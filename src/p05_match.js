@@ -187,22 +187,23 @@ addEventListener('keyup', e => { KEY[e.code] = false; });
 addEventListener('blur', () => { for (const k in KEY) KEY[k] = false; });
 const prevIN = { a: false, b: false, c: false, st: false };
 function readInput(dt) {
-  let x = 0, y = 0, a, b, c, s;
-  if (KEY.ArrowLeft || KEY.KeyA) x -= 1; if (KEY.ArrowRight || KEY.KeyD) x += 1;
-  if (KEY.ArrowUp || KEY.KeyW) y -= 1; if (KEY.ArrowDown || KEY.KeyS) y += 1;
-  a = !!(KEY.KeyJ || KEY.KeyZ || KEY.KeyY); b = !!(KEY.KeyK || KEY.KeyX || KEY.Space); c = !!(KEY.KeyL || KEY.KeyC);
-  s = !!(KEY.ShiftLeft || KEY.ShiftRight);
+  let x = 0, y = 0, a, b, c, s, km;
+  // Pfeile laufen, linke Hand macht die Aktionen: S Pass, A Kempa, Leertaste Wurf, D Finte/Klau, W oder Shift Sprint (J/K/L gehen weiterhin)
+  if (KEY.ArrowLeft) x -= 1; if (KEY.ArrowRight) x += 1;
+  if (KEY.ArrowUp) y -= 1; if (KEY.ArrowDown) y += 1;
+  a = !!(KEY.KeyS || KEY.KeyA || KEY.KeyJ); b = !!(KEY.Space || KEY.KeyK); c = !!(KEY.KeyD || KEY.KeyL);
+  km = !!(KEY.ShiftLeft || KEY.ShiftRight); s = km || !!KEY.KeyW;   // km: Shift + Pass = Kempa (W sprintet nur)
   for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) {
     if (!gp) continue;
     const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; if (Math.hypot(ax, ay) > 0.25) { x += ax; y += ay; }
     const bt = i => gp.buttons[i] && gp.buttons[i].pressed;
     if (bt(14)) x -= 1; if (bt(15)) x += 1; if (bt(12)) y -= 1; if (bt(13)) y += 1;
-    a = a || bt(0); b = b || bt(2) || bt(7); c = c || bt(1) || bt(3); s = s || bt(5) || bt(4);
+    a = a || bt(0); b = b || bt(2) || bt(7); c = c || bt(1) || bt(3); s = s || bt(5) || bt(4); km = km || bt(5) || bt(4);
     if (bt(9) && !prevIN.st && G && !G.demo) togglePause(); prevIN.st = bt(9);
   }
   x += TOUCH.x; y += TOUCH.y; b = b || TOUCH.b; c = c || TOUCH.c; s = s || TOUCH.s;
   if (TOUCH.pulseA) { a = true; TOUCH.pulseA = 0; }
-  IN.k = !!TOUCH.pulseK; TOUCH.pulseK = 0;
+  IN.k = !!TOUCH.pulseK || !!KEY.KeyA || km; TOUCH.pulseK = 0;
   const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
   Object.assign(IN, { x, y, s, a, b, c, pa: a && !prevIN.a, pb: b && !prevIN.b, pc: c && !prevIN.c, ra: !a && prevIN.a, rb: !b && prevIN.b, rc: !c && prevIN.c });
   IN.aHeld = a ? IN.aHeld + dt : (IN.ra ? IN.aHeld : 0);

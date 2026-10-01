@@ -127,11 +127,13 @@ const ACT = {
   help() {
     SCREEN = 'help';
     showMenu(`<div class="panel"><h2>STEUERUNG</h2><div class="keys">
-      <b>PFEILE / WASD</b><span>Laufen · SHIFT sprinten (kostet Puste)</span>
-      <b>J</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: zum ballnächsten Spieler wechseln</span>
-      <b>SHIFT + J</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft</span>
-      <b>K / LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe) · Abwehr: Blocksprung</span>
-      <b>L</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
+      <b>PFEILE</b><span>Laufen</span>
+      <b>W / SHIFT</b><span>Sprinten (kostet Puste)</span>
+      <b>S</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: zum ballnächsten Spieler wechseln</span>
+      <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: Spieler wechseln</span>
+      <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe) · Abwehr: Blocksprung</span>
+      <b>D</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
+      <b>Q</b><span>Wechselmenü</span>
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
