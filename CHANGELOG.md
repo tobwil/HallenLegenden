@@ -2,6 +2,12 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v7.1: Veröffentlichung
+- **GitHub Pages:** spielbar unter https://tobwil.github.io/HallenLegenden/. `index.html` ist jetzt ein vollständiges HTML-Dokument (Titel, Beschreibung, Vorschau-Tags und Favicon im `<head>`), dazu `.nojekyll`
+- **Lizenz:** Open Source unter MIT, © 2026 tobwil. Hinweis auf dem Titelbildschirm
+- **README** auf Deutsch und Englisch
+- **Fehler behoben:** Beim Start konnte die Spielschleife abbrechen und das Bild einfrieren, wenn der erste Frame-Zeitstempel vor dem Ladezeitpunkt lag (negative Spielzeit)
+
 ## v7: Touch-Steuerung, Auswechseln, Pokal, Verletzungen, Verträge
 - **Touch:**
   - mitwandernder Stick mit Auto-Sprint bei voller Auslenkung
