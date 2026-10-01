@@ -1107,7 +1107,7 @@ function setupPenalty(team, pick) {
 }
 
 // ================= Eingabe =================
-const KEY = {};
+const KEY = {}, KEYP = {};   // KEYP: seit dem letzten Frame gedrückt (damit kurze Tipper nicht verloren gehen)
 const IN = { x: 0, y: 0, s: false, a: false, b: false, c: false, pa: false, pb: false, pc: false, ra: false, rb: false, rc: false, any: false, aHeld: 0 };
 const TOUCH = { x: 0, y: 0, a: false, b: false, c: false, s: false };
 addEventListener('keydown', e => {
@@ -1115,7 +1115,7 @@ addEventListener('keydown', e => {
   if (inField) return;
   const onBtn = document.activeElement && document.activeElement.tagName === 'BUTTON' && !menu.hidden;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code) && !onBtn) e.preventDefault();
-  KEY[e.code] = true; AU.init();
+  KEY[e.code] = true; if (!e.repeat) KEYP[e.code] = true; AU.init();
   if (e.code === 'KeyM') AU.toggle();
   if ((e.code === 'Escape' || e.code === 'KeyP') && G && !G.demo && menu.hidden) { e.stopImmediatePropagation(); togglePause(); }
   if (e.code === 'KeyT' && G && !G.demo && G.human >= 0) callTimeout(G.human);
@@ -1129,8 +1129,9 @@ function readInput(dt) {
   // Pfeile laufen, linke Hand macht die Aktionen: S Pass, A Kempa, Leertaste Wurf, D Finte/Klau, W oder Shift Sprint (J/K/L gehen weiterhin)
   if (KEY.ArrowLeft) x -= 1; if (KEY.ArrowRight) x += 1;
   if (KEY.ArrowUp) y -= 1; if (KEY.ArrowDown) y += 1;
-  a = !!(KEY.KeyS || KEY.KeyA || KEY.KeyJ); b = !!(KEY.Space || KEY.KeyK); c = !!(KEY.KeyD || KEY.KeyL);
-  km = !!(KEY.ShiftLeft || KEY.ShiftRight); s = km || !!KEY.KeyW;   // km: Shift + Pass = Kempa (W sprintet nur)
+  const K = c => !!(KEY[c] || KEYP[c]);
+  a = K('KeyS') || K('KeyA') || K('KeyJ'); b = K('Space') || K('KeyK'); c = K('KeyD') || K('KeyL');
+  km = K('ShiftLeft') || K('ShiftRight'); s = km || K('KeyW');   // km: Shift + Pass = Kempa (W sprintet nur)
   for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) {
     if (!gp) continue;
     const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; if (Math.hypot(ax, ay) > 0.25) { x += ax; y += ay; }
@@ -1141,7 +1142,8 @@ function readInput(dt) {
   }
   x += TOUCH.x; y += TOUCH.y; b = b || TOUCH.b; c = c || TOUCH.c; s = s || TOUCH.s;
   if (TOUCH.pulseA) { a = true; TOUCH.pulseA = 0; }
-  IN.k = !!TOUCH.pulseK || !!KEY.KeyA || km; TOUCH.pulseK = 0;
+  IN.k = !!TOUCH.pulseK || K('KeyA') || km; TOUCH.pulseK = 0;
+  for (const k in KEYP) delete KEYP[k];
   const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
   Object.assign(IN, { x, y, s, a, b, c, pa: a && !prevIN.a, pb: b && !prevIN.b, pc: c && !prevIN.c, ra: !a && prevIN.a, rb: !b && prevIN.b, rc: !c && prevIN.c });
   IN.aHeld = a ? IN.aHeld + dt : (IN.ra ? IN.aHeld : 0);
@@ -1203,17 +1205,18 @@ function launch(fx, fy, fz, tx, ty, tz, speed) {
 const openness = q => { let m = 9; for (const o of fieldOpps(q)) m = Math.min(m, dist(q.x, q.y, o.x, o.y)); return m; };
 function laneOpen(p, tx, ty) { let m = 9; for (const o of fieldOpps(p)) if (dist(o.x, o.y, p.x, p.y) > 0.3) m = Math.min(m, segDist(o.x, o.y, p.x, p.y, tx, ty)); return m; }
 const pressure = p => Math.min(9, ...fieldOpps(p).map(o => dist(o.x, o.y, p.x, p.y)));
-function choosePass(p, dx, dy, det = false) {
+function choosePass(p, dx, dy, det = false, cone = 0.62) {
   let best = null, bs = -1e9; const hasDir = Math.hypot(dx, dy) > 0.3, gx = goalX(p.team);
   for (const q of mates(p)) {
     if (q.role === 'TW' && G.possT > 0.5) continue;
     const d = dist(p.x, p.y, q.x, q.y); if (d < 1.2) continue;
     let sc;
-    if (hasDir) { const dot = ((q.x - p.x) * dx + (q.y - p.y) * dy) / d; if (dot < 0.25) continue; sc = dot * 3 - d * 0.04 + openness(q) * 0.15; }
+    if (hasDir) { const dot = ((q.x - p.x) * dx + (q.y - p.y) * dy) / d / Math.hypot(dx, dy); if (dot < cone) continue; sc = dot * 6 - d * 0.04 + openness(q) * 0.15; }
     else sc = openness(q) * 0.8 - goalDist(q.x, q.y, gx) * 0.16 - d * 0.03 + laneOpen(p, q.x, q.y) * 0.7 + (det ? 0 : rnd(0, 0.7)) + (q.star ? 0.4 : 0);
     if (sc > bs) { bs = sc; best = q; }
   }
-  return best || (hasDir ? choosePass(p, 0, 0, det) : null);
+  // Pass in Laufrichtung: erst ein enger Kegel (~50°), dann ein weiter (~75°), sonst der beste freie Mitspieler
+  return best || (hasDir ? (cone > 0.3 ? choosePass(p, dx, dy, det, 0.25) : choosePass(p, 0, 0, det)) : null);
 }
 function pass(p, q) {
   if (!q) return;
@@ -1423,6 +1426,11 @@ function updateGK(g, dt) {
 function humanControl(p, dt) {
   const b = G.ball, sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1);
   if (b.owner === p) {
+    G.inUsedT = G.t;   // Eingaben dieses Frames gehören dem Ballführer, nicht dem nächsten Empfänger
+    const buf = G.inBuf && G.inBuf.p === p && G.t - G.inBuf.t < 0.25 ? G.inBuf.k : null; G.inBufK = buf && G.inBuf.kempa; G.inBuf = null;   // vor dem Fangen gedrückt
+    if (buf === 'a') { IN.pa = true; IN.k = IN.k || G.inBufK; }
+    else if (buf === 'b' && !p.airCatch && G.phase === 'play') { if (IN.b) IN.pb = true; else { shoot(p, IN.y, 0.3); return [0, 0]; } }
+    else if (buf === 'c') IN.pc = true;
     if (p.airCatch) { if (IN.pb || p.airT > 0.24) shoot(p, IN.y || null, 0.7); return [0, 0]; }
     if (IN.pa && !p.charging) { if (IN.k && p.role !== 'TW') kempa(p); else pass(p, choosePass(p, IN.x, IN.y, true)); buzz(12); return [IN.x * sp, IN.y * sp]; }
     if (IN.pb && G.phase === 'play') { p.charging = true; p.charge = 0.3; p.aim = IN.y; }            // kurzes Antippen = schneller Wurf
@@ -1459,9 +1467,15 @@ function updatePlayer(p, dt) {
     }
   } else {
     const holdStill = (ph === 'restart' && G.ball.owner === p) || p.lie > 0;
-    // Passempfänger (auch der gesteuerte) läuft automatisch zum Ball, bis er ihn hat
+    // Passempfänger läuft automatisch zum Ball, bis er ihn hat. Der gesteuerte nur, solange keine Richtung gedrückt ist
     if (!frozen && !holdStill) {
-      if (G.human === p.team && G.ctrl === p && ph === 'play' && !(G.ball.passTo === p && G.ball.state === 'air')) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
+      const hum = G.human === p.team && G.ctrl === p && ph === 'play', recv = G.ball.passTo === p && G.ball.state === 'air';
+      if (hum && recv && G.inUsedT !== G.t && (IN.pa || IN.pb || IN.pc)) G.inBuf = { p, t: G.t, k: IN.pa ? 'a' : IN.pb ? 'b' : 'c', kempa: IN.k };   // Ball unterwegs zu mir: Aktion für den Fang merken
+      if (recv && G.inBuf && G.inBuf.p === p) G.inBuf.t = G.t;   // gilt den ganzen Flug über, danach noch kurz
+      if (hum && recv && !G.ball.lob && Math.hypot(IN.x, IN.y) > 0.2) {   // mit Richtung selbst laufen (Kempa-Lupfer bleiben automatisch)
+        const sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1); dvx = IN.x * sp; dvy = IN.y * sp; sprint = IN.s;
+      }
+      else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
       else {
         const t = p.role === 'TW' ? updateGK(p, dt) : aiTarget(p, dt);
         if (t) {
@@ -1481,7 +1495,7 @@ function updatePlayer(p, dt) {
     if (p.charging) { dvx *= 0.45; dvy *= 0.45; }
     if (p.stun > 0) { dvx *= 0.2; dvy *= 0.2; }
     if (p.dash > 0) { dvx = p.vx; dvy = p.vy; }
-    const k = Math.min(1, dt * (p.dash > 0 ? 30 : 11));
+    const k = Math.min(1, dt * (p.dash > 0 ? 30 : G.ctrl === p && G.human === p.team ? 18 : 11));   // eigener Spieler reagiert direkter
     const pv = Math.hypot(p.vx, p.vy), nv = Math.hypot(dvx, dvy);
     if (!G.demo && pv > 3.2 && nv > 3 && (p.vx * dvx + p.vy * dvy) / (pv * nv) < 0.3 && Math.random() < 0.6) AU.squeak();   // Schuhquietschen bei Richtungswechsel
     p.vx += (dvx - p.vx) * k; p.vy += (dvy - p.vy) * k;
@@ -1490,7 +1504,7 @@ function updatePlayer(p, dt) {
   if (p.charging && G.ball.owner !== p) { p.charging = false; p.charge = 0; }
   p.st = clamp(p.st + (sprint ? -0.13 * (1.3 - (p.sta ?? 80) / 150) : 0.07 * (0.6 + 0.4 * (p.energy ?? 1))) * dt, 0, 1);
   // Kraft über das ganze Spiel: sinkt mit Spielzeit (Ausdauer bremst den Abbau), Sprints kosten extra
-  if (ph === 'play') { p.mins += dt; p.energy = Math.max(0.15, p.energy - dt * 0.34 / (2 * G.halfLen) * (1.3 - (p.sta ?? 80) / 150) * (sprint ? 1.8 : 1)); }
+  if (ph === 'play') { p.mins += dt; p.energy = Math.max(0.15, p.energy - dt * 0.66 / (2 * G.halfLen) * (1.3 - (p.sta ?? 80) / 150) * (sprint ? 1.8 : 1)); }
   p.x = clamp(p.x, 0.15, CW - 0.15); p.y = clamp(p.y, 0.15, CH - 0.15);
   if (p.role !== 'TW' && p.z <= 0) pushOut(p);
   if (p.role === 'TW' && G.ball.owner === p) { const gx = ownX(p.team), cy = clamp(p.y, GY1, GY2), d = dist(p.x, p.y, gx, cy); if (d > 5.8) { p.x = gx + (p.x - gx) / d * 5.8; p.y = cy + (p.y - cy) / d * 5.8; } }
@@ -1760,7 +1774,7 @@ function step(dt) {
   if (G.phase === 'play' || G.phase === 'restart') {
     for (const p of G.players) if (p.out) { p.out -= dt; if (p.out <= 0) { p.out = 0; place(p, 20 - sgn(p.team) * 2, 0.3); say(`${p.name} ist wieder auf dem Feld.`); } }
   }
-  if (G.phase === 'play') for (const t of [0, 1]) for (const b of G.bench[t]) b.energy = Math.min(b.fitMul + 0.05, b.energy + dt * 0.3 / (2 * G.halfLen));
+  if (G.phase === 'play') for (const t of [0, 1]) for (const b of G.bench[t]) b.energy = Math.min(b.fitMul, b.energy + dt * 0.3 / (2 * G.halfLen));
   G.subT = (G.subT || 0) + dt; if (G.subT > 3 && ['play', 'restart', 'whistle', 'kickoff'].includes(G.phase)) { G.subT = 0; autoSubs(); }
   // Warnung, wenn ein eigener Spieler platt ist und nicht automatisch gewechselt wird
   if (G.human >= 0 && !G.autoSub && G.phase === 'play') { const tired = G.players.find(p => p.team === G.human && p.energy < 0.4 && !p.warned); if (tired) { tired.warned = true; say(`${tired.name} ist platt. Wechseln im Pausemenü (Q).`, 4); } }

@@ -169,7 +169,7 @@ function setupPenalty(team, pick) {
 }
 
 // ================= Eingabe =================
-const KEY = {};
+const KEY = {}, KEYP = {};   // KEYP: seit dem letzten Frame gedrückt (damit kurze Tipper nicht verloren gehen)
 const IN = { x: 0, y: 0, s: false, a: false, b: false, c: false, pa: false, pb: false, pc: false, ra: false, rb: false, rc: false, any: false, aHeld: 0 };
 const TOUCH = { x: 0, y: 0, a: false, b: false, c: false, s: false };
 addEventListener('keydown', e => {
@@ -177,7 +177,7 @@ addEventListener('keydown', e => {
   if (inField) return;
   const onBtn = document.activeElement && document.activeElement.tagName === 'BUTTON' && !menu.hidden;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code) && !onBtn) e.preventDefault();
-  KEY[e.code] = true; AU.init();
+  KEY[e.code] = true; if (!e.repeat) KEYP[e.code] = true; AU.init();
   if (e.code === 'KeyM') AU.toggle();
   if ((e.code === 'Escape' || e.code === 'KeyP') && G && !G.demo && menu.hidden) { e.stopImmediatePropagation(); togglePause(); }
   if (e.code === 'KeyT' && G && !G.demo && G.human >= 0) callTimeout(G.human);
@@ -191,8 +191,9 @@ function readInput(dt) {
   // Pfeile laufen, linke Hand macht die Aktionen: S Pass, A Kempa, Leertaste Wurf, D Finte/Klau, W oder Shift Sprint (J/K/L gehen weiterhin)
   if (KEY.ArrowLeft) x -= 1; if (KEY.ArrowRight) x += 1;
   if (KEY.ArrowUp) y -= 1; if (KEY.ArrowDown) y += 1;
-  a = !!(KEY.KeyS || KEY.KeyA || KEY.KeyJ); b = !!(KEY.Space || KEY.KeyK); c = !!(KEY.KeyD || KEY.KeyL);
-  km = !!(KEY.ShiftLeft || KEY.ShiftRight); s = km || !!KEY.KeyW;   // km: Shift + Pass = Kempa (W sprintet nur)
+  const K = c => !!(KEY[c] || KEYP[c]);
+  a = K('KeyS') || K('KeyA') || K('KeyJ'); b = K('Space') || K('KeyK'); c = K('KeyD') || K('KeyL');
+  km = K('ShiftLeft') || K('ShiftRight'); s = km || K('KeyW');   // km: Shift + Pass = Kempa (W sprintet nur)
   for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) {
     if (!gp) continue;
     const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; if (Math.hypot(ax, ay) > 0.25) { x += ax; y += ay; }
@@ -203,7 +204,8 @@ function readInput(dt) {
   }
   x += TOUCH.x; y += TOUCH.y; b = b || TOUCH.b; c = c || TOUCH.c; s = s || TOUCH.s;
   if (TOUCH.pulseA) { a = true; TOUCH.pulseA = 0; }
-  IN.k = !!TOUCH.pulseK || !!KEY.KeyA || km; TOUCH.pulseK = 0;
+  IN.k = !!TOUCH.pulseK || K('KeyA') || km; TOUCH.pulseK = 0;
+  for (const k in KEYP) delete KEYP[k];
   const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
   Object.assign(IN, { x, y, s, a, b, c, pa: a && !prevIN.a, pb: b && !prevIN.b, pc: c && !prevIN.c, ra: !a && prevIN.a, rb: !b && prevIN.b, rc: !c && prevIN.c });
   IN.aHeld = a ? IN.aHeld + dt : (IN.ra ? IN.aHeld : 0);

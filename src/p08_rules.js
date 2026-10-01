@@ -226,7 +226,7 @@ function step(dt) {
   if (G.phase === 'play' || G.phase === 'restart') {
     for (const p of G.players) if (p.out) { p.out -= dt; if (p.out <= 0) { p.out = 0; place(p, 20 - sgn(p.team) * 2, 0.3); say(`${p.name} ist wieder auf dem Feld.`); } }
   }
-  if (G.phase === 'play') for (const t of [0, 1]) for (const b of G.bench[t]) b.energy = Math.min(b.fitMul + 0.05, b.energy + dt * 0.3 / (2 * G.halfLen));
+  if (G.phase === 'play') for (const t of [0, 1]) for (const b of G.bench[t]) b.energy = Math.min(b.fitMul, b.energy + dt * 0.3 / (2 * G.halfLen));
   G.subT = (G.subT || 0) + dt; if (G.subT > 3 && ['play', 'restart', 'whistle', 'kickoff'].includes(G.phase)) { G.subT = 0; autoSubs(); }
   // Warnung, wenn ein eigener Spieler platt ist und nicht automatisch gewechselt wird
   if (G.human >= 0 && !G.autoSub && G.phase === 'play') { const tired = G.players.find(p => p.team === G.human && p.energy < 0.4 && !p.warned); if (tired) { tired.warned = true; say(`${tired.name} ist platt. Wechseln im Pausemenü (Q).`, 4); } }

@@ -7,17 +7,18 @@ function launch(fx, fy, fz, tx, ty, tz, speed) {
 const openness = q => { let m = 9; for (const o of fieldOpps(q)) m = Math.min(m, dist(q.x, q.y, o.x, o.y)); return m; };
 function laneOpen(p, tx, ty) { let m = 9; for (const o of fieldOpps(p)) if (dist(o.x, o.y, p.x, p.y) > 0.3) m = Math.min(m, segDist(o.x, o.y, p.x, p.y, tx, ty)); return m; }
 const pressure = p => Math.min(9, ...fieldOpps(p).map(o => dist(o.x, o.y, p.x, p.y)));
-function choosePass(p, dx, dy, det = false) {
+function choosePass(p, dx, dy, det = false, cone = 0.62) {
   let best = null, bs = -1e9; const hasDir = Math.hypot(dx, dy) > 0.3, gx = goalX(p.team);
   for (const q of mates(p)) {
     if (q.role === 'TW' && G.possT > 0.5) continue;
     const d = dist(p.x, p.y, q.x, q.y); if (d < 1.2) continue;
     let sc;
-    if (hasDir) { const dot = ((q.x - p.x) * dx + (q.y - p.y) * dy) / d; if (dot < 0.25) continue; sc = dot * 3 - d * 0.04 + openness(q) * 0.15; }
+    if (hasDir) { const dot = ((q.x - p.x) * dx + (q.y - p.y) * dy) / d / Math.hypot(dx, dy); if (dot < cone) continue; sc = dot * 6 - d * 0.04 + openness(q) * 0.15; }
     else sc = openness(q) * 0.8 - goalDist(q.x, q.y, gx) * 0.16 - d * 0.03 + laneOpen(p, q.x, q.y) * 0.7 + (det ? 0 : rnd(0, 0.7)) + (q.star ? 0.4 : 0);
     if (sc > bs) { bs = sc; best = q; }
   }
-  return best || (hasDir ? choosePass(p, 0, 0, det) : null);
+  // Pass in Laufrichtung: erst ein enger Kegel (~50°), dann ein weiter (~75°), sonst der beste freie Mitspieler
+  return best || (hasDir ? (cone > 0.3 ? choosePass(p, dx, dy, det, 0.25) : choosePass(p, 0, 0, det)) : null);
 }
 function pass(p, q) {
   if (!q) return;
