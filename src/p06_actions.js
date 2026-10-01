@@ -22,13 +22,13 @@ function choosePass(p, dx, dy, det = false, cone = 0.62) {
 }
 function pass(p, q) {
   if (!q) return;
-  const b = G.ball, d = dist(p.x, p.y, q.x, q.y), sp = d > 14 ? 18 : 13.5, t = d / sp;
+  const b = G.ball, d = dist(p.x, p.y, q.x, q.y), sp = d > 14 ? 21 : 16.5, t = d / sp;
   const tp = { x: clamp(q.x + q.vx * t * 0.85, 0.3, CW - 0.3), y: clamp(q.y + q.vy * t * 0.85, 0.3, CH - 0.3) };
   pushOut(tp, 6.4); const tx = tp.x, ty = tp.y;
   launch(p.x + p.face * 0.3, p.y, p.z + 1.5, tx, ty, 1.3, sp);
   b.passTo = q; b.shot = null; b.nc = p; b.ncT = 0.25; b.last = p; p.throwT = 0.22; p.hold = 0;
   q.tx = tx; q.ty = ty;
-  G.recvSteer = null; if (G.human === p.team) { G.ctrl = q; G.recvLock = { p: q, x: IN.x, y: IN.y }; }   // beim Pass gehaltene Richtung steuert den Empfänger nicht
+  if (G.human === p.team) { G.ctrl = q; G.recvLock = { p: q, x: IN.x, y: IN.y }; }   // beim Pass gehaltene Richtung steuert den Empfänger nicht
   AU.pass();
 }
 // Kempa-Trick: Lupfer in den Torraum, Mitspieler fängt im Sprung
