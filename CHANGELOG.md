@@ -2,6 +2,11 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v7.4: Kraftverlust, Eingabe
+- **Kraft über das Spiel:** Der Abbau ist etwa doppelt so stark wie bisher. Ohne Wechsel sinken Feldspieler bis Spielende im Schnitt auf rund 35 % (vorher rund 70 %, der Balken blieb fast immer grün). Mit Co-Trainer wird jetzt etwa ein Dutzend Mal pro Spiel gewechselt.
+- Bankspieler erholen sich höchstens bis zu ihrer Fitness, nicht mehr auf 105 %
+- **Eingabe:** Tastendrücke werden bis zum nächsten Frame gemerkt. Kurze Tipper auf Pass, Wurf oder Finte gingen vorher verloren, wenn die Taste schon vor dem nächsten Frame wieder losgelassen war.
+
 ## v7.3: Neue Tastaturbelegung
 - **Pfeile laufen, linke Hand spielt:** S Pass (Abwehr: Spieler wechseln), A Kempa-Trick, Leertaste Wurf/Block, D Finte, beim Aufladen Heber (Abwehr: Ball herausspielen), W oder Shift Sprint. WASD bewegt den Spieler nicht mehr. J/K/L funktionieren weiterhin.
 - Kempa per Tastatur nur noch über A oder Shift + S, damit Sprinten mit W und Passen keinen ungewollten Kempa auslöst

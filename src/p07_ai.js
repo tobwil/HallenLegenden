@@ -164,7 +164,7 @@ function updatePlayer(p, dt) {
   if (p.charging && G.ball.owner !== p) { p.charging = false; p.charge = 0; }
   p.st = clamp(p.st + (sprint ? -0.13 * (1.3 - (p.sta ?? 80) / 150) : 0.07 * (0.6 + 0.4 * (p.energy ?? 1))) * dt, 0, 1);
   // Kraft über das ganze Spiel: sinkt mit Spielzeit (Ausdauer bremst den Abbau), Sprints kosten extra
-  if (ph === 'play') { p.mins += dt; p.energy = Math.max(0.15, p.energy - dt * 0.34 / (2 * G.halfLen) * (1.3 - (p.sta ?? 80) / 150) * (sprint ? 1.8 : 1)); }
+  if (ph === 'play') { p.mins += dt; p.energy = Math.max(0.15, p.energy - dt * 0.66 / (2 * G.halfLen) * (1.3 - (p.sta ?? 80) / 150) * (sprint ? 1.8 : 1)); }
   p.x = clamp(p.x, 0.15, CW - 0.15); p.y = clamp(p.y, 0.15, CH - 0.15);
   if (p.role !== 'TW' && p.z <= 0) pushOut(p);
   if (p.role === 'TW' && G.ball.owner === p) { const gx = ownX(p.team), cy = clamp(p.y, GY1, GY2), d = dist(p.x, p.y, gx, cy); if (d > 5.8) { p.x = gx + (p.x - gx) / d * 5.8; p.y = cy + (p.y - cy) / d * 5.8; } }

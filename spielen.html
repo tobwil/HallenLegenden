@@ -1107,7 +1107,7 @@ function setupPenalty(team, pick) {
 }
 
 // ================= Eingabe =================
-const KEY = {};
+const KEY = {}, KEYP = {};   // KEYP: seit dem letzten Frame gedrückt (damit kurze Tipper nicht verloren gehen)
 const IN = { x: 0, y: 0, s: false, a: false, b: false, c: false, pa: false, pb: false, pc: false, ra: false, rb: false, rc: false, any: false, aHeld: 0 };
 const TOUCH = { x: 0, y: 0, a: false, b: false, c: false, s: false };
 addEventListener('keydown', e => {
@@ -1115,7 +1115,7 @@ addEventListener('keydown', e => {
   if (inField) return;
   const onBtn = document.activeElement && document.activeElement.tagName === 'BUTTON' && !menu.hidden;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code) && !onBtn) e.preventDefault();
-  KEY[e.code] = true; AU.init();
+  KEY[e.code] = true; if (!e.repeat) KEYP[e.code] = true; AU.init();
   if (e.code === 'KeyM') AU.toggle();
   if ((e.code === 'Escape' || e.code === 'KeyP') && G && !G.demo && menu.hidden) { e.stopImmediatePropagation(); togglePause(); }
   if (e.code === 'KeyT' && G && !G.demo && G.human >= 0) callTimeout(G.human);
@@ -1129,8 +1129,9 @@ function readInput(dt) {
   // Pfeile laufen, linke Hand macht die Aktionen: S Pass, A Kempa, Leertaste Wurf, D Finte/Klau, W oder Shift Sprint (J/K/L gehen weiterhin)
   if (KEY.ArrowLeft) x -= 1; if (KEY.ArrowRight) x += 1;
   if (KEY.ArrowUp) y -= 1; if (KEY.ArrowDown) y += 1;
-  a = !!(KEY.KeyS || KEY.KeyA || KEY.KeyJ); b = !!(KEY.Space || KEY.KeyK); c = !!(KEY.KeyD || KEY.KeyL);
-  km = !!(KEY.ShiftLeft || KEY.ShiftRight); s = km || !!KEY.KeyW;   // km: Shift + Pass = Kempa (W sprintet nur)
+  const K = c => !!(KEY[c] || KEYP[c]);
+  a = K('KeyS') || K('KeyA') || K('KeyJ'); b = K('Space') || K('KeyK'); c = K('KeyD') || K('KeyL');
+  km = K('ShiftLeft') || K('ShiftRight'); s = km || K('KeyW');   // km: Shift + Pass = Kempa (W sprintet nur)
   for (const gp of (navigator.getGamepads ? navigator.getGamepads() : [])) {
     if (!gp) continue;
     const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0; if (Math.hypot(ax, ay) > 0.25) { x += ax; y += ay; }
@@ -1141,7 +1142,8 @@ function readInput(dt) {
   }
   x += TOUCH.x; y += TOUCH.y; b = b || TOUCH.b; c = c || TOUCH.c; s = s || TOUCH.s;
   if (TOUCH.pulseA) { a = true; TOUCH.pulseA = 0; }
-  IN.k = !!TOUCH.pulseK || !!KEY.KeyA || km; TOUCH.pulseK = 0;
+  IN.k = !!TOUCH.pulseK || K('KeyA') || km; TOUCH.pulseK = 0;
+  for (const k in KEYP) delete KEYP[k];
   const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
   Object.assign(IN, { x, y, s, a, b, c, pa: a && !prevIN.a, pb: b && !prevIN.b, pc: c && !prevIN.c, ra: !a && prevIN.a, rb: !b && prevIN.b, rc: !c && prevIN.c });
   IN.aHeld = a ? IN.aHeld + dt : (IN.ra ? IN.aHeld : 0);
@@ -1490,7 +1492,7 @@ function updatePlayer(p, dt) {
   if (p.charging && G.ball.owner !== p) { p.charging = false; p.charge = 0; }
   p.st = clamp(p.st + (sprint ? -0.13 * (1.3 - (p.sta ?? 80) / 150) : 0.07 * (0.6 + 0.4 * (p.energy ?? 1))) * dt, 0, 1);
   // Kraft über das ganze Spiel: sinkt mit Spielzeit (Ausdauer bremst den Abbau), Sprints kosten extra
-  if (ph === 'play') { p.mins += dt; p.energy = Math.max(0.15, p.energy - dt * 0.34 / (2 * G.halfLen) * (1.3 - (p.sta ?? 80) / 150) * (sprint ? 1.8 : 1)); }
+  if (ph === 'play') { p.mins += dt; p.energy = Math.max(0.15, p.energy - dt * 0.66 / (2 * G.halfLen) * (1.3 - (p.sta ?? 80) / 150) * (sprint ? 1.8 : 1)); }
   p.x = clamp(p.x, 0.15, CW - 0.15); p.y = clamp(p.y, 0.15, CH - 0.15);
   if (p.role !== 'TW' && p.z <= 0) pushOut(p);
   if (p.role === 'TW' && G.ball.owner === p) { const gx = ownX(p.team), cy = clamp(p.y, GY1, GY2), d = dist(p.x, p.y, gx, cy); if (d > 5.8) { p.x = gx + (p.x - gx) / d * 5.8; p.y = cy + (p.y - cy) / d * 5.8; } }
@@ -1760,7 +1762,7 @@ function step(dt) {
   if (G.phase === 'play' || G.phase === 'restart') {
     for (const p of G.players) if (p.out) { p.out -= dt; if (p.out <= 0) { p.out = 0; place(p, 20 - sgn(p.team) * 2, 0.3); say(`${p.name} ist wieder auf dem Feld.`); } }
   }
-  if (G.phase === 'play') for (const t of [0, 1]) for (const b of G.bench[t]) b.energy = Math.min(b.fitMul + 0.05, b.energy + dt * 0.3 / (2 * G.halfLen));
+  if (G.phase === 'play') for (const t of [0, 1]) for (const b of G.bench[t]) b.energy = Math.min(b.fitMul, b.energy + dt * 0.3 / (2 * G.halfLen));
   G.subT = (G.subT || 0) + dt; if (G.subT > 3 && ['play', 'restart', 'whistle', 'kickoff'].includes(G.phase)) { G.subT = 0; autoSubs(); }
   // Warnung, wenn ein eigener Spieler platt ist und nicht automatisch gewechselt wird
   if (G.human >= 0 && !G.autoSub && G.phase === 'play') { const tired = G.players.find(p => p.team === G.human && p.energy < 0.4 && !p.warned); if (tired) { tired.warned = true; say(`${tired.name} ist platt. Wechseln im Pausemenü (Q).`, 4); } }
