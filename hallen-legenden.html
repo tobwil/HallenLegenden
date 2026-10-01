@@ -1155,9 +1155,11 @@ function matchData(r, boost) {
 // Ersatzbank für Spiele ohne Karriere: je Position ein etwas schwächerer Spieler
 function quickBench(tid) {
   const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#ersatz')), used = new Set(roster(tid).map(p => p.name)), nums = new Set(roster(tid).map(p => p.num));
-  return ROLES.map(role => {
+  return ROLES.map((role, i) => {
     let n; do { n = SUR[(r() * SUR.length) | 0]; } while (used.has(n)); used.add(n);
     let num; do { num = role === 'TW' ? [12, 16, 33, 30][(r() * 4) | 0] : 2 + ((r() * 70) | 0); } while (nums.has(num)); nums.add(num);
+    const ed = ROSTER_EDIT[tid] && ROSTER_EDIT[tid][ROLES.length + i];   // Editor: Plätze 8 bis 14 sind die Ersatzbank
+    if (ed) { if (ed.name) n = ed.name; if (ed.num) num = ed.num; }
     const lv = T.r - 6, v = () => Math.round((r() - 0.5) * 10);
     return { name: n, num, role, att: lv + v(), pas: lv + v(), def: lv + v(), gk: lv + v(), spd: lv + v(), sta: lv + v(), skin: (r() * SKIN.length) | 0, hair: HAIR[(r() * HAIR.length) | 0],
       style: (r() * 6) | 0, beard: r() < 0.35, band: r() < 0.2, tall: role === 'KM' || role === 'RL' || role === 'RR', star: false, trait: '' };
@@ -1217,7 +1219,7 @@ function pass(p, q) {
   launch(p.x + p.face * 0.3, p.y, p.z + 1.5, tx, ty, 1.3, sp);
   b.passTo = q; b.shot = null; b.nc = p; b.ncT = 0.25; b.last = p; p.throwT = 0.22; p.hold = 0;
   q.tx = tx; q.ty = ty;
-  if (G.human === p.team) G.ctrl = q;
+  G.recvSteer = null; if (G.human === p.team) { G.ctrl = q; G.recvLock = { p: q, x: IN.x, y: IN.y }; }   // beim Pass gehaltene Richtung steuert den Empfänger nicht
   AU.pass();
 }
 // Kempa-Trick: Lupfer in den Torraum, Mitspieler fängt im Sprung
@@ -1463,8 +1465,10 @@ function updatePlayer(p, dt) {
       const hum = G.human === p.team && G.ctrl === p && ph === 'play', recv = G.ball.passTo === p && G.ball.state === 'air';
       if (hum && recv && G.inUsedT !== G.t && (IN.pa || IN.pb || IN.pc)) G.inBuf = { p, t: G.t, k: IN.pa ? 'a' : IN.pb ? 'b' : 'c', kempa: IN.k };   // Ball unterwegs zu mir: Aktion für den Fang merken
       if (recv && G.inBuf && G.inBuf.p === p) G.inBuf.t = G.t;   // gilt den ganzen Flug über, danach noch kurz
-      if (hum && recv && !G.ball.lob && Math.hypot(IN.x, IN.y) > 0.2) {   // mit Richtung selbst laufen (Kempa-Lupfer bleiben automatisch)
-        const sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1); dvx = IN.x * sp; dvy = IN.y * sp; sprint = IN.s;
+      const lk = G.recvLock, im = Math.hypot(IN.x, IN.y);
+      if (lk && (lk.p !== p || im < 0.2 || (IN.x * lk.x + IN.y * lk.y) / (im * (Math.hypot(lk.x, lk.y) || 1)) < 0.9)) G.recvLock = null;   // losgelassen oder neue Richtung
+      if (hum && recv && !G.ball.lob && im > 0.2 && !G.recvLock) {   // mit neuer Richtung selbst laufen (Kempa-Lupfer bleiben automatisch)
+        const sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1); dvx = IN.x * sp; dvy = IN.y * sp; sprint = IN.s; G.recvSteer = p;
       }
       else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
       else {
@@ -1559,6 +1563,12 @@ function updateBall(dt) {
     return;
   }
   b.ncT -= dt;
+  // Selbst gesteuerter Empfänger: Pass lenkt leicht nach, damit kleine Laufkorrekturen ihn nicht kosten
+  if (b.passTo && G.recvSteer === b.passTo && !b.lob && b.state === 'air') {
+    const q = b.passTo, v = Math.hypot(b.vx, b.vy), a = Math.atan2(b.vy, b.vx), want = Math.atan2(q.y - b.y, q.x - b.x);
+    let da = want - a; da = Math.atan2(Math.sin(da), Math.cos(da)); const na = a + clamp(da, -2.5 * dt, 2.5 * dt);
+    b.vx = Math.cos(na) * v; b.vy = Math.sin(na) * v;
+  } else if (!b.passTo) G.recvSteer = null;
   b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
   if (b.z <= 0) {
     b.z = 0;
@@ -2366,8 +2376,9 @@ const ACT = {
   rematch() { const a = G.tid[0], b = G.tid[1]; startMatch(a, b, { human: 0, halfLen: G.halfLen, diff: G.diff, label: 'REVANCHE' }); },
   editor(v) {
     const tid = v !== undefined ? +v : (SEL.edit ?? SEL.a); SEL.edit = tid;
-    const ps = roster(tid);
+    const ps = roster(tid).concat(quickBench(tid)), csq = CAREER && CAREER.squads[tid];
     const T = TEAMS[tid];
+    const row = (p, id, lbl) => `<span class="tag">${p.role}</span><input id="${id}N" value="${esc(p.name)}" maxlength="16" aria-label="Name ${lbl}"><input id="${id}Z" value="${p.num}" inputmode="numeric" maxlength="2" aria-label="Nummer ${lbl}">`;
     showMenu(`<div class="panel"><h2>EDITOR</h2>
       <p class="muted">Vereins- und Spielernamen sind Platzhalter. Hier kannst du alles umbenennen und die Farben anpassen. Gespeichert wird nur in diesem Browser.</p>
       <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg}. Liga · ${esc(X.n)}</option>`).join('')}</select>
@@ -2375,8 +2386,12 @@ const ACT = {
       <div class="ed"><span class="tag">NAME</span><input id="edTn" value="${esc(T.n)}" maxlength="30" aria-label="Vereinsname"><input id="edTk" value="${esc(T.k)}" maxlength="3" aria-label="Kürzel"></div>
       <div class="row"><span class="tag" style="min-width:120px">HEIMTRIKOT</span><input type="color" id="edH1" value="${T.home.c1}" aria-label="Heim Trikotfarbe"><input type="color" id="edH2" value="${T.home.c2}" aria-label="Heim Zweitfarbe"><img src="${kitIcon(T.home)}" width="32" height="32" alt="" style="image-rendering:pixelated">
         <span class="tag" style="min-width:110px;margin-left:12px">AUSWÄRTS</span><input type="color" id="edA1" value="${T.away.c1}" aria-label="Auswärts Trikotfarbe"><input type="color" id="edA2" value="${T.away.c2}" aria-label="Auswärts Zweitfarbe"><img src="${kitIcon(T.away)}" width="32" height="32" alt="" style="image-rendering:pixelated"></div>
-      <h3>KADER (NAME · NUMMER)</h3>
-      <div class="ed">${ps.map((p, i) => `<span class="tag">${p.role}</span><input id="edN${i}" value="${esc(p.name)}" maxlength="16" aria-label="Name ${ROLE_LONG[p.role]}"><input id="edZ${i}" value="${p.num}" inputmode="numeric" maxlength="2" aria-label="Nummer ${ROLE_LONG[p.role]}">`).join('')}</div>
+      <h3>SCHNELLES SPIEL · STARTSIEBEN (NAME · NUMMER)</h3>
+      <div class="ed">${ps.slice(0, ROLES.length).map((p, i) => row(p, 'ed' + i, ROLE_LONG[p.role])).join('')}</div>
+      <h3>SCHNELLES SPIEL · ERSATZBANK</h3>
+      <div class="ed">${ps.slice(ROLES.length).map((p, i) => row(p, 'ed' + (ROLES.length + i), 'Ersatz ' + ROLE_LONG[p.role])).join('')}</div>
+      ${csq ? `<h3>KARRIERE · KADER (${csq.length} SPIELER)</h3><p class="muted" style="margin:0">Gilt für deine laufende Karriere, inklusive Ersatzspielern und Neuzugängen.</p>
+      <div class="ed">${csq.map((p, i) => row(p, 'edC' + i, ROLE_LONG[p.role])).join('')}</div>` : ''}
       <div class="row"><button class="main" data-act="edSave">SPEICHERN</button><button data-act="edReset">ZURÜCKSETZEN</button><button data-act="main">ZURÜCK</button></div></div>`);
     menu.querySelector('#edTeam').onchange = e => ACT.editor(e.target.value);
   },
@@ -2384,8 +2399,11 @@ const ACT = {
     const T = TEAMS[SEL.edit], v = id => menu.querySelector(id).value;
     TEAM_EDIT[T.id] = { n: v('#edTn').trim().slice(0, 30) || undefined, k: v('#edTk').trim().slice(0, 3) || undefined, h1: v('#edH1'), h2: v('#edH2'), a1: v('#edA1'), a2: v('#edA2') };
     store.set(TEAM_KEY, TEAM_EDIT); applyTeam(T); ICONS.clear();
-    ROSTER_EDIT[T.id] = ROLES.map((_, i) => ({ name: menu.querySelector('#edN' + i).value.trim().slice(0, 16), num: clamp(parseInt(menu.querySelector('#edZ' + i).value, 10) || 0, 1, 99) }));
-    store.set(ROSTER_KEY, ROSTER_EDIT); ACT.editor(SEL.edit); const h = menu.querySelector('h2'); if (h) h.textContent = 'KADER GESPEICHERT';
+    const rd = id => ({ name: menu.querySelector(`#${id}N`).value.trim().slice(0, 16), num: clamp(parseInt(menu.querySelector(`#${id}Z`).value, 10) || 0, 1, 99) });
+    ROSTER_EDIT[T.id] = [...ROLES, ...ROLES].map((_, i) => rd('ed' + i));
+    store.set(ROSTER_KEY, ROSTER_EDIT);
+    const csq = CAREER && CAREER.squads[T.id];
+    if (csq) { csq.forEach((p, i) => { if (!menu.querySelector(`#edC${i}N`)) return; const e = rd('edC' + i); if (e.name) p.name = e.name; p.num = e.num; }); fixNumbers(csq); saveCareer(); } ACT.editor(SEL.edit); const h = menu.querySelector('h2'); if (h) h.textContent = 'KADER GESPEICHERT';
   },
   edReset() { const id = SEL.edit; delete ROSTER_EDIT[id]; delete TEAM_EDIT[id]; store.set(ROSTER_KEY, ROSTER_EDIT); store.set(TEAM_KEY, TEAM_EDIT); applyTeam(TEAMS[id]); ICONS.clear(); ACT.editor(id); },
 };

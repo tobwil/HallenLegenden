@@ -2,6 +2,10 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v7.5: Pässe kommen wieder an, Editor für den ganzen Kader
+- **Fehler behoben:** Wer beim Passen die Pfeiltaste gedrückt hielt, steuerte den Empfänger sofort vom Ball weg, nur noch rund 20 % der Pässe kamen an. Jetzt steuert die beim Pass gehaltene Richtung den Empfänger nicht mehr. Erst nach Loslassen oder mit einer neuen Richtung übernimmst du ihn. Steuerst du ihn selbst, lenkt der Pass leicht nach. Angekommene Pässe mit gehaltenem Pfeil: 19 % → 86 %, mit neuer Richtung im Flug: 50 % → 88 %.
+- **Editor:** Neben der Startsieben ist auch die Ersatzbank des Schnellen Spiels editierbar. Bei laufender Karriere gibt es einen eigenen Abschnitt für den kompletten Karriere-Kader (inklusive Neuzugängen), der direkt im Spielstand gespeichert wird. Vorher wirkte der Editor auf die Karriere gar nicht.
+
 ## v7.4: Kraftverlust, Steuerung
 - **Kraft über das Spiel:** Der Abbau ist etwa doppelt so stark wie bisher. Ohne Wechsel sinken Feldspieler bis Spielende im Schnitt auf rund 35 % (vorher rund 70 %, der Balken blieb fast immer grün). Mit Co-Trainer wird jetzt etwa ein Dutzend Mal pro Spiel gewechselt.
 - Bankspieler erholen sich höchstens bis zu ihrer Fitness, nicht mehr auf 105 %

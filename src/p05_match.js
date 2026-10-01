@@ -226,9 +226,11 @@ function matchData(r, boost) {
 // Ersatzbank für Spiele ohne Karriere: je Position ein etwas schwächerer Spieler
 function quickBench(tid) {
   const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#ersatz')), used = new Set(roster(tid).map(p => p.name)), nums = new Set(roster(tid).map(p => p.num));
-  return ROLES.map(role => {
+  return ROLES.map((role, i) => {
     let n; do { n = SUR[(r() * SUR.length) | 0]; } while (used.has(n)); used.add(n);
     let num; do { num = role === 'TW' ? [12, 16, 33, 30][(r() * 4) | 0] : 2 + ((r() * 70) | 0); } while (nums.has(num)); nums.add(num);
+    const ed = ROSTER_EDIT[tid] && ROSTER_EDIT[tid][ROLES.length + i];   // Editor: Plätze 8 bis 14 sind die Ersatzbank
+    if (ed) { if (ed.name) n = ed.name; if (ed.num) num = ed.num; }
     const lv = T.r - 6, v = () => Math.round((r() - 0.5) * 10);
     return { name: n, num, role, att: lv + v(), pas: lv + v(), def: lv + v(), gk: lv + v(), spd: lv + v(), sta: lv + v(), skin: (r() * SKIN.length) | 0, hair: HAIR[(r() * HAIR.length) | 0],
       style: (r() * 6) | 0, beard: r() < 0.35, band: r() < 0.2, tall: role === 'KM' || role === 'RL' || role === 'RR', star: false, trait: '' };
