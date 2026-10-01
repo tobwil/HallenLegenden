@@ -2,10 +2,14 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
-## v7.4: Kraftverlust, Eingabe
+## v7.4: Kraftverlust, Steuerung
 - **Kraft über das Spiel:** Der Abbau ist etwa doppelt so stark wie bisher. Ohne Wechsel sinken Feldspieler bis Spielende im Schnitt auf rund 35 % (vorher rund 70 %, der Balken blieb fast immer grün). Mit Co-Trainer wird jetzt etwa ein Dutzend Mal pro Spiel gewechselt.
 - Bankspieler erholen sich höchstens bis zu ihrer Fitness, nicht mehr auf 105 %
 - **Eingabe:** Tastendrücke werden bis zum nächsten Frame gemerkt. Kurze Tipper auf Pass, Wurf oder Finte gingen vorher verloren, wenn die Taste schon vor dem nächsten Frame wieder losgelassen war.
+- **Passempfang:** Während der Ball zu dir fliegt, steuerst du den Empfänger sofort mit den Pfeilen. Ohne Eingabe läuft er wie bisher automatisch zum Ball, Kempa-Lupfer bleiben automatisch.
+- **Direktpass und Direktwurf:** Pass, Wurf, Kempa oder Finte, gedrückt während der Ball zu dir unterwegs ist, werden beim Fangen sofort ausgeführt
+- **Passrichtung:** Pässe in Laufrichtung suchen zuerst in einem engen Kegel (rund 50°), erst dann weiter. Steht ein Mitspieler klar in Laufrichtung, geht der Pass nicht mehr zu jemandem, der weit daneben steht.
+- **Direktere Bewegung:** Der eigene Spieler beschleunigt, bremst und wendet schneller (etwa 0,1 statt 0,2 s bis zum vollen Tempo). Die CPU-Spieler bewegen sich wie bisher.
 
 ## v7.3: Neue Tastaturbelegung
 - **Pfeile laufen, linke Hand spielt:** S Pass (Abwehr: Spieler wechseln), A Kempa-Trick, Leertaste Wurf/Block, D Finte, beim Aufladen Heber (Abwehr: Ball herausspielen), W oder Shift Sprint. WASD bewegt den Spieler nicht mehr. J/K/L funktionieren weiterhin.

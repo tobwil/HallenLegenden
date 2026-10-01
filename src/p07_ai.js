@@ -97,6 +97,11 @@ function updateGK(g, dt) {
 function humanControl(p, dt) {
   const b = G.ball, sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1);
   if (b.owner === p) {
+    G.inUsedT = G.t;   // Eingaben dieses Frames gehören dem Ballführer, nicht dem nächsten Empfänger
+    const buf = G.inBuf && G.inBuf.p === p && G.t - G.inBuf.t < 0.25 ? G.inBuf.k : null; G.inBufK = buf && G.inBuf.kempa; G.inBuf = null;   // vor dem Fangen gedrückt
+    if (buf === 'a') { IN.pa = true; IN.k = IN.k || G.inBufK; }
+    else if (buf === 'b' && !p.airCatch && G.phase === 'play') { if (IN.b) IN.pb = true; else { shoot(p, IN.y, 0.3); return [0, 0]; } }
+    else if (buf === 'c') IN.pc = true;
     if (p.airCatch) { if (IN.pb || p.airT > 0.24) shoot(p, IN.y || null, 0.7); return [0, 0]; }
     if (IN.pa && !p.charging) { if (IN.k && p.role !== 'TW') kempa(p); else pass(p, choosePass(p, IN.x, IN.y, true)); buzz(12); return [IN.x * sp, IN.y * sp]; }
     if (IN.pb && G.phase === 'play') { p.charging = true; p.charge = 0.3; p.aim = IN.y; }            // kurzes Antippen = schneller Wurf
@@ -133,9 +138,15 @@ function updatePlayer(p, dt) {
     }
   } else {
     const holdStill = (ph === 'restart' && G.ball.owner === p) || p.lie > 0;
-    // Passempfänger (auch der gesteuerte) läuft automatisch zum Ball, bis er ihn hat
+    // Passempfänger läuft automatisch zum Ball, bis er ihn hat. Der gesteuerte nur, solange keine Richtung gedrückt ist
     if (!frozen && !holdStill) {
-      if (G.human === p.team && G.ctrl === p && ph === 'play' && !(G.ball.passTo === p && G.ball.state === 'air')) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
+      const hum = G.human === p.team && G.ctrl === p && ph === 'play', recv = G.ball.passTo === p && G.ball.state === 'air';
+      if (hum && recv && G.inUsedT !== G.t && (IN.pa || IN.pb || IN.pc)) G.inBuf = { p, t: G.t, k: IN.pa ? 'a' : IN.pb ? 'b' : 'c', kempa: IN.k };   // Ball unterwegs zu mir: Aktion für den Fang merken
+      if (recv && G.inBuf && G.inBuf.p === p) G.inBuf.t = G.t;   // gilt den ganzen Flug über, danach noch kurz
+      if (hum && recv && !G.ball.lob && Math.hypot(IN.x, IN.y) > 0.2) {   // mit Richtung selbst laufen (Kempa-Lupfer bleiben automatisch)
+        const sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1); dvx = IN.x * sp; dvy = IN.y * sp; sprint = IN.s;
+      }
+      else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
       else {
         const t = p.role === 'TW' ? updateGK(p, dt) : aiTarget(p, dt);
         if (t) {
@@ -155,7 +166,7 @@ function updatePlayer(p, dt) {
     if (p.charging) { dvx *= 0.45; dvy *= 0.45; }
     if (p.stun > 0) { dvx *= 0.2; dvy *= 0.2; }
     if (p.dash > 0) { dvx = p.vx; dvy = p.vy; }
-    const k = Math.min(1, dt * (p.dash > 0 ? 30 : 11));
+    const k = Math.min(1, dt * (p.dash > 0 ? 30 : G.ctrl === p && G.human === p.team ? 18 : 11));   // eigener Spieler reagiert direkter
     const pv = Math.hypot(p.vx, p.vy), nv = Math.hypot(dvx, dvy);
     if (!G.demo && pv > 3.2 && nv > 3 && (p.vx * dvx + p.vy * dvy) / (pv * nv) < 0.3 && Math.random() < 0.6) AU.squeak();   // Schuhquietschen bei Richtungswechsel
     p.vx += (dvx - p.vx) * k; p.vy += (dvy - p.vy) * k;
