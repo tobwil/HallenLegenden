@@ -54,18 +54,22 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
 
 ### Steuerung
 
+Rechte Hand auf den Pfeiltasten zum Laufen, linke Hand auf WASD und Leertaste für die Aktionen.
+
 | Taste | Angriff | Abwehr |
 |---|---|---|
-| Pfeile / WASD | Laufen | Laufen |
-| Shift | Sprint | Sprint |
-| J | Pass (Richtung = Laufrichtung) | zum ballnächsten Spieler wechseln |
-| Shift + J | Kempa-Trick | – |
-| K / Leertaste | Wurf (antippen = schnell, halten = mehr Wucht, hoch/runter = Ecke) | Blocksprung |
-| L | Finte, beim Aufladen: Heber | Ball herausspielen |
+| Pfeile | Laufen | Laufen |
+| W / Shift | Sprint | Sprint |
+| S | Pass (Richtung = Laufrichtung) | zum ballnächsten Spieler wechseln |
+| A | Kempa-Trick (auch Shift + S) | Spieler wechseln |
+| Leertaste | Wurf (antippen = schnell, halten = mehr Wucht, hoch/runter = Ecke) | Blocksprung |
+| D | Finte, beim Aufladen: Heber | Ball herausspielen |
 | T | Team-Timeout (Deckung umstellen) | |
 | Q | Wechselmenü | |
 | Esc / P | Pause, im Menü: zurück | |
 | M | Ton an/aus | |
+
+J, K und L funktionieren weiterhin als Alternative für Pass, Wurf und Finte.
 
 **Menüs:** Pfeiltasten wählen, Enter bestätigt, Esc oder Backspace geht zurück.
 
@@ -165,18 +169,22 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
 
 ### Controls
 
+Right hand on the arrow keys to move, left hand on WASD and Space for the actions.
+
 | Key | Attack | Defence |
 |---|---|---|
-| Arrows / WASD | Move | Move |
-| Shift | Sprint | Sprint |
-| J | Pass (direction = movement direction) | Switch to the player closest to the ball |
-| Shift + J | Kempa trick | – |
-| K / Space | Shoot (tap = quick, hold = more power, up/down = corner) | Block jump |
-| L | Feint, while charging: lob | Steal the ball |
+| Arrows | Move | Move |
+| W / Shift | Sprint | Sprint |
+| S | Pass (direction = movement direction) | Switch to the player closest to the ball |
+| A | Kempa trick (also Shift + S) | Switch player |
+| Space | Shoot (tap = quick, hold = more power, up/down = corner) | Block jump |
+| D | Feint, while charging: lob | Steal the ball |
 | T | Team timeout (change defence) | |
 | Q | Substitution menu | |
 | Esc / P | Pause, in menus: back | |
 | M | Sound on/off | |
+
+J, K and L still work as alternatives for pass, shoot and feint.
 
 **Menus:** arrow keys to select, Enter to confirm, Esc or Backspace to go back.
 

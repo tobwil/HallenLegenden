@@ -2,6 +2,11 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v7.3: Neue Tastaturbelegung
+- **Pfeile laufen, linke Hand spielt:** S Pass (Abwehr: Spieler wechseln), A Kempa-Trick, Leertaste Wurf/Block, D Finte, beim Aufladen Heber (Abwehr: Ball herausspielen), W oder Shift Sprint. WASD bewegt den Spieler nicht mehr. J/K/L funktionieren weiterhin.
+- Kempa per Tastatur nur noch über A oder Shift + S, damit Sprinten mit W und Passen keinen ungewollten Kempa auslöst
+- Hinweise im Spiel (Laufband beim Anpfiff, „D=HEBER“) und Steuerungsseite angepasst
+
 ## v7.2: Einheitliche Fenster
 - **Feste Fenstergröße:** Alle Menüfenster haben dieselbe Größe und füllen die Spielfläche. Klicks auf Knöpfe oder Karriere-Tabs ändern die Größe nicht mehr, längere Inhalte scrollen im Fenster. Kurze Menüs (Hauptmenü, Optionen, Pause, Taktik) zeigen ihren Inhalt schmal und mittig. Auf dem Handy füllt jedes Fenster mindestens den Bildschirm.
 - **Fehler behoben:** Knöpfe in der Zeitung (z. B. „SIMULIEREN“) waren ohne Hover schwarz auf schwarz, weil die Zeitung die Schriftfarbe `--ink` auf Dunkelbraun setzt

@@ -98,7 +98,7 @@ function humanControl(p, dt) {
   const b = G.ball, sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1);
   if (b.owner === p) {
     if (p.airCatch) { if (IN.pb || p.airT > 0.24) shoot(p, IN.y || null, 0.7); return [0, 0]; }
-    if (IN.pa && !p.charging) { if ((IN.k || (IN.s && !TOUCH.s)) && p.role !== 'TW') kempa(p); else pass(p, choosePass(p, IN.x, IN.y, true)); buzz(12); return [IN.x * sp, IN.y * sp]; }
+    if (IN.pa && !p.charging) { if (IN.k && p.role !== 'TW') kempa(p); else pass(p, choosePass(p, IN.x, IN.y, true)); buzz(12); return [IN.x * sp, IN.y * sp]; }
     if (IN.pb && G.phase === 'play') { p.charging = true; p.charge = 0.3; p.aim = IN.y; }            // kurzes Antippen = schneller Wurf
     else if (IN.b && p.charging) { p.charge = Math.min(1, p.charge + dt / 0.8); p.aim = lerp(p.aim || 0, IN.y, Math.min(1, dt * 10)); }
     if (p.charging && IN.pc) { shoot(p, p.aim, p.charge, true); return [0, 0]; }
