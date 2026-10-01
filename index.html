@@ -30,8 +30,12 @@ body{background:var(--bg) radial-gradient(ellipse at 50% 30%,#1a1430 0%,#07060b 
 #menu.clear{background:linear-gradient(rgba(7,6,11,0),rgba(7,6,11,.55) 70%)}
 #menu[hidden]{display:none}
 .panel{background:var(--panel);border:3px solid var(--ink);box-shadow:6px 6px 0 #000,inset 0 0 0 3px var(--panel2);
-  padding:clamp(10px,2vw,20px);max-width:760px;width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;max-height:100%;overflow:auto}
+  padding:clamp(10px,2vw,20px);width:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;flex:1 1 0;min-height:0;max-height:100%;overflow:auto}
 .panel > *{flex-shrink:0}
+/* kurze Menüs: gleiche Fenstergröße, Inhalt schmal und mittig */
+.panel.narrow{padding-inline:max(clamp(10px,2vw,20px),calc((100% - 600px) / 2))}
+.panel.narrow > :first-child{margin-top:auto}
+.panel.narrow > :last-child{margin-bottom:auto}
 .title{display:flex;flex-direction:column;align-items:center;gap:clamp(10px,2.5vw,22px);text-align:center}
 .logo{font-family:var(--pix);font-size:clamp(22px,6.4vw,64px);line-height:1.05;margin:0;color:var(--gold);letter-spacing:.02em;position:relative;
   text-shadow:0 4px 0 #c96a12,0 8px 0 #7a2c0c,0 12px 0 #000,0 0 40px rgba(255,200,58,.35);animation:bob 3s ease-in-out infinite}
@@ -124,7 +128,8 @@ button.link:hover,button.link:focus-visible{background:none;color:var(--gold)}
 .np-vs{display:flex;align-items:center;gap:10px}
 .np-vs img{width:36px;height:36px;image-rendering:pixelated}
 .np-vs b{font-family:var(--pix);font-size:9px}
-.paper button{box-shadow:2px 2px 0 #000}
+.paper button{box-shadow:2px 2px 0 #000;color:#f3ead6}
+.paper button:hover,.paper button:focus-visible,.paper button.on{color:#1a1205}
 .np-meter{height:8px;background:#cfc3a3;border:1px solid #1d1a16}.np-meter i{display:block;height:100%;background:#1d1a16}
 .paper table td{color:#1d1a16;border-top-color:#c9bd9e}
 .paper tr.me td{color:#a3170d;font-weight:bold}
@@ -142,7 +147,7 @@ button:focus-visible{box-shadow:0 0 0 3px var(--cyan),3px 3px 0 #000}
   #menu{position:fixed;inset:0;z-index:20;justify-content:flex-start;background:rgba(7,6,11,.95);
     padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
   #menu.clear{background:rgba(7,6,11,.72);justify-content:center}
-  .panel{max-height:none;overflow:visible;padding:12px;box-shadow:4px 4px 0 #000}
+  .panel{flex:1 0 auto;max-height:none;overflow:visible;padding:12px;box-shadow:4px 4px 0 #000}
   .logo{font-size:clamp(24px,9vw,52px)}
   .paper{padding:10px}
 }
@@ -2260,7 +2265,7 @@ const ACT = {
   },
   main() {
     SCREEN = 'main'; AU.startMusic();
-    showMenu(`<div class="panel" style="max-width:460px"><h2>HAUPTMENÜ</h2><div class="btns menu-list">
+    showMenu(`<div class="panel narrow"><h2>HAUPTMENÜ</h2><div class="btns menu-list">
       ${savedInfo() ? `<button class="main" data-act="load">FORTSETZEN <i>${savedInfo()}</i></button>` : ''}
       <button class="${savedInfo() ? '' : 'main'}" data-act="quick">SCHNELLES SPIEL <i>1 gegen CPU</i></button>
       <button data-act="career">KARRIERE <i>${CAREER ? `${esc(TEAMS[CAREER.team].k)} · ${CAREER.season.lg}. Liga · ${CAREER.year}/${String(CAREER.year + 1).slice(2)}` : 'Manager & Liga'}</i></button>
@@ -2311,7 +2316,7 @@ const ACT = {
   sound() { AU.toggle(); if (AU.on) AU.startMusic(); ACT.options(); },
   options() {
     const sl = (k, l) => `<span class="tag">${l}</span><input type="range" id="vol_${k}" min="0" max="100" value="${Math.round(AU.vol[k] * 100)}" aria-label="${l}"><span id="vv_${k}">${Math.round(AU.vol[k] * 100)}</span>`;
-    showMenu(`<div class="panel" style="max-width:520px"><h2>OPTIONEN</h2>
+    showMenu(`<div class="panel narrow"><h2>OPTIONEN</h2>
       <div class="ed" style="grid-template-columns:auto 1fr 40px">${sl('master', 'GESAMT')}${sl('music', 'MUSIK')}${sl('sfx', 'EFFEKTE')}${sl('crowd', 'PUBLIKUM')}</div>
       <div class="row"><span class="tag" style="min-width:150px">SPIELTEMPO</span>${[1, 0.85, 0.7].map(v => `<button class="small ${SETTINGS.speed === v ? 'on' : ''}" data-act="speed" data-v="${v}">${Math.round(v * 100)} %</button>`).join('')}</div>
       <div class="row"><span class="tag" style="min-width:150px">TON</span><button class="small ${AU.on ? 'on' : ''}" data-act="sound">${AU.on ? 'AN' : 'AUS'}</button></div>
@@ -2325,7 +2330,7 @@ const ACT = {
   sndTest() { AU.init(); AU.whistle(1); setTimeout(() => { AU.cheer(0.7); AU.horn(); }, 400); setTimeout(() => AU.say('Tor für die Heimmannschaft! Torschütze mit der Nummer 7!'), 900); },
   pause() {
     SCREEN = 'pause';
-    showMenu(`<div class="panel" style="max-width:460px"><h2>PAUSE</h2><p class="muted">${esc(TEAMS[G.tid[0]].n)} ${G.score[0]} : ${G.score[1]} ${esc(TEAMS[G.tid[1]].n)}</p>
+    showMenu(`<div class="panel narrow"><h2>PAUSE</h2><p class="muted">${esc(TEAMS[G.tid[0]].n)} ${G.score[0]} : ${G.score[1]} ${esc(TEAMS[G.tid[1]].n)}</p>
       <div class="btns menu-list"><button class="main" data-act="resume">WEITERSPIELEN</button>
       ${G.human >= 0 ? `<div class="row"><span class="tag" style="min-width:120px">DECKUNG</span>${DEF_SYS.map((d, i) => `<button class="small ${G.tact[G.human] === i ? 'on' : ''}" data-act="tact" data-v="${i}">${d.n}</button>`).join('')}</div>` : ''}
       ${G.human >= 0 ? `<button data-act="subs">WECHSELN <i>Q · Kraft der Spieler</i></button>` : ''}
@@ -2380,7 +2385,7 @@ let SEASON_PICK = false;
 function startMatch(a, b, o) { AU.stopMusic(); newMatch(a, b, o); G.tact[o.human] = SEL.def; G.tact[1 - o.human] = (Math.random() * 3) | 0; hideMenu(); }
 function showTactics() {
   if (!G) return;
-  showMenu(`<div class="panel" style="max-width:460px"><h2>TEAM-TIMEOUT · TAKTIK</h2><p class="muted">Wähle die Deckung für die nächsten Minuten.</p>
+  showMenu(`<div class="panel narrow"><h2>TEAM-TIMEOUT · TAKTIK</h2><p class="muted">Wähle die Deckung für die nächsten Minuten.</p>
     <div class="btns menu-list">${DEF_SYS.map((d, i) => `<button class="${i === G.tact[G.human] ? 'main' : ''}" data-act="tact" data-v="${i}" ${i === G.tact[G.human] ? 'data-back' : ''}>${d.n}-DECKUNG <i>${['kompakt am Kreis', 'Spitze stört die Mitte', 'offensiv, viele Ballgewinne'][i]}</i></button>`).join('')}</div></div>`, true);
 }
 
