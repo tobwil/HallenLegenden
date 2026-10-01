@@ -28,7 +28,7 @@ function pass(p, q) {
   launch(p.x + p.face * 0.3, p.y, p.z + 1.5, tx, ty, 1.3, sp);
   b.passTo = q; b.shot = null; b.nc = p; b.ncT = 0.25; b.last = p; p.throwT = 0.22; p.hold = 0;
   q.tx = tx; q.ty = ty;
-  if (G.human === p.team) G.ctrl = q;
+  G.recvSteer = null; if (G.human === p.team) { G.ctrl = q; G.recvLock = { p: q, x: IN.x, y: IN.y }; }   // beim Pass gehaltene Richtung steuert den Empfänger nicht
   AU.pass();
 }
 // Kempa-Trick: Lupfer in den Torraum, Mitspieler fängt im Sprung

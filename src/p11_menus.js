@@ -187,8 +187,9 @@ const ACT = {
   rematch() { const a = G.tid[0], b = G.tid[1]; startMatch(a, b, { human: 0, halfLen: G.halfLen, diff: G.diff, label: 'REVANCHE' }); },
   editor(v) {
     const tid = v !== undefined ? +v : (SEL.edit ?? SEL.a); SEL.edit = tid;
-    const ps = roster(tid);
+    const ps = roster(tid).concat(quickBench(tid)), csq = CAREER && CAREER.squads[tid];
     const T = TEAMS[tid];
+    const row = (p, id, lbl) => `<span class="tag">${p.role}</span><input id="${id}N" value="${esc(p.name)}" maxlength="16" aria-label="Name ${lbl}"><input id="${id}Z" value="${p.num}" inputmode="numeric" maxlength="2" aria-label="Nummer ${lbl}">`;
     showMenu(`<div class="panel"><h2>EDITOR</h2>
       <p class="muted">Vereins- und Spielernamen sind Platzhalter. Hier kannst du alles umbenennen und die Farben anpassen. Gespeichert wird nur in diesem Browser.</p>
       <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg}. Liga · ${esc(X.n)}</option>`).join('')}</select>
@@ -196,8 +197,12 @@ const ACT = {
       <div class="ed"><span class="tag">NAME</span><input id="edTn" value="${esc(T.n)}" maxlength="30" aria-label="Vereinsname"><input id="edTk" value="${esc(T.k)}" maxlength="3" aria-label="Kürzel"></div>
       <div class="row"><span class="tag" style="min-width:120px">HEIMTRIKOT</span><input type="color" id="edH1" value="${T.home.c1}" aria-label="Heim Trikotfarbe"><input type="color" id="edH2" value="${T.home.c2}" aria-label="Heim Zweitfarbe"><img src="${kitIcon(T.home)}" width="32" height="32" alt="" style="image-rendering:pixelated">
         <span class="tag" style="min-width:110px;margin-left:12px">AUSWÄRTS</span><input type="color" id="edA1" value="${T.away.c1}" aria-label="Auswärts Trikotfarbe"><input type="color" id="edA2" value="${T.away.c2}" aria-label="Auswärts Zweitfarbe"><img src="${kitIcon(T.away)}" width="32" height="32" alt="" style="image-rendering:pixelated"></div>
-      <h3>KADER (NAME · NUMMER)</h3>
-      <div class="ed">${ps.map((p, i) => `<span class="tag">${p.role}</span><input id="edN${i}" value="${esc(p.name)}" maxlength="16" aria-label="Name ${ROLE_LONG[p.role]}"><input id="edZ${i}" value="${p.num}" inputmode="numeric" maxlength="2" aria-label="Nummer ${ROLE_LONG[p.role]}">`).join('')}</div>
+      <h3>SCHNELLES SPIEL · STARTSIEBEN (NAME · NUMMER)</h3>
+      <div class="ed">${ps.slice(0, ROLES.length).map((p, i) => row(p, 'ed' + i, ROLE_LONG[p.role])).join('')}</div>
+      <h3>SCHNELLES SPIEL · ERSATZBANK</h3>
+      <div class="ed">${ps.slice(ROLES.length).map((p, i) => row(p, 'ed' + (ROLES.length + i), 'Ersatz ' + ROLE_LONG[p.role])).join('')}</div>
+      ${csq ? `<h3>KARRIERE · KADER (${csq.length} SPIELER)</h3><p class="muted" style="margin:0">Gilt für deine laufende Karriere, inklusive Ersatzspielern und Neuzugängen.</p>
+      <div class="ed">${csq.map((p, i) => row(p, 'edC' + i, ROLE_LONG[p.role])).join('')}</div>` : ''}
       <div class="row"><button class="main" data-act="edSave">SPEICHERN</button><button data-act="edReset">ZURÜCKSETZEN</button><button data-act="main">ZURÜCK</button></div></div>`);
     menu.querySelector('#edTeam').onchange = e => ACT.editor(e.target.value);
   },
@@ -205,8 +210,11 @@ const ACT = {
     const T = TEAMS[SEL.edit], v = id => menu.querySelector(id).value;
     TEAM_EDIT[T.id] = { n: v('#edTn').trim().slice(0, 30) || undefined, k: v('#edTk').trim().slice(0, 3) || undefined, h1: v('#edH1'), h2: v('#edH2'), a1: v('#edA1'), a2: v('#edA2') };
     store.set(TEAM_KEY, TEAM_EDIT); applyTeam(T); ICONS.clear();
-    ROSTER_EDIT[T.id] = ROLES.map((_, i) => ({ name: menu.querySelector('#edN' + i).value.trim().slice(0, 16), num: clamp(parseInt(menu.querySelector('#edZ' + i).value, 10) || 0, 1, 99) }));
-    store.set(ROSTER_KEY, ROSTER_EDIT); ACT.editor(SEL.edit); const h = menu.querySelector('h2'); if (h) h.textContent = 'KADER GESPEICHERT';
+    const rd = id => ({ name: menu.querySelector(`#${id}N`).value.trim().slice(0, 16), num: clamp(parseInt(menu.querySelector(`#${id}Z`).value, 10) || 0, 1, 99) });
+    ROSTER_EDIT[T.id] = [...ROLES, ...ROLES].map((_, i) => rd('ed' + i));
+    store.set(ROSTER_KEY, ROSTER_EDIT);
+    const csq = CAREER && CAREER.squads[T.id];
+    if (csq) { csq.forEach((p, i) => { if (!menu.querySelector(`#edC${i}N`)) return; const e = rd('edC' + i); if (e.name) p.name = e.name; p.num = e.num; }); fixNumbers(csq); saveCareer(); } ACT.editor(SEL.edit); const h = menu.querySelector('h2'); if (h) h.textContent = 'KADER GESPEICHERT';
   },
   edReset() { const id = SEL.edit; delete ROSTER_EDIT[id]; delete TEAM_EDIT[id]; store.set(ROSTER_KEY, ROSTER_EDIT); store.set(TEAM_KEY, TEAM_EDIT); applyTeam(TEAMS[id]); ICONS.clear(); ACT.editor(id); },
 };

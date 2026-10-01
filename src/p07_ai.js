@@ -143,8 +143,10 @@ function updatePlayer(p, dt) {
       const hum = G.human === p.team && G.ctrl === p && ph === 'play', recv = G.ball.passTo === p && G.ball.state === 'air';
       if (hum && recv && G.inUsedT !== G.t && (IN.pa || IN.pb || IN.pc)) G.inBuf = { p, t: G.t, k: IN.pa ? 'a' : IN.pb ? 'b' : 'c', kempa: IN.k };   // Ball unterwegs zu mir: Aktion für den Fang merken
       if (recv && G.inBuf && G.inBuf.p === p) G.inBuf.t = G.t;   // gilt den ganzen Flug über, danach noch kurz
-      if (hum && recv && !G.ball.lob && Math.hypot(IN.x, IN.y) > 0.2) {   // mit Richtung selbst laufen (Kempa-Lupfer bleiben automatisch)
-        const sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1); dvx = IN.x * sp; dvy = IN.y * sp; sprint = IN.s;
+      const lk = G.recvLock, im = Math.hypot(IN.x, IN.y);
+      if (lk && (lk.p !== p || im < 0.2 || (IN.x * lk.x + IN.y * lk.y) / (im * (Math.hypot(lk.x, lk.y) || 1)) < 0.9)) G.recvLock = null;   // losgelassen oder neue Richtung
+      if (hum && recv && !G.ball.lob && im > 0.2 && !G.recvLock) {   // mit neuer Richtung selbst laufen (Kempa-Lupfer bleiben automatisch)
+        const sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1); dvx = IN.x * sp; dvy = IN.y * sp; sprint = IN.s; G.recvSteer = p;
       }
       else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
       else {
