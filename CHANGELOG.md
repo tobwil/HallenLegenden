@@ -2,6 +2,10 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v7.2: Einheitliche Fenster
+- **Feste Fenstergröße:** Alle Menüfenster haben dieselbe Größe und füllen die Spielfläche. Klicks auf Knöpfe oder Karriere-Tabs ändern die Größe nicht mehr, längere Inhalte scrollen im Fenster. Kurze Menüs (Hauptmenü, Optionen, Pause, Taktik) zeigen ihren Inhalt schmal und mittig. Auf dem Handy füllt jedes Fenster mindestens den Bildschirm.
+- **Fehler behoben:** Knöpfe in der Zeitung (z. B. „SIMULIEREN“) waren ohne Hover schwarz auf schwarz, weil die Zeitung die Schriftfarbe `--ink` auf Dunkelbraun setzt
+
 ## v7.1: Veröffentlichung
 - **GitHub Pages:** spielbar unter https://tobwil.github.io/HallenLegenden/. `index.html` ist jetzt ein vollständiges HTML-Dokument (Titel, Beschreibung, Vorschau-Tags und Favicon im `<head>`), dazu `.nojekyll`
 - **Lizenz:** Open Source unter MIT, © 2026 tobwil. Hinweis auf dem Titelbildschirm

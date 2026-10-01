@@ -92,7 +92,7 @@ const ACT = {
   },
   main() {
     SCREEN = 'main'; AU.startMusic();
-    showMenu(`<div class="panel" style="max-width:460px"><h2>HAUPTMENÜ</h2><div class="btns menu-list">
+    showMenu(`<div class="panel narrow"><h2>HAUPTMENÜ</h2><div class="btns menu-list">
       ${savedInfo() ? `<button class="main" data-act="load">FORTSETZEN <i>${savedInfo()}</i></button>` : ''}
       <button class="${savedInfo() ? '' : 'main'}" data-act="quick">SCHNELLES SPIEL <i>1 gegen CPU</i></button>
       <button data-act="career">KARRIERE <i>${CAREER ? `${esc(TEAMS[CAREER.team].k)} · ${CAREER.season.lg}. Liga · ${CAREER.year}/${String(CAREER.year + 1).slice(2)}` : 'Manager & Liga'}</i></button>
@@ -143,7 +143,7 @@ const ACT = {
   sound() { AU.toggle(); if (AU.on) AU.startMusic(); ACT.options(); },
   options() {
     const sl = (k, l) => `<span class="tag">${l}</span><input type="range" id="vol_${k}" min="0" max="100" value="${Math.round(AU.vol[k] * 100)}" aria-label="${l}"><span id="vv_${k}">${Math.round(AU.vol[k] * 100)}</span>`;
-    showMenu(`<div class="panel" style="max-width:520px"><h2>OPTIONEN</h2>
+    showMenu(`<div class="panel narrow"><h2>OPTIONEN</h2>
       <div class="ed" style="grid-template-columns:auto 1fr 40px">${sl('master', 'GESAMT')}${sl('music', 'MUSIK')}${sl('sfx', 'EFFEKTE')}${sl('crowd', 'PUBLIKUM')}</div>
       <div class="row"><span class="tag" style="min-width:150px">SPIELTEMPO</span>${[1, 0.85, 0.7].map(v => `<button class="small ${SETTINGS.speed === v ? 'on' : ''}" data-act="speed" data-v="${v}">${Math.round(v * 100)} %</button>`).join('')}</div>
       <div class="row"><span class="tag" style="min-width:150px">TON</span><button class="small ${AU.on ? 'on' : ''}" data-act="sound">${AU.on ? 'AN' : 'AUS'}</button></div>
@@ -157,7 +157,7 @@ const ACT = {
   sndTest() { AU.init(); AU.whistle(1); setTimeout(() => { AU.cheer(0.7); AU.horn(); }, 400); setTimeout(() => AU.say('Tor für die Heimmannschaft! Torschütze mit der Nummer 7!'), 900); },
   pause() {
     SCREEN = 'pause';
-    showMenu(`<div class="panel" style="max-width:460px"><h2>PAUSE</h2><p class="muted">${esc(TEAMS[G.tid[0]].n)} ${G.score[0]} : ${G.score[1]} ${esc(TEAMS[G.tid[1]].n)}</p>
+    showMenu(`<div class="panel narrow"><h2>PAUSE</h2><p class="muted">${esc(TEAMS[G.tid[0]].n)} ${G.score[0]} : ${G.score[1]} ${esc(TEAMS[G.tid[1]].n)}</p>
       <div class="btns menu-list"><button class="main" data-act="resume">WEITERSPIELEN</button>
       ${G.human >= 0 ? `<div class="row"><span class="tag" style="min-width:120px">DECKUNG</span>${DEF_SYS.map((d, i) => `<button class="small ${G.tact[G.human] === i ? 'on' : ''}" data-act="tact" data-v="${i}">${d.n}</button>`).join('')}</div>` : ''}
       ${G.human >= 0 ? `<button data-act="subs">WECHSELN <i>Q · Kraft der Spieler</i></button>` : ''}
@@ -212,7 +212,7 @@ let SEASON_PICK = false;
 function startMatch(a, b, o) { AU.stopMusic(); newMatch(a, b, o); G.tact[o.human] = SEL.def; G.tact[1 - o.human] = (Math.random() * 3) | 0; hideMenu(); }
 function showTactics() {
   if (!G) return;
-  showMenu(`<div class="panel" style="max-width:460px"><h2>TEAM-TIMEOUT · TAKTIK</h2><p class="muted">Wähle die Deckung für die nächsten Minuten.</p>
+  showMenu(`<div class="panel narrow"><h2>TEAM-TIMEOUT · TAKTIK</h2><p class="muted">Wähle die Deckung für die nächsten Minuten.</p>
     <div class="btns menu-list">${DEF_SYS.map((d, i) => `<button class="${i === G.tact[G.human] ? 'main' : ''}" data-act="tact" data-v="${i}" ${i === G.tact[G.human] ? 'data-back' : ''}>${d.n}-DECKUNG <i>${['kompakt am Kreis', 'Spitze stört die Mitte', 'offensiv, viele Ballgewinne'][i]}</i></button>`).join('')}</div></div>`, true);
 }
 
