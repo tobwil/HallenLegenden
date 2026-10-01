@@ -85,7 +85,7 @@ cv.addEventListener('pointerdown', () => { if (G && !G.demo && ['intro', 'replay
 
 let lastT = performance.now();
 function frame(now) {
-  const dt = Math.min(1 / 30, (now - lastT) / 1000); lastT = now;
+  const dt = Math.max(0, Math.min(1 / 30, (now - lastT) / 1000)); lastT = now;
   readInput(dt); menuPad(); updateTouchLabels();
   document.body.classList.toggle('ingame', !!(G && !G.demo));
   if (G && !G.paused) {

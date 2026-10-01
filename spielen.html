@@ -1,4 +1,11 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{margin:0}</style></head><body>
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal und Transfermarkt. Läuft direkt im Browser, am Desktop und auf dem Handy.">
+<meta name="author" content="tobwil"><meta name="theme-color" content="#07060b">
+<meta property="og:type" content="website"><meta property="og:title" content="Hallen-Legenden"><meta property="og:description" content="Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal und Transfermarkt. Läuft direkt im Browser, am Desktop und auf dem Handy."><meta property="og:url" content="https://tobwil.github.io/HallenLegenden/">
+<link rel="canonical" href="https://tobwil.github.io/HallenLegenden/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤾</text></svg>">
+<style>html,body{margin:0}</style>
 <title>Hallen-Legenden</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -195,6 +202,7 @@ body.touch.ingame #pad{display:block}
 #tbPause{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));width:46px;height:46px;min-height:0;padding:0;text-align:center;font-family:var(--pix);font-size:12px;opacity:.8;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){.logo,.logo::after,.press{animation:none}}
 </style>
+</head><body>
 
 <div id="wrap">
   <canvas id="cv" width="640" height="360" aria-label="Spielfeld"></canvas>
@@ -2246,7 +2254,8 @@ const ACT = {
     addEventListener('keydown', function anyKey(e) { if (SCREEN === 'title' && !['Tab', 'ShiftLeft', 'ShiftRight'].includes(e.code)) { e.preventDefault(); ACT.main(); } removeEventListener('keydown', anyKey); }, { once: true });
     showMenu(`<div class="title"><p class="logo">HALLEN-<br>LEGENDEN<span>HANDBALL 26/27</span></p>
       <button class="press" data-act="main" autofocus>DRÜCKE START</button>
-      <p class="legal">Inoffizielles Fan-Spiel. Vereinsnamen nur zur Zuordnung, ohne Logos und ohne Verbindung zu Liga oder Vereinen.</p></div>`, true);
+      <p class="legal">Inoffizielles Fan-Spiel. Vereinsnamen nur zur Zuordnung, ohne Logos und ohne Verbindung zu Liga oder Vereinen.</p>
+      <p class="legal">© 2026 tobwil · Open Source (MIT) · github.com/tobwil/HallenLegenden</p></div>`, true);
   },
   main() {
     SCREEN = 'main'; AU.startMusic();
@@ -3242,7 +3251,7 @@ cv.addEventListener('pointerdown', () => { if (G && !G.demo && ['intro', 'replay
 
 let lastT = performance.now();
 function frame(now) {
-  const dt = Math.min(1 / 30, (now - lastT) / 1000); lastT = now;
+  const dt = Math.max(0, Math.min(1 / 30, (now - lastT) / 1000)); lastT = now;
   readInput(dt); menuPad(); updateTouchLabels();
   document.body.classList.toggle('ingame', !!(G && !G.demo));
   if (G && !G.paused) {

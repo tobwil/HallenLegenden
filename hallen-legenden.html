@@ -2245,7 +2245,8 @@ const ACT = {
     addEventListener('keydown', function anyKey(e) { if (SCREEN === 'title' && !['Tab', 'ShiftLeft', 'ShiftRight'].includes(e.code)) { e.preventDefault(); ACT.main(); } removeEventListener('keydown', anyKey); }, { once: true });
     showMenu(`<div class="title"><p class="logo">HALLEN-<br>LEGENDEN<span>HANDBALL 26/27</span></p>
       <button class="press" data-act="main" autofocus>DRÜCKE START</button>
-      <p class="legal">Inoffizielles Fan-Spiel. Vereinsnamen nur zur Zuordnung, ohne Logos und ohne Verbindung zu Liga oder Vereinen.</p></div>`, true);
+      <p class="legal">Inoffizielles Fan-Spiel. Vereinsnamen nur zur Zuordnung, ohne Logos und ohne Verbindung zu Liga oder Vereinen.</p>
+      <p class="legal">© 2026 tobwil · Open Source (MIT) · github.com/tobwil/HallenLegenden</p></div>`, true);
   },
   main() {
     SCREEN = 'main'; AU.startMusic();
@@ -3241,7 +3242,7 @@ cv.addEventListener('pointerdown', () => { if (G && !G.demo && ['intro', 'replay
 
 let lastT = performance.now();
 function frame(now) {
-  const dt = Math.min(1 / 30, (now - lastT) / 1000); lastT = now;
+  const dt = Math.max(0, Math.min(1 / 30, (now - lastT) / 1000)); lastT = now;
   readInput(dt); menuPad(); updateTouchLabels();
   document.body.classList.toggle('ingame', !!(G && !G.demo));
   if (G && !G.paused) {
