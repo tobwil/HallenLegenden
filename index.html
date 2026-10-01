@@ -1222,13 +1222,13 @@ function choosePass(p, dx, dy, det = false, cone = 0.62) {
 }
 function pass(p, q) {
   if (!q) return;
-  const b = G.ball, d = dist(p.x, p.y, q.x, q.y), sp = d > 14 ? 18 : 13.5, t = d / sp;
+  const b = G.ball, d = dist(p.x, p.y, q.x, q.y), sp = d > 14 ? 21 : 16.5, t = d / sp;
   const tp = { x: clamp(q.x + q.vx * t * 0.85, 0.3, CW - 0.3), y: clamp(q.y + q.vy * t * 0.85, 0.3, CH - 0.3) };
   pushOut(tp, 6.4); const tx = tp.x, ty = tp.y;
   launch(p.x + p.face * 0.3, p.y, p.z + 1.5, tx, ty, 1.3, sp);
   b.passTo = q; b.shot = null; b.nc = p; b.ncT = 0.25; b.last = p; p.throwT = 0.22; p.hold = 0;
   q.tx = tx; q.ty = ty;
-  G.recvSteer = null; if (G.human === p.team) { G.ctrl = q; G.recvLock = { p: q, x: IN.x, y: IN.y }; }   // beim Pass gehaltene Richtung steuert den Empfänger nicht
+  if (G.human === p.team) { G.ctrl = q; G.recvLock = { p: q, x: IN.x, y: IN.y }; }   // beim Pass gehaltene Richtung steuert den Empfänger nicht
   AU.pass();
 }
 // Kempa-Trick: Lupfer in den Torraum, Mitspieler fängt im Sprung
@@ -1476,8 +1476,9 @@ function updatePlayer(p, dt) {
       if (recv && G.inBuf && G.inBuf.p === p) G.inBuf.t = G.t;   // gilt den ganzen Flug über, danach noch kurz
       const lk = G.recvLock, im = Math.hypot(IN.x, IN.y);
       if (lk && (lk.p !== p || im < 0.2 || (IN.x * lk.x + IN.y * lk.y) / (im * (Math.hypot(lk.x, lk.y) || 1)) < 0.9)) G.recvLock = null;   // losgelassen oder neue Richtung
-      if (hum && recv && !G.ball.lob && im > 0.2 && !G.recvLock) {   // mit neuer Richtung selbst laufen (Kempa-Lupfer bleiben automatisch)
-        const sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1); dvx = IN.x * sp; dvy = IN.y * sp; sprint = IN.s; G.recvSteer = p;
+      if (hum && recv && !G.ball.lob && im > 0.2 && !G.recvLock) {   // neue Richtung: Fangpunkt bis 0,6 m verschieben, der Ball fliegt gerade weiter (Kempa-Lupfer bleiben automatisch)
+        const dx = p.tx + IN.x * 0.6 - p.x, dy = p.ty + IN.y * 0.6 - p.y, d = Math.hypot(dx, dy), spd = runSpeed(p) * 1.25, k = d > 1.2 ? 1 : d / 1.2;
+        if (d > 0.05) { dvx = dx / d * spd * k; dvy = dy / d * spd * k; } sprint = d > 2;
       }
       else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
       else {
@@ -1572,12 +1573,6 @@ function updateBall(dt) {
     return;
   }
   b.ncT -= dt;
-  // Selbst gesteuerter Empfänger: Pass lenkt leicht nach, damit kleine Laufkorrekturen ihn nicht kosten
-  if (b.passTo && G.recvSteer === b.passTo && !b.lob && b.state === 'air') {
-    const q = b.passTo, v = Math.hypot(b.vx, b.vy), a = Math.atan2(b.vy, b.vx), want = Math.atan2(q.y - b.y, q.x - b.x);
-    let da = want - a; da = Math.atan2(Math.sin(da), Math.cos(da)); const na = a + clamp(da, -2.5 * dt, 2.5 * dt);
-    b.vx = Math.cos(na) * v; b.vy = Math.sin(na) * v;
-  } else if (!b.passTo) G.recvSteer = null;
   b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
   if (b.z <= 0) {
     b.z = 0;

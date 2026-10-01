@@ -20,12 +20,6 @@ function updateBall(dt) {
     return;
   }
   b.ncT -= dt;
-  // Selbst gesteuerter Empfänger: Pass lenkt leicht nach, damit kleine Laufkorrekturen ihn nicht kosten
-  if (b.passTo && G.recvSteer === b.passTo && !b.lob && b.state === 'air') {
-    const q = b.passTo, v = Math.hypot(b.vx, b.vy), a = Math.atan2(b.vy, b.vx), want = Math.atan2(q.y - b.y, q.x - b.x);
-    let da = want - a; da = Math.atan2(Math.sin(da), Math.cos(da)); const na = a + clamp(da, -2.5 * dt, 2.5 * dt);
-    b.vx = Math.cos(na) * v; b.vy = Math.sin(na) * v;
-  } else if (!b.passTo) G.recvSteer = null;
   b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
   if (b.z <= 0) {
     b.z = 0;

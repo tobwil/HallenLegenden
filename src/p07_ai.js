@@ -145,8 +145,9 @@ function updatePlayer(p, dt) {
       if (recv && G.inBuf && G.inBuf.p === p) G.inBuf.t = G.t;   // gilt den ganzen Flug über, danach noch kurz
       const lk = G.recvLock, im = Math.hypot(IN.x, IN.y);
       if (lk && (lk.p !== p || im < 0.2 || (IN.x * lk.x + IN.y * lk.y) / (im * (Math.hypot(lk.x, lk.y) || 1)) < 0.9)) G.recvLock = null;   // losgelassen oder neue Richtung
-      if (hum && recv && !G.ball.lob && im > 0.2 && !G.recvLock) {   // mit neuer Richtung selbst laufen (Kempa-Lupfer bleiben automatisch)
-        const sp = runSpeed(p) * (IN.s && p.st > 0.05 ? 1.3 : 1); dvx = IN.x * sp; dvy = IN.y * sp; sprint = IN.s; G.recvSteer = p;
+      if (hum && recv && !G.ball.lob && im > 0.2 && !G.recvLock) {   // neue Richtung: Fangpunkt bis 0,6 m verschieben, der Ball fliegt gerade weiter (Kempa-Lupfer bleiben automatisch)
+        const dx = p.tx + IN.x * 0.6 - p.x, dy = p.ty + IN.y * 0.6 - p.y, d = Math.hypot(dx, dy), spd = runSpeed(p) * 1.25, k = d > 1.2 ? 1 : d / 1.2;
+        if (d > 0.05) { dvx = dx / d * spd * k; dvy = dy / d * spd * k; } sprint = d > 2;
       }
       else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
       else {

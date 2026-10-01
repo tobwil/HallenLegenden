@@ -2,6 +2,10 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v7.6: Schnellere Pässe, keine Kurvenbälle
+- **Pässe** fliegen rund 20 % schneller (kurz 16,5 statt 13,5 m/s, lang 21 statt 18 m/s), mittlere Flugzeit 0,47 statt 0,62 s
+- **Keine Kurvenbälle mehr:** Die Ball-Lenkung aus v7.5 ist entfernt. Mit einer neuen Richtung verschiebst du den Empfänger während des Flugs nur noch bis 0,6 m um den Fangpunkt, der Ball fliegt gerade. Angekommene Pässe: 83–87 % in allen Fällen.
+
 ## v7.5: Pässe kommen wieder an, Editor für den ganzen Kader
 - **Fehler behoben:** Wer beim Passen die Pfeiltaste gedrückt hielt, steuerte den Empfänger sofort vom Ball weg, nur noch rund 20 % der Pässe kamen an. Jetzt steuert die beim Pass gehaltene Richtung den Empfänger nicht mehr. Erst nach Loslassen oder mit einer neuen Richtung übernimmst du ihn. Steuerst du ihn selbst, lenkt der Pass leicht nach. Angekommene Pässe mit gehaltenem Pfeil: 19 % → 86 %, mit neuer Richtung im Flug: 50 % → 88 %.
 - **Editor:** Neben der Startsieben ist auch die Ersatzbank des Schnellen Spiels editierbar. Bei laufender Karriere gibt es einen eigenen Abschnitt für den kompletten Karriere-Kader (inklusive Neuzugängen), der direkt im Spielstand gespeichert wird. Vorher wirkte der Editor auf die Karriere gar nicht.
