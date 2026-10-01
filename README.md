@@ -3,7 +3,19 @@
 [![Jetzt spielen / Play now](https://img.shields.io/badge/%E2%96%B6%20Jetzt%20spielen%20%2F%20Play%20now-tobwil.github.io%2FHallenLegenden-ffc83a?style=for-the-badge&labelColor=07060b)](https://tobwil.github.io/HallenLegenden/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3ddc84?style=for-the-badge&labelColor=07060b)](LICENSE)
 
-**[Deutsch](#deutsch) · [English](#english)**
+**[Screenshots](#screenshots) · [Deutsch](#deutsch) · [English](#english)**
+
+## Screenshots
+
+Echte Aufnahmen aus dem Browserspiel. Für die volle Ansicht auf ein Bild klicken.
+
+Actual browser gameplay and menus. Click any image to view it at full size.
+
+| Spielgeschehen · Gameplay | Titelbildschirm · Title screen |
+|:---:|:---:|
+| [![Handball-Partie Kiel gegen Flensburg in der Pixel-Halle mit Anzeigetafel und Radar](docs/screenshots/gameplay.jpg)](docs/screenshots/gameplay.jpg) | [![Hallen-Legenden: Titelbildschirm mit Pixel-Halle und Start-Button](docs/screenshots/title-screen.jpg)](docs/screenshots/title-screen.jpg) |
+| **Teamauswahl · Team selection** | **Karriere & Handball-Kurier · Career & newspaper** |
+| [![Schnelles Spiel: Mannschaften, Teamwerte, Schwierigkeit und Abwehrsystem auswählen](docs/screenshots/team-selection.jpg)](docs/screenshots/team-selection.jpg) | [![Karriere-Modus mit Handball-Kurier, nächstem Spiel, Tabelle, Budget und Vorstandsziel](docs/screenshots/career-newspaper.jpg)](docs/screenshots/career-newspaper.jpg) |
 
 ---
 
@@ -88,6 +100,7 @@ index.html            spielbare Datei, wird von GitHub Pages ausgeliefert
 spielen.html          Kopie von index.html
 hallen-legenden.html  dieselbe Seite ohne <html>-Gerüst (für die Veröffentlichung als Claude-Artifact)
 src/                  Quellcode in Modulen, wird per build.sh zusammengesetzt
+docs/screenshots/     echte Spielaufnahmen für die README
 docs/ARCHITEKTUR.md   Aufbau des Codes, Datenmodell, Speicher-Schlüssel
 docs/ENTWICKLUNG.md   Entwicklungsgeschichte: Wünsche, Entscheidungen, Tests
 CHANGELOG.md          Versionen
@@ -203,6 +216,7 @@ index.html            playable file, served by GitHub Pages
 spielen.html          copy of index.html
 hallen-legenden.html  same page without the <html> wrapper (for publishing as a Claude Artifact)
 src/                  modular source code, assembled by build.sh
+docs/screenshots/     actual game screenshots used in this README
 docs/ARCHITEKTUR.md   code architecture, data model, storage keys (German)
 docs/ENTWICKLUNG.md   development history: requests, decisions, tests (German)
 CHANGELOG.md          versions (German)
