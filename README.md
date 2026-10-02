@@ -3,7 +3,9 @@
 [![Jetzt spielen / Play now](https://img.shields.io/badge/%E2%96%B6%20Jetzt%20spielen%20%2F%20Play%20now-hallenlegenden.de-ffc83a?style=for-the-badge&labelColor=07060b)](https://hallenlegenden.de/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3ddc84?style=for-the-badge&labelColor=07060b)](LICENSE)
 
-**[Screenshots](#screenshots) · [Deutsch](#deutsch) · [English](#english)**
+<p align="center"><a href="https://hallenlegenden.de"><img src="docs/presse/hallenlegenden-teaser.gif" width="640" alt="Pixel-Handballer dribbelt durch die Halle, trifft, jubelt vor dem Fernseher, liest Zeitung, stemmt den Pokal und steht am Ende im Anzug am Spielfeldrand"></a><br><sub>Der Story-Film von <a href="https://hallenlegenden.de">hallenlegenden.de</a> · the story film from the landing page</sub></p>
+
+**[Screenshots](#screenshots) · [Pressekit / press kit](docs/presse/) · [Deutsch](#deutsch) · [English](#english)**
 
 ## Screenshots
 
@@ -107,11 +109,12 @@ impressum.html        Impressum
 datenschutz.html      Datenschutzerklärung
 assets/               Story-Film, Umzugs-Skript, Styles und Kontakt-Skript für Impressum und Datenschutz
 fonts/                Schriften lokal (Press Start 2P, VT323, SIL OFL)
-tools/                Google-Apps-Script für die Wunschliste
+tools/                Google-Apps-Script für die Wunschliste, tools/promo: Teaser und GIFs neu aufnehmen
 netlify.toml          Einstellungen für Netlify (Hosting von hallenlegenden.de)
 hallen-legenden.html  dieselbe Seite ohne <html>-Gerüst (für die Veröffentlichung als Claude-Artifact)
 src/                  Quellcode in Modulen, wird per build.sh zusammengesetzt
 docs/screenshots/     echte Spielaufnahmen für README und Landingpage
+docs/presse/          Pressekit: Teaser-Video, GIFs, Kurzbeschreibung
 docs/LANDINGPAGE.md   Landingpage, Wunsch-Formular und eigene Domain einrichten
 docs/ARCHITEKTUR.md   Aufbau des Codes, Datenmodell, Speicher-Schlüssel
 docs/ENTWICKLUNG.md   Entwicklungsgeschichte: Wünsche, Entscheidungen, Tests
@@ -235,11 +238,12 @@ impressum.html        legal notice (German)
 datenschutz.html      privacy policy (German)
 assets/               story film, move script, styles and contact script for the legal pages
 fonts/                self-hosted fonts (Press Start 2P, VT323, SIL OFL)
-tools/                Google Apps Script for the wish list
+tools/                Google Apps Script for the wish list, tools/promo: re-record teaser and GIFs
 netlify.toml          Netlify settings (hosting for hallenlegenden.de)
 hallen-legenden.html  same page without the <html> wrapper (for publishing as a Claude Artifact)
 src/                  modular source code, assembled by build.sh
 docs/screenshots/     actual game screenshots used in this README and the landing page
+docs/presse/          press kit: teaser video, GIFs, short description
 docs/LANDINGPAGE.md   landing page, form and custom domain setup (German)
 docs/ARCHITEKTUR.md   code architecture, data model, storage keys (German)
 docs/ENTWICKLUNG.md   development history: requests, decisions, tests (German)

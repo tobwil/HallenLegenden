@@ -7,6 +7,7 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
 - **Das Spiel** liegt jetzt unter `/game/`. `spielen.html` leitet dorthin weiter.
 - **Wunsch-Formular:** schreibt über ein Google-Apps-Script in die Tabelle „Feature Requests HallenLegenden“ (`tools/feature-requests.gs`). Spam-Schutz mit Schalter „Ich bin ein Mensch“, unsichtbarem Feld, Mindestzeit, Prüfwert, Mengenbremse und Schutz gegen Formeln in der Tabelle.
 - **Impressum und Datenschutz:** Kontaktdaten erst nach Klick lesbar
+- **Pressekit** in `docs/presse/`: Teaser-Video und GIFs vom Story-Film, Kurzbeschreibung DE/EN. Mit `tools/promo/promo.sh` neu erzeugbar.
 - **Nutzungsstatistik mit Umami** (ohne Cookies, nur auf hallenlegenden.de): Klicks auf „Jetzt spielen“, Fortschritt im Story-Film, Spielstarts und -ergebnisse, neue Karrieren, abgeschickte Wünsche. Abschalten auf der Datenschutz-Seite.
 - **Neue Adresse hallenlegenden.de** (Netlify). Die alte Adresse tobwil.github.io/HallenLegenden leitet weiter und nimmt Spielstände automatisch mit.
 - **Schriften lokal** statt von Google Fonts, auch im Spiel
