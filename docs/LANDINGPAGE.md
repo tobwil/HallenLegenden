@@ -24,6 +24,8 @@ Die Figur nutzt die Sprites aus dem Spiel (`src/p03_sprites.js`, nach `assets/st
 | `kabine` | Vorhang zu, Trikot und Schuhe fliegen raus, Vorhang auf: Anzug |
 | `finale` | Halle am Abend, Ersatzbank jubelt, der Manager zeigt aufs Feld |
 
+Alles ist im gleichen Maßstab gezeichnet: Die Figur ist rund 50 px groß (≈ 1,9 m), also `M = 26` Pixel pro Meter. Tor 2 m hoch auf der Torlinie am Ende des Torraums, Fernseher 1,45 m, Tisch 0,76 m, Spinde 1,8 m usw. Neue Möbel bitte in diesem Maßstab anlegen.
+
 Die Zeitachse ergibt sich aus `SCENES` (Breite `w`, Haltepunkt `at`, Länge der Aktion `act`). Lauf-Abschnitte sind 1:1 an den Scroll gekoppelt, in Aktionen bleibt die Figur stehen und der Scroll treibt die Animation. Die Texte (`[data-scene]` in `index.html`) gleiten pro Szene von rechts herein und nach links hinaus. Mit `window.__story` lässt sich die Zeitachse im Browser untersuchen.
 
 Ohne JavaScript werden die Texte als normale Liste untereinander gezeigt.
@@ -73,6 +75,23 @@ Die frühere Adresse `tobwil.github.io/HallenLegenden` wird weiter von GitHub Pa
 Eine Karriere nach einer vollen Saison ist rund 220 KB groß, komprimiert etwa 45 KB im Link. Über 1,9 MB wird ohne Spielstand weitergeleitet. Browser, die keinen Referrer senden, werden ebenfalls ohne Spielstand weitergeleitet.
 
 GitHub Pages bleibt dafür in den Repository-Einstellungen eingeschaltet (Branch `main`, Ordner `/`).
+
+## Nutzungsstatistik (Umami Cloud)
+
+Landingpage und Spiel (`game/index.html`, eingefügt von `src/build.sh`) laden das Umami-Skript mit `data-domains="hallenlegenden.de,www.hallenlegenden.de"`. Auf anderen Adressen (localhost, netlify.app, github.io) wird nichts gezählt. Keine Cookies, „Do Not Track“ wird beachtet, Datenregion EU. Auswertung im Umami-Dashboard.
+
+| Ereignis | Wo | Daten |
+|---|---|---|
+| `spielen-klick` | Knöpfe „Spielen“ / „Jetzt spielen“ | `ort`: kopf, start, finale |
+| `wunsch-klick` | Knöpfe „Feature wünschen“ / „Was fehlt dir?“ | `ort` |
+| `story-szene` | jede Szene im Story-Film, einmal pro Besuch | `szene`, `nr` (1–7) |
+| `wunsch-gesendet` | Formular erfolgreich abgeschickt | `kategorie` |
+| `spiel-start` | Partie beginnt | `modus`: schnelles-spiel, karriere |
+| `spiel-ende` | Abpfiff | `modus`, `ergebnis` (sieg, niederlage, unentschieden, weiter, ausgeschieden) |
+| `karriere-neu` | neue Karriere angelegt | |
+| `karriere-simuliert` | eigener Spieltag simuliert | |
+
+Im Spiel läuft das über `track()` in `src/p01_core.js`, ohne Umami ist der Aufruf wirkungslos. Eigene Besuche ausschließen: auf der Datenschutz-Seite „Statistik abschalten“ klicken (setzt `umami.disabled` im Browser).
 
 ## Impressum und Datenschutz
 

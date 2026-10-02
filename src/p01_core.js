@@ -50,6 +50,8 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } },
   del(k) { try { localStorage.removeItem(k); } catch (e) { } },
 };
+// Nutzungsstatistik (Umami): Skript lädt nur auf hallenlegenden.de, sonst ohne Wirkung
+const track = (name, data) => { try { if (window.umami) window.umami.track(name, data); } catch (e) { } };
 const SETTINGS = Object.assign({ speed: 1 }, store.get('hl4_settings', {}));
 
 // ================= Ligen 2026/27 =================
