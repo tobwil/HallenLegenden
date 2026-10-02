@@ -1,0 +1,14 @@
+# Statische Seite ohne Build-Schritt: Landingpage im Hauptordner, Spiel unter /game/
+[build]
+  publish = "."
+  command = ""
+
+[[redirects]]
+  from = "/spielen"
+  to = "/game/"
+  status = 301
+
+[[redirects]]
+  from = "/spielen.html"
+  to = "/game/"
+  status = 301
