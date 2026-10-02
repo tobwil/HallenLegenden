@@ -219,7 +219,7 @@ const ACT = {
   edReset() { const id = SEL.edit; delete ROSTER_EDIT[id]; delete TEAM_EDIT[id]; store.set(ROSTER_KEY, ROSTER_EDIT); store.set(TEAM_KEY, TEAM_EDIT); applyTeam(TEAMS[id]); ICONS.clear(); ACT.editor(id); },
 };
 let SEASON_PICK = false;
-function startMatch(a, b, o) { AU.stopMusic(); newMatch(a, b, o); G.tact[o.human] = SEL.def; G.tact[1 - o.human] = (Math.random() * 3) | 0; hideMenu(); }
+function startMatch(a, b, o) { AU.stopMusic(); newMatch(a, b, o); G.tact[o.human] = SEL.def; G.tact[1 - o.human] = (Math.random() * 3) | 0; hideMenu(); track('spiel-start', { modus: G.career ? 'karriere' : 'schnelles-spiel' }); }
 function showTactics() {
   if (!G) return;
   showMenu(`<div class="panel narrow"><h2>TEAM-TIMEOUT · TAKTIK</h2><p class="muted">Wähle die Deckung für die nächsten Minuten.</p>
@@ -237,6 +237,7 @@ function endMatch() {
   store.del(SAVE_KEY);
   if (G.career && CAREER) careerAfterPlayed(G);
   const h = G.human, res = h < 0 ? '' : G.soWinner !== undefined ? (G.soWinner === h ? 'WEITER!' : 'AUSGESCHIEDEN') : G.score[h] > G.score[1 - h] ? 'SIEG!' : G.score[h] < G.score[1 - h] ? 'NIEDERLAGE' : 'UNENTSCHIEDEN';
+  track('spiel-ende', { modus: G.career ? 'karriere' : 'schnelles-spiel', ergebnis: res ? res.replace('!', '').toLowerCase() : 'cpu' });
   const row = (l, a, b) => `<tr><td>${a}</td><td style="text-align:center">${l}</td><td>${b}</td></tr>`;
   const q = t => st.shots[t] ? Math.round(st.goals[t] / st.shots[t] * 100) + '%' : '–';
   const best = potm();

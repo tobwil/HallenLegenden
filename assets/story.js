@@ -742,6 +742,9 @@ function update() {
   const r = film.getBoundingClientRect();
   targetU = clamp(-r.top / unitPx, 0, TL.total);
 }
+// Nutzungsstatistik: jede Szene einmal pro Besuch zählen (wie weit wird gescrollt?)
+const SEEN = new Set();
+function seen(sc) { if (SEEN.has(sc.id)) return; SEEN.add(sc.id); try { if (window.umami) window.umami.track('story-szene', { szene: sc.id, nr: SCENES.indexOf(sc) + 1 }); } catch (e) { } }
 function onFrame(s) {
   // Hero-Text verschwindet mit dem ersten Scrollen
   const h = 1 - seg(s.u, INTRO.len * 0.25, INTRO.len * 0.9);
@@ -757,7 +760,7 @@ function onFrame(s) {
     const vis = f < 0.05 ? seg(f, -0.15, 0.05) : 1 - seg(f, 0.85, 1.05);
     const dx = f < 0.5 ? (1 - vis) * 80 : -(1 - vis) * 80;
     c.style.opacity = vis.toFixed(3); c.style.transform = `translate3d(${dx}px,0,0)`; c.style.visibility = vis < 0.02 ? 'hidden' : 'visible';
-    if (vis > 0.5) active = SCENES.indexOf(sc);
+    if (vis > 0.5) { active = SCENES.indexOf(sc); seen(sc); }
   });
   const idx = SCENES.indexOf(s.scene);
   hudNo.textContent = String(s.kind === 'intro' ? 0 : idx + 1).padStart(2, '0');

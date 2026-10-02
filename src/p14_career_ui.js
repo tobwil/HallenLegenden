@@ -222,7 +222,7 @@ function seasonSummary() {
     <div class="row"><button class="main" data-act="cNext">SAISON ${seasonName(CAREER.year)} STARTEN</button></div></div>`);
 }
 Object.assign(ACT, {
-  cNew() { SEASON_PICK = false; careerCreate(SEL.a, SEL.len, SEL.half, SEL.diff, SEL.ait === 0, SEL.coach); careerHub('home'); },
+  cNew() { SEASON_PICK = false; careerCreate(SEL.a, SEL.len, SEL.half, SEL.diff, SEL.ait === 0, SEL.coach); track('karriere-neu'); careerHub('home'); },
   cTab(v) { CSEL = null; CSELL = null; CTAB = v; careerHub(); },
   cPick(v) { CSEL = v ? +v : null; CSELL = null; CTAB = 'squad'; careerHub(); },
   cPlay() {
@@ -233,7 +233,7 @@ Object.assign(ACT, {
       lineups: L, benches: [benchOf(fx[0], L[0]), benchOf(fx[1], L[1])], label: ct ? `POKAL · ${CUP_ROUNDS[CAREER.cup.round]}` : `${CAREER.season.lg}. LIGA · ${CAREER.season.round + 1}. SPIELTAG` }, 'career');
   },
   cExt(v) { const [pid, y] = v.split(':').map(Number); CMSG = extendContract(pid, y); careerHub(); },
-  cSim() { careerSimOwn(); careerHub('home'); },
+  cSim() { careerSimOwn(); track('karriere-simuliert'); careerHub('home'); },
   cStart(v) {
     const sq = CAREER.squads[CAREER.team], p = sq.find(x => x.pid === +v);
     if (p && p.inj) { CMSG = `${p.name} ist verletzt und kann nicht spielen.`; return careerHub(); }

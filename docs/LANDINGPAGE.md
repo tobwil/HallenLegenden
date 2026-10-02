@@ -76,6 +76,23 @@ Eine Karriere nach einer vollen Saison ist rund 220 KB groß, komprimiert etwa 4
 
 GitHub Pages bleibt dafür in den Repository-Einstellungen eingeschaltet (Branch `main`, Ordner `/`).
 
+## Nutzungsstatistik (Umami Cloud)
+
+Landingpage und Spiel (`game/index.html`, eingefügt von `src/build.sh`) laden das Umami-Skript mit `data-domains="hallenlegenden.de,www.hallenlegenden.de"`. Auf anderen Adressen (localhost, netlify.app, github.io) wird nichts gezählt. Keine Cookies, „Do Not Track“ wird beachtet. Auswertung im Umami-Dashboard.
+
+| Ereignis | Wo | Daten |
+|---|---|---|
+| `spielen-klick` | Knöpfe „Spielen“ / „Jetzt spielen“ | `ort`: kopf, start, finale |
+| `wunsch-klick` | Knöpfe „Feature wünschen“ / „Was fehlt dir?“ | `ort` |
+| `story-szene` | jede Szene im Story-Film, einmal pro Besuch | `szene`, `nr` (1–7) |
+| `wunsch-gesendet` | Formular erfolgreich abgeschickt | `kategorie` |
+| `spiel-start` | Partie beginnt | `modus`: schnelles-spiel, karriere |
+| `spiel-ende` | Abpfiff | `modus`, `ergebnis` (sieg, niederlage, unentschieden, weiter, ausgeschieden) |
+| `karriere-neu` | neue Karriere angelegt | |
+| `karriere-simuliert` | eigener Spieltag simuliert | |
+
+Im Spiel läuft das über `track()` in `src/p01_core.js`, ohne Umami ist der Aufruf wirkungslos. Eigene Besuche ausschließen: auf der Datenschutz-Seite „Statistik abschalten“ klicken (setzt `umami.disabled` im Browser).
+
 ## Impressum und Datenschutz
 
 `impressum.html` und `datenschutz.html` nutzen `assets/legal.css`. Name, Adresse und E-Mail stehen kodiert in `assets/kontakt.js` und werden erst nach Klick auf „Kontakt anzeigen“ lesbar. Ändern: neue Daten als JSON kodieren (Base64, dann Zeichenfolge umdrehen) und in `D` eintragen.

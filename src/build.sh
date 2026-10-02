@@ -16,6 +16,8 @@ DESC='Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal un
   echo '<html lang="de"><head><meta charset="utf-8"><script src="../assets/umzug.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
   echo "<meta name=\"description\" content=\"$DESC\">"
   echo '<meta name="author" content="tobwil"><meta name="theme-color" content="#07060b">'
+  # Nutzungsstatistik (Umami, ohne Cookies), zählt nur auf hallenlegenden.de
+  echo '<script defer src="https://cloud.umami.is/script.js" data-website-id="961ff3e5-3c46-4605-9ed8-604d267f78cc" data-domains="hallenlegenden.de,www.hallenlegenden.de" data-do-not-track="true"></script>'
   echo "<meta property=\"og:type\" content=\"website\"><meta property=\"og:title\" content=\"Hallen-Legenden\"><meta property=\"og:description\" content=\"$DESC\"><meta property=\"og:url\" content=\"$URL\">"
   echo "<link rel=\"canonical\" href=\"$URL\">"
   echo "<link rel=\"icon\" href=\"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤾</text></svg>\">"

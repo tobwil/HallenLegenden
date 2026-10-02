@@ -15,7 +15,7 @@
 <header class="top"><a class="brand" href="./">HALLENLEGENDEN</a><a class="back" href="./">← ZURÜCK</a></header>
 <main>
   <h1>Datenschutz</h1>
-  <p>Kurz gesagt: keine Cookies, kein Tracking, keine Werbung. Daten werden nur verarbeitet, wenn du die Seite aufrufst (Server-Protokolle beim Hoster) oder freiwillig einen Feature-Wunsch abschickst.</p>
+  <p>Kurz gesagt: keine Cookies, keine Werbung, kein Tracking über Seiten hinweg. Wir zählen anonym, wie die Seite und das Spiel genutzt werden (Umami, ohne Cookies). Weitere Daten werden nur verarbeitet, wenn du die Seite aufrufst (Server-Protokolle beim Hoster) oder freiwillig einen Feature-Wunsch abschickst.</p>
 
   <h2>1. VERANTWORTLICHER</h2>
   <div class="card">
@@ -34,11 +34,17 @@
   <p>Das Spiel speichert Einstellungen, laufende Partien und Karrieren im lokalen Speicher deines Browsers (localStorage). Diese Daten verlassen dein Gerät nicht und werden nicht an uns übertragen. Du kannst sie jederzeit über die Browser-Einstellungen löschen.</p>
   <p>Wer die frühere Adresse aufruft, wird weitergeleitet. Vorhandene Spielstände werden dabei im Anker der Adresse (der Teil nach #) mitgegeben und auf dieser Seite wieder im Browser gespeichert. Der Anker wird nicht an einen Server übertragen.</p>
 
-  <h2>5. FEATURE-WÜNSCHE</h2>
+  <h2>5. ANONYME NUTZUNGSSTATISTIK (UMAMI)</h2>
+  <p>Um zu verstehen, wie Landingpage und Spiel genutzt werden, verwenden wir Umami Cloud (Umami Software, Inc.). Umami setzt <b>keine Cookies</b>, speichert nichts auf deinem Gerät und erkennt dich nicht über verschiedene Websites oder Tage hinweg wieder. Deine IP-Adresse wird nur kurz verarbeitet, um daraus das Land zu bestimmen und Besuche zu zählen, und nicht gespeichert.</p>
+  <p>Erfasst werden: aufgerufene Seite, verweisende Seite (z. B. Reddit), Browser, Betriebssystem, Gerätetyp, Bildschirmgröße, Sprache und Land. Dazu zählen wir einzelne Ereignisse ohne Bezug zu deiner Person: Klicks auf „Jetzt spielen“, wie weit die Story auf der Startseite angesehen wurde, gestartete und beendete Spiele (Schnelles Spiel oder Karriere, Ergebnis), neue Karrieren und abgeschickte Wünsche (nur die Kategorie, nicht der Inhalt).</p>
+  <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse, das Spiel zu verbessern). Die Statistik läuft nur unter hallenlegenden.de. Ist in deinem Browser „Do Not Track“ eingeschaltet, wird nichts erfasst. Mehr zum Datenschutz bei Umami: <a href="https://umami.is/privacy">umami.is/privacy</a>.</p>
+  <p>Du kannst die Statistik für diesen Browser auch hier abschalten: <button class="reveal" type="button" id="optout">STATISTIK ABSCHALTEN</button> <span class="small" id="optout-status"></span><br><span class="small">Dafür wird im Browser der Eintrag <code>umami.disabled</code> gespeichert.</span></p>
+
+  <h2>6. FEATURE-WÜNSCHE</h2>
   <p>Wenn du das Wunsch-Formular abschickst, werden folgende Angaben gespeichert: Kategorie, Wunsch, Beschreibung, optional Name und E-Mail-Adresse, außerdem Zeitpunkt und Gerätetyp (Desktop oder Touch mit Fenstergröße). Die Daten werden über Google Apps Script in eine Google-Tabelle geschrieben (Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland). Dabei kann auch Google technische Daten wie deine IP-Adresse verarbeiten.</p>
   <p>Zweck ist allein die Weiterentwicklung des Spiels, Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO, für freiwillige Kontaktangaben deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Kontaktangaben werden nur für Rückfragen zu deinem Wunsch genutzt. Die Einträge werden gelöscht, sobald sie nicht mehr gebraucht werden, Kontaktangaben spätestens nach Umsetzung oder Ablehnung des Wunsches.</p>
 
-  <h2>6. DEINE RECHTE</h2>
+  <h2>7. DEINE RECHTE</h2>
   <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung, auf Datenübertragbarkeit, auf Widerspruch gegen die Verarbeitung sowie auf Widerruf einer Einwilligung mit Wirkung für die Zukunft. Eine formlose E-Mail an die oben genannte Adresse genügt.</p>
   <p>Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel beim Bayerischen Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18, 91522 Ansbach.</p>
 
@@ -46,5 +52,15 @@
 </main>
 <footer><a href="./">Startseite</a> · <a href="game/">Spielen</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></footer>
 <script src="assets/kontakt.js"></script>
+<script>
+// Umami lässt Browser aus, in denen dieser Eintrag gesetzt ist
+(() => {
+  const btn = document.getElementById('optout'), out = document.getElementById('optout-status');
+  const off = () => { try { return localStorage.getItem('umami.disabled') === '1'; } catch (e) { return false; } };
+  const show = () => { btn.textContent = off() ? 'STATISTIK WIEDER EINSCHALTEN' : 'STATISTIK ABSCHALTEN'; out.textContent = off() ? 'Abgeschaltet für diesen Browser.' : ''; };
+  btn.addEventListener('click', () => { try { off() ? localStorage.removeItem('umami.disabled') : localStorage.setItem('umami.disabled', '1'); } catch (e) { } show(); });
+  show();
+})();
+</script>
 </body>
 </html>

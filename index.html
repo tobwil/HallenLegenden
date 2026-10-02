@@ -16,6 +16,7 @@
 <link rel="canonical" href="https://hallenlegenden.de/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤾</text></svg>">
 <link rel="stylesheet" href="fonts/fonts.css">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="961ff3e5-3c46-4605-9ed8-604d267f78cc" data-domains="hallenlegenden.de,www.hallenlegenden.de" data-do-not-track="true"></script>
 <style>
 :root{
   color-scheme:dark;
@@ -258,7 +259,7 @@ footer a:hover{color:var(--gold)}
   <nav aria-label="Hauptnavigation">
     <a href="#film">Die Story</a>
     <a href="#wunsch">Feature-Wünsche</a>
-    <a class="btn main" href="game/">▶ Spielen</a>
+    <a class="btn main" href="game/" data-umami-event="spielen-klick" data-umami-event-ort="kopf">▶ Spielen</a>
   </nav>
 </header>
 
@@ -271,8 +272,8 @@ footer a:hover{color:var(--gold)}
         <h1 class="logo">HALLEN-<br>LEGENDEN<span>HANDBALL 26/27</span></h1>
         <p class="tagline">Retro-Handball im Pixel-Look. Vom ersten Anwurf bis in den Chefsessel.</p>
         <div class="cta">
-          <a class="btn main big" href="game/">▶ JETZT SPIELEN</a>
-          <a class="btn big" href="#wunsch">FEATURE WÜNSCHEN</a>
+          <a class="btn main big" href="game/" data-umami-event="spielen-klick" data-umami-event-ort="start">▶ JETZT SPIELEN</a>
+          <a class="btn big" href="#wunsch" data-umami-event="wunsch-klick" data-umami-event-ort="start">FEATURE WÜNSCHEN</a>
         </div>
         <ul class="platforms" aria-label="Plattformen">
           <li>COMPUTER</li>
@@ -352,8 +353,8 @@ footer a:hover{color:var(--gold)}
         <h2>Deine Legende beginnt.</h2>
         <p>Kostenlos im Browser am Computer (auch mit Gamepad) und am Smartphone. Konsole: coming soon.</p>
         <div class="cta">
-          <a class="btn main" href="game/">▶ JETZT SPIELEN</a>
-          <a class="btn" href="#wunsch">WAS FEHLT DIR?</a>
+          <a class="btn main" href="game/" data-umami-event="spielen-klick" data-umami-event-ort="finale">▶ JETZT SPIELEN</a>
+          <a class="btn" href="#wunsch" data-umami-event="wunsch-klick" data-umami-event-ort="finale">WAS FEHLT DIR?</a>
         </div>
       </article>
     </div>
@@ -508,6 +509,7 @@ form.addEventListener('submit', async e => {
     countEl.textContent = '0 / 2000';
     human = false; humanBtn.setAttribute('aria-checked', 'false');
     setStatus('Danke! Dein Wunsch steht auf der Liste.', 'ok');
+    try { if (window.umami) window.umami.track('wunsch-gesendet', { kategorie: data.get('kategorie') }); } catch (e) { }
   };
   try {
     const res = await fetch(FEATURE_ENDPOINT, { method: 'POST', body: new URLSearchParams(data), signal: ctrl.signal });
