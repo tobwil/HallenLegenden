@@ -142,6 +142,7 @@ npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
 npm test                             # alle Tests, etwa 35 Sekunden
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
+GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 ```
 
 Die `package.json` liegt bewusst nur in `tests/`, damit Netlify beim Veröffentlichen nichts installiert.
@@ -285,6 +286,7 @@ npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
 npm test                             # all tests, about 35 seconds
 npm test -- pass zoom                # only tests whose name contains these words
+GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 ```
 
 The `package.json` deliberately lives only in `tests/` so Netlify does not install anything when deploying.

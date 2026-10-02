@@ -1,6 +1,6 @@
 // Regressionstests für das Spiel (game/index.html) mit Playwright und Chromium.
 // Aufruf:  cd tests && npm install && npm test        (einmalig vorher: npx playwright-core install chromium)
-// Optional: CHROMIUM_PATH=/pfad/zu/chromium, GAME=/pfad/zu/index.html, nur bestimmte Tests: npm test -- pass zoom
+// Optional: CHROMIUM_PATH=/pfad/zu/chromium, GAME=/pfad/zu/index.html oder GAME=https://…/game/ (z. B. Netlify-Vorschau), nur bestimmte Tests: npm test -- pass zoom
 // Wo möglich laufen die Tests Frame für Frame (readInput + step) mit festem Zufall, damit sie nicht vom Timing abhängen.
 import { chromium } from 'playwright-core';
 import { existsSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const GAME = pathToFileURL(process.env.GAME || path.join(root, 'game/index.html')).href;
+const GAME = /^https?:\/\//.test(process.env.GAME || '') ? process.env.GAME : pathToFileURL(process.env.GAME || path.join(root, 'game/index.html')).href;
 const exe = process.env.CHROMIUM_PATH || ['/opt/pw-browsers/chromium'].find(existsSync);
 const only = process.argv.slice(2);
 const DESKTOP = { viewport: { width: 1440, height: 900 } };
