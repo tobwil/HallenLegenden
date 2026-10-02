@@ -9,11 +9,11 @@ JS="p01_core.js p02_audio.js p03_sprites.js p04_arena.js p05_match.js p06_action
 # Website-Fassung (game/index.html): Titel, Schriften und Styles im <head>, Spielfläche und Script im <body>
 # Die Startseite index.html im Hauptordner ist die Landingpage und wird hier nicht erzeugt.
 mkdir -p ../game
-URL='https://tobwil.github.io/HallenLegenden/game/'
+URL='https://hallenlegenden.de/game/'
 DESC='Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal und Transfermarkt. Läuft direkt im Browser, am Desktop und auf dem Handy.'
 {
   echo '<!doctype html>'
-  echo '<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
+  echo '<html lang="de"><head><meta charset="utf-8"><script src="../assets/umzug.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
   echo "<meta name=\"description\" content=\"$DESC\">"
   echo '<meta name="author" content="tobwil"><meta name="theme-color" content="#07060b">'
   echo "<meta property=\"og:type\" content=\"website\"><meta property=\"og:title\" content=\"Hallen-Legenden\"><meta property=\"og:description\" content=\"$DESC\"><meta property=\"og:url\" content=\"$URL\">"

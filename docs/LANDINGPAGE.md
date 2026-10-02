@@ -57,23 +57,22 @@ Warum ein Script nötig ist: Auch eine für alle bearbeitbare Tabelle lässt sic
 
 Gegen gezielte Angriffe hilft das nur begrenzt, weil der Prüfwert im Browser berechnet wird. Wird das ein Problem, lässt sich Cloudflare Turnstile ergänzen (Token im Formular, Prüfung im Apps Script per `UrlFetchApp`).
 
-## Eigene Domain (z. B. hallenhelden.de)
+## Hosting und Domain
 
-Mit GitHub Pages:
+**hallenlegenden.de** liegt bei Netlify (Projekt `hallenlegenden`, Ausweich-Adresse https://hallenlegenden.netlify.app). `netlify.toml` veröffentlicht den Hauptordner ohne Build-Schritt und leitet `/spielen` auf `/game/` weiter.
 
-1. Im Repository unter **Settings → Pages → Custom domain** die Domain eintragen. GitHub legt dabei eine Datei `CNAME` an.
-2. Beim Domain-Anbieter DNS-Einträge setzen:
-   - `A`-Einträge für die Hauptdomain auf `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - `CNAME` für `www` auf `tobwil.github.io`
-3. Wenn das Zertifikat bereit ist: **Enforce HTTPS** aktivieren.
+Damit Änderungen auf `main` automatisch online gehen, muss das Netlify-Projekt mit dem Repository verbunden sein: in Netlify unter **Project configuration → Build & deploy → Continuous deployment → Link repository** `tobwil/HallenLegenden` wählen, Branch `main`, Build-Befehl leer, Veröffentlichungsordner `.`. Pull Requests bekommen dann eigene Vorschau-Adressen.
 
-Danach ist die Landingpage unter `https://hallenhelden.de/` und das Spiel unter `https://hallenhelden.de/game/` erreichbar. Alle Links auf der Seite sind relativ und funktionieren ohne Änderung. Nur die `canonical`-URL in `src/build.sh` (`URL=...`) sollte dann auf die neue Domain zeigen.
+## Umzug von GitHub Pages
 
-Achtung: Spielstände liegen im Browser pro Domain. Wer bisher unter `tobwil.github.io` gespielt hat, sieht seine Karriere unter der neuen Domain nicht.
+Die frühere Adresse `tobwil.github.io/HallenLegenden` wird weiter von GitHub Pages aus `main` ausgeliefert. Jede Seite lädt `assets/umzug.js` (im Spiel `../assets/umzug.js`, eingefügt von `src/build.sh`):
 
-## Netlify (Testumgebung)
+- **Auf github.io** leitet das Skript sofort auf hallenlegenden.de weiter, mit dem gleichen Pfad (`/spielen.html` → `/game/`). Gibt es Spielstände (`localStorage`, Schlüssel `hl…_`), werden sie komprimiert (`deflate-raw`, Base64) in den URL-Anker gepackt: `https://hallenlegenden.de/#umzug=…&ziel=/game/`. Wer schon gespielt hat und die alte Startseite aufruft, landet direkt im Spiel.
+- **Auf hallenlegenden.de** übernimmt das Skript die Spielstände aus dem Anker, überschreibt aber keine vorhandenen, und leitet zum Ziel weiter. Übernommen wird nur, wenn die Seite wirklich von `https://tobwil.github.io/` kommt (Referrer), und nur Pfade auf der eigenen Seite sind als Ziel erlaubt. So kann niemand per präpariertem Link Spielstände unterschieben oder auf fremde Seiten umleiten.
 
-Test-Adresse: https://hallenlegenden.netlify.app. `netlify.toml` veröffentlicht den Hauptordner ohne Build-Schritt und leitet `/spielen` auf `/game/` weiter.
+Eine Karriere nach einer vollen Saison ist rund 220 KB groß, komprimiert etwa 45 KB im Link. Über 1,9 MB wird ohne Spielstand weitergeleitet. Browser, die keinen Referrer senden, werden ebenfalls ohne Spielstand weitergeleitet.
+
+GitHub Pages bleibt dafür in den Repository-Einstellungen eingeschaltet (Branch `main`, Ordner `/`).
 
 ## Impressum und Datenschutz
 
