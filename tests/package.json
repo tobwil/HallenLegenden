@@ -1,0 +1,12 @@
+{
+  "name": "hallen-legenden-tests",
+  "private": true,
+  "description": "Regressionstests für das Spiel (game/index.html)",
+  "type": "module",
+  "scripts": {
+    "test": "node run.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.63.0"
+  }
+}

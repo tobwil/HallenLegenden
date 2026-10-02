@@ -132,6 +132,20 @@ sh src/build.sh
 
 Das erzeugt `game/index.html` und `hallen-legenden.html`. Die Landingpage `index.html` wird von Hand gepflegt. Es gibt keinen Bundler und keine Paketabhängigkeiten. Für einen Syntax-Check reicht `node --check` auf die zusammengefügten JS-Dateien.
 
+#### Tests
+
+Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere, Editor, Menüfenster und die Handy-Steuerung. Nach `sh src/build.sh` und vor jedem Merge:
+
+```sh
+cd tests
+npm install                          # einmalig
+npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
+npm test                             # alle Tests, etwa 35 Sekunden
+npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
+```
+
+Die `package.json` liegt bewusst nur in `tests/`, damit Netlify beim Veröffentlichen nichts installiert.
+
 #### Als Website veröffentlichen
 
 Die Seite läuft unter [hallenlegenden.de](https://hallenlegenden.de/) bei Netlify, direkt aus dem Branch `main` ohne Build-Schritt (`netlify.toml`). Die Landingpage liegt im Hauptordner, das Spiel unter `/game/`.
@@ -260,6 +274,20 @@ sh src/build.sh
 ```
 
 This generates `game/index.html` and `hallen-legenden.html`. The landing page `index.html` is maintained by hand. There is no bundler and there are no package dependencies. For a syntax check, `node --check` on the concatenated JS is enough.
+
+#### Tests
+
+Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career, editor, menu windows and touch controls, among others. After `sh src/build.sh` and before every merge:
+
+```sh
+cd tests
+npm install                          # once
+npx playwright-core install chromium # once, if Chromium is not installed yet
+npm test                             # all tests, about 35 seconds
+npm test -- pass zoom                # only tests whose name contains these words
+```
+
+The `package.json` deliberately lives only in `tests/` so Netlify does not install anything when deploying.
 
 #### Publishing as a website
 
