@@ -92,6 +92,43 @@ input:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
 
 /* Karriere: breites Panel, kompakte Tabellen */
 .panel.wide{max-width:none}
+/* Karriere-Statistik */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.kpi{background:var(--panel2);border:2px solid var(--line);padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi span{font-family:var(--pix);font-size:8px;color:var(--dim);letter-spacing:.08em}
+.kpi b{font-family:var(--pix);font-size:clamp(14px,2vw,20px);color:var(--ink);font-weight:normal;line-height:1.3}
+.kpi i{font-style:normal;color:var(--mute);font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi b.chips{display:flex;gap:3px;font-size:10px}
+.fchip{font-style:normal;width:20px;height:20px;display:inline-grid;place-items:center;color:#07060b;font-family:var(--pix);font-size:9px}
+.fchip.fS{background:var(--green)}.fchip.fU{background:var(--dim)}.fchip.fN{background:var(--hot)}
+.poschart{width:100%;height:auto;display:block}
+.poschart text{font-family:var(--pix);font-size:8px;fill:var(--mute)}
+.poschart .gl{stroke:var(--line);stroke-width:1}
+.poschart .pl{fill:none;stroke:var(--gold);stroke-width:2;stroke-linejoin:round}
+.poschart .pt circle{fill:var(--gold);stroke:var(--panel);stroke-width:2}
+.poschart .pt circle.hit{fill:transparent;stroke:none}
+.poschart .pt:hover circle:first-child{fill:var(--ink)}
+.stat2{display:grid;grid-template-columns:1fr 1.5fr;gap:18px;align-items:start}
+.stat2 > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.stt td.num,.stt th.num{text-align:right}
+.stt td.barc{width:30%}
+.sbar{display:block;height:6px;background:var(--gold);opacity:.8}
+.stt tr.me .sbar{background:var(--hot)}
+@media (max-width:760px){.stat2{grid-template-columns:1fr}}
+/* Pokal-Turnierbaum */
+.bracket{display:grid;grid-template-columns:repeat(5,minmax(92px,1fr)) minmax(80px,.8fr);gap:12px;overflow-x:auto;padding-bottom:4px}
+.bcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+.bties{display:flex;flex-direction:column;justify-content:space-around;flex:1;gap:4px}
+.tie{position:relative;border:2px solid var(--line);background:var(--panel2);font-size:15px;line-height:1}
+.tie.myt{border-color:var(--gold)}
+.tie em{position:absolute;right:-2px;top:-9px;font-style:normal;font-family:var(--pix);font-size:7px;color:var(--cyan);background:var(--panel);padding:1px 2px}
+.bt{display:flex;justify-content:space-between;gap:6px;padding:1px 6px}
+.bt + .bt{border-top:1px solid var(--line)}
+.bt.out{color:var(--mute)}
+.bt.win{color:var(--ink);font-weight:bold}
+.bt.mine span{color:var(--gold)}
+.bt.tbd{color:var(--mute)}
+.champ .tie{border-color:var(--gold)}
 table.sqt{font-size:17px}
 .sqt th,.sqt td{padding:2px 5px}
 .sqt td:nth-child(2){white-space:normal}

@@ -2,6 +2,11 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v7.8: Neue Statistik-Seite, Pokal als Turnierbaum
+- **Statistik:** Kennzahlen-Kacheln (Platz, Punkte mit Siege/Unentschieden/Niederlagen, Tore und Differenz, Rang von Angriff und Abwehr, Form der letzten 5 Spiele), Verlauf des Tabellenplatzes nach Spieltag (wird ab jetzt pro Spieltag gespeichert), Torjäger der Liga mit Balken, eigener Kader mit Spielen, Toren, Toren pro Spiel, Paraden, Form und Fitness
+- **Pokal als Turnierbaum:** alle Runden bis zum Sieger nebeneinander, Sieger hervorgehoben, eigener Weg in Gold, 7-Meter-Entscheidungen markiert. Ab jetzt treffen die Sieger benachbarter Partien aufeinander (fester Baum statt Neuauslosung). Ältere Spielstände werden für die Anzeige passend sortiert.
+- Pokal-Hinweis sagt jetzt „steht jetzt an“, wenn die Runde vor dem nächsten Ligaspiel fällig ist
+
 ## v7.7: Simulierte Ergebnisse passend zur Spieldauer, neuer Spielerwechsel
 - **Simulation:** Simulierte Partien (Liga, Pokal, eigene simulierte Spiele) passen jetzt zur gewählten Halbzeitlänge. Tore pro Team im Schnitt: 2 Min ≈ 5,6, 3 Min ≈ 8,3, 5 Min ≈ 14 (gespielt: 5,2 / 7,9 / 13,1). Vorher immer rund 27 wie nach 60 echten Minuten, das hat die Tabelle verzerrt. Paraden skalieren mit. Bereits gespielte Ergebnisse einer laufenden Saison bleiben, wie sie sind.
 - **Spielerwechsel in der Abwehr:** S (oder A) springt zuerst zum ballnächsten Spieler, jedes weitere Drücken innerhalb von 1,2 s zum nächstnäheren. Ohne Wechseltaste steuerst du automatisch den ballnächsten Spieler (Toleranz 2,5 m, höchstens ein Wechsel pro Sekunde, 1,5 s Pause nach einem Tastenwechsel, nie mitten im Block oder Sprung).

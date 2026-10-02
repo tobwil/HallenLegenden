@@ -177,6 +177,7 @@ function playRound(own) {
     if (a === own.a && b === own.b) applyResult(own);
     else applyResult(simMatch(a, b));
   }
+  S.posHist = (S.posHist || []).concat(standingsOf(S.table).findIndex(r => r.i === CAREER.team) + 1);   // Tabellenplatz nach jedem Spieltag (Statistik)
   const me = CAREER.team, mine = own.a === me ? [own.ga, own.gb] : [own.gb, own.ga], opp = own.a === me ? own.b : own.a;
   const res = mine[0] > mine[1] ? 'S' : mine[0] === mine[1] ? 'U' : 'N';
   const myL = own.a === me ? own.La : own.Lb, top = myL.filter(p => p.role !== 'TW').map(p => [p, (own.stats[p.pid] || {}).g || 0]).sort((x, y) => y[1] - x[1])[0];
