@@ -243,7 +243,7 @@ footer a:hover{color:var(--gold)}
 <a class="skip" href="game/">Direkt zum Spiel</a>
 
 <header class="top solid" id="top">
-  <a class="brand" href="#film">HALLEN-LEGENDEN</a>
+  <a class="brand" href="#film">HALLENLEGENDEN</a>
   <nav aria-label="Hauptnavigation">
     <a href="#film">Die Story</a>
     <a href="#wunsch">Feature-Wünsche</a>
@@ -479,17 +479,27 @@ form.addEventListener('submit', async e => {
 
   sendBtn.disabled = true;
   setStatus('Wird gesendet …');
-  try {
-    const res = await fetch(FEATURE_ENDPOINT, { method: 'POST', body: new URLSearchParams(data) });
-    const json = await res.json().catch(() => ({ ok: res.ok }));
-    if (!json.ok) throw new Error(json.error || 'Unbekannter Fehler');
+  const slow = setTimeout(() => setStatus('Wird gesendet … die Wunschliste wacht gerade auf, das dauert einen Moment.'), 4000);
+  const ctrl = new AbortController(), timeout = setTimeout(() => ctrl.abort(), 30000);
+  const done = () => {
     form.reset();
     countEl.textContent = '0 / 2000';
     human = false; humanBtn.setAttribute('aria-checked', 'false');
     setStatus('Danke! Dein Wunsch steht auf der Liste.', 'ok');
+  };
+  try {
+    const res = await fetch(FEATURE_ENDPOINT, { method: 'POST', body: new URLSearchParams(data), signal: ctrl.signal });
+    const json = await res.json().catch(() => null);
+    // Google schreibt die Zeile, bevor es per Weiterleitung antwortet. Gab es die Weiterleitung, ist der Wunsch angekommen.
+    if (json && json.ok === false) throw new Error(json.error || 'Unbekannter Fehler');
+    if (!json && !res.redirected && !res.ok) throw new Error(`Server antwortet mit ${res.status}`);
+    done();
   } catch (err) {
-    setStatus(`Das hat nicht geklappt (${err.message}). Bitte versuch es gleich noch einmal.`, 'err');
+    if (err.name === 'AbortError') setStatus('Keine Antwort von der Wunschliste. Dein Wunsch ist vermutlich trotzdem angekommen, bitte nicht doppelt senden.', 'err');
+    else if (err instanceof TypeError) setStatus('Die Verbindung ist abgebrochen. Dein Wunsch ist eventuell schon angekommen. Falls du unsicher bist, schick ihn in ein paar Minuten noch einmal.', 'err');
+    else setStatus(`Das hat nicht geklappt (${err.message}). Bitte versuch es gleich noch einmal.`, 'err');
   } finally {
+    clearTimeout(slow); clearTimeout(timeout);
     sendBtn.disabled = false;
   }
 });
