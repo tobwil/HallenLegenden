@@ -1442,9 +1442,12 @@ function humanControl(p, dt) {
     else if (IN.pc && !p.charging) feint(p, IN.x, IN.y);
     if (p.role === 'TW' && p.hold > 1.5) pass(p, choosePass(p, 0, 0));
   } else {
-    if (IN.pa) {
-      const cands = G.players.filter(q => q.team === p.team && !q.out && q.role !== 'TW' && q !== p).sort((a, c) => dist(a.x, a.y, b.x, b.y) - dist(c.x, c.y, b.x, b.y));
-      if (cands[0]) { G.ctrl = cands[0]; AU.select(); }
+    if (IN.pa) {   // Wechseltaste: erst zum ballnächsten, jedes weitere Drücken (innerhalb 1,2 s) zum nächstnäheren
+      const fresh = !G.swList || G.t - G.swT > 1.2;
+      if (fresh) G.swList = G.players.filter(q => q.team === p.team && !q.out && q.role !== 'TW').sort((a, c) => dist(a.x, a.y, b.x, b.y) - dist(c.x, c.y, b.x, b.y));
+      const L = G.swList.filter(q => !q.out), i = L.indexOf(p), n = fresh ? L.find(q => q !== p) : L.find((q, k) => k > i && q !== p) || L.find(q => q !== p);
+      if (n && n !== p) { G.ctrl = n; AU.select(); }
+      G.swT = G.manT = G.t; IN.pa = false;   // Druck verbraucht: der neue Spieler wird im selben Frame nicht gleich weitergeschaltet
     }
     if (IN.pb && p.z <= 0 && p.role !== 'TW') { p.vz = 3.4; p.block = 0.55; }
     if (IN.pc && b.owner && b.owner.team !== p.team) steal(p, b.owner);
@@ -1730,14 +1733,13 @@ function step(dt) {
   if (G.human >= 0) {
     if (!G.ctrl || G.ctrl.out || G.ctrl.team !== G.human) G.ctrl = nearestTo(G.human, b.x, b.y);
     if (G.ctrl && G.ctrl.role === 'TW' && b.owner !== G.ctrl && ph === 'play') G.ctrl = nearestTo(G.human, b.x, b.y);
-    // Automatischer Wechsel in der Abwehr, wenn der Gegner den Ball bekommt und der gesteuerte Spieler weit weg ist
-    const thr = b.owner || b.passTo;
-    if (ph === 'play' && thr && thr.team !== G.human && thr !== G.autoSw) {
-      G.autoSw = thr;
-      const tx = b.owner ? thr.x : (thr.tx ?? thr.x), ty = b.owner ? thr.y : (thr.ty ?? thr.y), n = nearestTo(G.human, tx, ty);
-      if (n && G.ctrl && n !== G.ctrl) { const dc = dist(G.ctrl.x, G.ctrl.y, tx, ty); if (dc > 9 || (Math.hypot(IN.x, IN.y) < 0.2 && dc > 4) || (TOUCHDEV && dc > 5)) G.ctrl = n; }
+    // Ohne Wechseltaste steuerst du in der Abwehr und bei freiem Ball automatisch den ballnächsten Spieler.
+    // Toleranz (2,5 m) und 1 s Pause gegen Hin- und Herspringen, nach einem Tastenwechsel 1,5 s Pause, nie mitten im Block oder Sprung
+    const thr = b.owner || b.passTo, mine = thr && thr.team === G.human;
+    if (ph === 'play' && !mine && G.ctrl && G.t - (G.manT ?? -9) > 1.5 && G.t - (G.autoT ?? -9) > 1.0 && G.ctrl.z <= 0 && !(G.ctrl.block > 0)) {
+      const tx = b.owner ? thr.x : thr ? (thr.tx ?? thr.x) : b.x, ty = b.owner ? thr.y : thr ? (thr.ty ?? thr.y) : b.y, n = nearestTo(G.human, tx, ty);
+      if (n && n !== G.ctrl) { const dc = dist(G.ctrl.x, G.ctrl.y, tx, ty); if (dc > 3 && dist(n.x, n.y, tx, ty) + 2.5 < dc) { G.ctrl = n; G.autoT = G.t; } }
     }
-    if (thr && thr.team === G.human) G.autoSw = null;
   }
   if (ph === 'kickoff' || ph === 'restart') { G.phaseT -= dt; if (G.phaseT <= 0) { G.phase = 'play'; AU.whistle(1); } }
   if (ph === 'whistle') {
@@ -2322,8 +2324,8 @@ const ACT = {
     showMenu(`<div class="panel"><h2>STEUERUNG</h2><div class="keys">
       <b>PFEILE</b><span>Laufen</span>
       <b>W / SHIFT</b><span>Sprinten (kostet Puste)</span>
-      <b>S</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: zum ballnächsten Spieler wechseln</span>
-      <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: Spieler wechseln</span>
+      <b>S</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: Spieler wechseln. Erst zum ballnächsten, jedes weitere Drücken zum nächstnäheren. Ohne Wechseltaste steuerst du automatisch den ballnächsten Spieler</span>
+      <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: wie S</span>
       <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe) · Abwehr: Blocksprung</span>
       <b>D</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
       <b>Q</b><span>Wechselmenü</span>
@@ -2619,8 +2621,10 @@ function simMatch(a, b) {
   // Schwierigkeit wirkt auch in der Simulation: Amateur hilft dir, Legende macht es schwerer
   const bonus = [2.5, 0, -2.5][CAREER.diff] || 0;
   for (const [S, tid] of [[A, a], [B, b]]) if (tid === CAREER.team) { S.att += bonus; S.def += bonus; S.gk += bonus; }
-  // Erwartung aus Stärke + deutliche Streuung: Überraschungen sind möglich
-  const g = (X, Y, h) => Math.max(15, Math.round(27 + (X.att - Y.def) * 0.18 + (80 - Y.gk) * 0.08 + h + gauss() * 3.8));
+  // Erwartung aus Stärke + deutliche Streuung: Überraschungen sind möglich.
+  // Skaliert auf die gewählte Halbzeitlänge (gespielt: ~5 Tore pro Team bei 2 Min, ~8 bei 3 Min, ~13 bei 5 Min statt 27 über 60 echte Minuten)
+  const sc = (HALVES[CAREER.half] || HALVES[1]).s * 0.046 / 27;
+  const g = (X, Y, h) => Math.max(Math.round(15 * sc), Math.round(sc * (27 + (X.att - Y.def) * 0.18 + (80 - Y.gk) * 0.08 + h) + gauss() * 3.8 * Math.sqrt(sc)));
   const ga = g(A, B, 1), gb = g(B, A, 0), stats = {};
   const share = (S, goals) => {
     const f = S.L.filter(p => p.role !== 'TW'), w = f.map(p => ({ LA: 0.8, RA: 0.8, RL: 1.2, RR: 1.2, RM: 1, KM: 0.9 }[p.role]) * Math.pow(p.att / 80, 1.5));
@@ -2629,7 +2633,8 @@ function simMatch(a, b) {
     for (let i = 0; i < goals; i++) { let x = Math.random() * tot, k = 0; while (x > w[k] && k < w.length - 1) { x -= w[k]; k++; } stats[f[k].pid].g++; }
   };
   share(A, ga); share(B, gb);
-  stats[A.L[0].pid].sv = Math.max(2, Math.round(rnd(6, 13) + (A.gk - 80) / 4)); stats[B.L[0].pid].sv = Math.max(2, Math.round(rnd(6, 13) + (B.gk - 80) / 4));
+  const sv = S => Math.max(1, Math.round((rnd(6, 13) + (S.gk - 80) / 4) * sc));
+  stats[A.L[0].pid].sv = sv(A); stats[B.L[0].pid].sv = sv(B);
   return { a, b, ga, gb, stats, La: A.L, Lb: B.L };
 }
 // Ergebnis auf Tabelle, Spieler (Tore, Form, Fitness) anwenden
@@ -3226,7 +3231,7 @@ function tapAt(cx0, cy0) {
   }
   if (G.phase === 'play' && hit && !attacking()) {
     const n = hit.team === me ? hit : nearestTo(me, hit.x, hit.y);
-    if (n && n.role !== 'TW') { G.ctrl = n; AU.select(); buzz(8); }
+    if (n && n.role !== 'TW') { G.ctrl = n; G.manT = G.t; AU.select(); buzz(8); }
   }
 }
 (() => {

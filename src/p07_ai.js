@@ -111,9 +111,12 @@ function humanControl(p, dt) {
     else if (IN.pc && !p.charging) feint(p, IN.x, IN.y);
     if (p.role === 'TW' && p.hold > 1.5) pass(p, choosePass(p, 0, 0));
   } else {
-    if (IN.pa) {
-      const cands = G.players.filter(q => q.team === p.team && !q.out && q.role !== 'TW' && q !== p).sort((a, c) => dist(a.x, a.y, b.x, b.y) - dist(c.x, c.y, b.x, b.y));
-      if (cands[0]) { G.ctrl = cands[0]; AU.select(); }
+    if (IN.pa) {   // Wechseltaste: erst zum ballnächsten, jedes weitere Drücken (innerhalb 1,2 s) zum nächstnäheren
+      const fresh = !G.swList || G.t - G.swT > 1.2;
+      if (fresh) G.swList = G.players.filter(q => q.team === p.team && !q.out && q.role !== 'TW').sort((a, c) => dist(a.x, a.y, b.x, b.y) - dist(c.x, c.y, b.x, b.y));
+      const L = G.swList.filter(q => !q.out), i = L.indexOf(p), n = fresh ? L.find(q => q !== p) : L.find((q, k) => k > i && q !== p) || L.find(q => q !== p);
+      if (n && n !== p) { G.ctrl = n; AU.select(); }
+      G.swT = G.manT = G.t; IN.pa = false;   // Druck verbraucht: der neue Spieler wird im selben Frame nicht gleich weitergeschaltet
     }
     if (IN.pb && p.z <= 0 && p.role !== 'TW') { p.vz = 3.4; p.block = 0.55; }
     if (IN.pc && b.owner && b.owner.team !== p.team) steal(p, b.owner);

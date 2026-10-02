@@ -129,8 +129,8 @@ const ACT = {
     showMenu(`<div class="panel"><h2>STEUERUNG</h2><div class="keys">
       <b>PFEILE</b><span>Laufen</span>
       <b>W / SHIFT</b><span>Sprinten (kostet Puste)</span>
-      <b>S</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: zum ballnächsten Spieler wechseln</span>
-      <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: Spieler wechseln</span>
+      <b>S</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: Spieler wechseln. Erst zum ballnächsten, jedes weitere Drücken zum nächstnäheren. Ohne Wechseltaste steuerst du automatisch den ballnächsten Spieler</span>
+      <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: wie S</span>
       <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe) · Abwehr: Blocksprung</span>
       <b>D</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
       <b>Q</b><span>Wechselmenü</span>
