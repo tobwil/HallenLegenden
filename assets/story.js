@@ -167,9 +167,9 @@ const BENCH = [
 // w = Breite der Szene in Welt-Pixeln, at = Haltepunkt der Figur, act = Länge der Aktion (Scroll-Einheiten)
 const SCENES = [
   { id: 'halle', w: 520, at: 0, act: 0, label: '7 GEGEN 7' },
-  { id: 'tor', w: 400, at: 120, act: 300, cam: 0.22, need: 156, label: 'DIE MOVES' },
-  { id: 'tv', w: 440, at: 150, act: 200, cam: 0.22, need: 140, label: 'TV-AUFTRITT' },
-  { id: 'zeitung', w: 420, at: 186, act: 260, cam: 0.36, need: 84, label: 'KARRIERE' },
+  { id: 'tor', w: 400, at: 120, act: 300, cam: 0.22, need: 148, label: 'DIE MOVES' },
+  { id: 'tv', w: 440, at: 150, act: 200, cam: 0.3, need: 92, label: 'TV-AUFTRITT' },
+  { id: 'zeitung', w: 420, at: 186, act: 260, cam: 0.36, need: 50, label: 'KARRIERE' },
   { id: 'buero', w: 460, at: 290, act: 260, cam: 0.5, label: 'STATISTIK' },
   { id: 'kabine', w: 400, at: 214, act: 320, cam: 0.42, label: 'MANAGER' },
   { id: 'finale', w: 560, at: 290, act: 160, cam: 0.42, need: 142, label: 'ANWURF!' },
@@ -290,21 +290,32 @@ function arena(s, opt = {}) {
 }
 
 // ---------- Szene: Tor ----------
+// Maßstab: Die Figur ist rund 50 px groß (≈ 1,9 m), also M = 26 px pro Meter. Möbel und Tor richten sich danach.
+const M = 26;
+const GOAL_DX = 118; // Torlinie rechts vom Wurfpunkt
 function goal(gx, net = 0) {
-  const y0 = FY - 30, y1 = FY + 2;
-  // Torraum
-  g.fillStyle = '#d9842f'; g.beginPath(); g.ellipse(gx, (FY - 36 + H) / 2 + 2, 62, (H - FY + 36) / 2 + 4, 0, Math.PI / 2, Math.PI * 1.5); g.fill();
-  g.strokeStyle = '#f3ead6'; g.lineWidth = 1; g.beginPath(); g.ellipse(gx, (FY - 36 + H) / 2 + 2, 62, (H - FY + 36) / 2 + 4, 0, Math.PI / 2, Math.PI * 1.5); g.stroke();
-  g.setLineDash([3, 3]); g.beginPath(); g.ellipse(gx, (FY - 36 + H) / 2 + 2, 92, (H - FY + 36) / 2 + 10, 0, Math.PI / 2, Math.PI * 1.5); g.stroke(); g.setLineDash([]);
-  R(gx, FY - 37, 200, H - FY + 37, '#d9842f');
-  // Netz
-  g.fillStyle = 'rgba(243,234,214,.25)';
-  for (let y = y0; y < y1; y += 3) R(gx + 1, y, 16 + Math.round(net * Math.sin((y - y0) / (y1 - y0) * Math.PI) * 5), 1, 'rgba(243,234,214,.22)');
-  for (let x = gx + 2; x < gx + 18; x += 3) R(x + Math.round(net * 3), y0, 1, y1 - y0, 'rgba(243,234,214,.22)');
-  // Pfosten rot-weiß
-  for (let y = y0; y < y1; y += 4) { R(gx - 1, y, 3, 2, '#ff4f3a'); R(gx - 1, y + 2, 3, 2, '#f3ead6'); }
-  for (let x = gx; x < gx + 18; x += 4) { R(x, y0 - 1, 2, 2, '#ff4f3a'); R(x + 2, y0 - 1, 2, 2, '#f3ead6'); }
-  R(gx + 17, y0, 2, y1 - y0 - 4, '#8a819c');
+  const fy0 = FY - 37, my = FY - 7;               // Hallenboden: Vorderkante, Mitte (Tiefe)
+  const nearY = my + 5, farY = my - 4, hgt = 2 * M; // Pfosten vorn/hinten, Tor 2 m hoch
+  // Hinter der Torlinie: Aus (dunkler), davor der Torraum als Halbkreis
+  R(gx, fy0, 400, H - fy0, '#24418a');
+  for (let y = fy0 + 2; y < H; y += 3) R(gx, y, 400, 1, 'rgba(0,0,0,.08)');
+  g.fillStyle = '#d9842f'; g.beginPath(); g.ellipse(gx, my, 96, 24, 0, Math.PI / 2, Math.PI * 1.5); g.fill();
+  g.strokeStyle = '#f3ead6'; g.lineWidth = 1;
+  g.beginPath(); g.ellipse(gx, my, 96, 24, 0, Math.PI / 2, Math.PI * 1.5); g.stroke();
+  g.setLineDash([3, 3]); g.beginPath(); g.ellipse(gx, my, 140, 30, 0, Math.PI / 2, Math.PI * 1.5); g.stroke(); g.setLineDash([]);
+  R(gx - 40, my - 1, 1, 3, '#f3ead6');           // 7-m-Marke
+  R(gx, fy0, 1, H - fy0, '#f3ead6');             // Torlinie
+  // Netz nach hinten (rechts), beult bei Treffern aus
+  const nd = 20, b = Math.round(net * 5), top = farY - hgt;
+  for (let x = 2; x <= nd; x += 3) R(gx + 3 + x + (x > nd / 2 ? b : 0), top + Math.round(x * 0.5), 1, nearY - top - Math.round(x * 0.5), 'rgba(243,234,214,.28)');
+  for (let y = top; y < nearY; y += 3) { const k = (y - top) / (nearY - top); R(gx + 3, y, nd + Math.round(b * Math.sin(k * Math.PI)), 1, 'rgba(243,234,214,.22)'); }
+  R(gx + 3 + nd, top + 10, 1, nearY - top - 10, 'rgba(243,234,214,.45)');
+  // hinterer Pfosten, Latte, vorderer Pfosten (rot-weiß)
+  const post = (x, yb) => { for (let y = yb - hgt; y < yb; y += 4) { R(x, y, 2, 2, '#ff4f3a'); R(x, y + 2, 2, 2, '#f3ead6'); } };
+  post(gx + 4, farY);
+  for (let k = 0; k <= 9; k++) R(gx + Math.round(k * 4 / 9), nearY - hgt + Math.round((farY - nearY) * k / 9), 2, 2, k % 4 < 2 ? '#ff4f3a' : '#f3ead6');
+  post(gx, nearY);
+  ellipse(gx + 2, nearY, 4, 1, 'rgba(0,0,0,.35)');
 }
 
 // ---------- Szene: Wohnzimmer ----------
@@ -312,7 +323,7 @@ function room(s, wall, wall2, floor, floor2) {
   const x0 = sx(s.x), fy = FY - 22;
   R(x0, 0, s.w, fy, wall);
   for (let k = 0; k < s.w; k += 10) R(x0 + k, 0, 4, fy, wall2);
-  R(x0, fy - 4, s.w, 4, shade(wall, 0.6)); R(x0, fy - 4, s.w, 1, mix(wall, '#ffffff', 0.15));
+  R(x0, fy - 3, s.w, 3, shade(wall, 0.6)); R(x0, fy - 3, s.w, 1, mix(wall, '#ffffff', 0.15));
   R(x0, fy, s.w, H - fy, floor);
   for (let y = fy + 3; y < H; y += 5) R(x0, y, s.w, 1, floor2);
   for (let y = fy, r = 0; y < H; y += 5, r++) for (let k = (r % 2) * 13; k < s.w; k += 26) R(x0 + k, y, 1, 5, floor2);
@@ -320,49 +331,49 @@ function room(s, wall, wall2, floor, floor2) {
 function tvScene(s, st) {
   room(s, '#2a1d3a', '#2f2141', '#5a3a24', '#4a2f1c');
   const x0 = sx(s.x), fy = FY - 22;
-  // Fenster mit Stadt bei Nacht (Parallaxe)
-  const wx = x0 + 40, wy = Math.max(10, fy - 96), ww = 76, wh = 50;
-  R(wx - 3, wy - 3, ww + 6, wh + 6, '#4a3a5c'); R(wx, wy, ww, wh, '#0d1030');
+  // Fenster 2 m × 1,4 m, Brüstung 0,9 m, draußen Stadt bei Nacht (Parallaxe)
+  const ww = 52, wh = 36, wx = x0 + 30, wy = fy - 23 - wh;
+  R(wx - 2, wy - 2, ww + 4, wh + 4, '#4a3a5c'); R(wx, wy, ww, wh, '#0d1030');
   g.save(); g.beginPath(); g.rect(wx, wy, ww, wh); g.clip();
   const pp = Math.round((s.x - cam) * 0.25);
-  for (let k = 0; k < 14; k++) { const bh = 14 + hash(k, 3) * 30, bx = wx + pp + k * 12 - 30; R(bx, wy + wh - bh, 11, bh, '#161a3e'); for (let j = 0; j < bh - 6; j += 5) for (let i2 = 2; i2 < 10; i2 += 4) if (hash(k * 31 + j, i2) > 0.55) R(bx + i2, wy + wh - bh + 3 + j, 2, 2, '#ffd27a'); }
-  R(wx + 58, wy + 8, 6, 6, '#f3ead6');
+  for (let k = 0; k < 12; k++) { const bh = 8 + hash(k, 3) * 20, bx = wx + pp + k * 9 - 20; R(bx, wy + wh - bh, 8, bh, '#161a3e'); for (let j = 0; j < bh - 4; j += 3) for (let i2 = 1; i2 < 7; i2 += 3) if (hash(k * 31 + j, i2) > 0.55) R(bx + i2, wy + wh - bh + 2 + j, 1, 1, '#ffd27a'); }
+  R(wx + 40, wy + 5, 3, 3, '#f3ead6');
   g.restore();
-  R(wx + ww / 2 - 1, wy, 2, wh, '#4a3a5c'); R(wx, wy + wh / 2 - 1, ww, 2, '#4a3a5c');
+  R(wx + ww / 2 - 1, wy, 2, wh, '#4a3a5c'); R(wx - 4, wy + wh + 2, ww + 8, 2, '#5c4a72');
+  // Sofa unter dem Fenster: 2,1 m breit, 0,85 m hoch
+  const sf = x0 + 28;
+  R(sf, fy - 22, 56, 11, '#3d4f8a'); R(sf, fy - 22, 56, 1, '#5a6fb0'); R(sf + 1, fy - 12, 54, 7, '#4a5fa0'); R(sf + 1, fy - 12, 54, 1, '#6a80c0');
+  R(sf - 3, fy - 16, 5, 13, '#33437a'); R(sf + 54, fy - 16, 5, 13, '#33437a'); R(sf + 1, fy - 5, 2, 5, '#2a1d14'); R(sf + 53, fy - 5, 2, 5, '#2a1d14');
+  R(sf + 6, fy - 19, 9, 7, '#ffc83a'); R(sf + 40, fy - 19, 9, 7, '#ff4f3a');
   // Teppich
-  ellipse(x0 + 220, FY + 8, 110, 10, '#5c2234'); ellipse(x0 + 220, FY + 8, 100, 8, '#73283f');
-  // Fernseher auf Schrank
-  const tx = x0 + 196, ty = fy - 60, tw = 84, th = 56;
-  R(tx - 6, fy - 10, tw + 12, 30, '#3d2616'); R(tx - 6, fy - 10, tw + 12, 2, '#5c3a22'); R(tx, fy - 4, 30, 10, '#2c1b10'); R(tx + 46, fy - 4, 30, 10, '#2c1b10');
-  R(tx - 2, ty - 2, tw + 4, th + 4, OUTLINE); R(tx, ty, tw, th, '#4a4452'); R(tx, ty, tw, 2, '#6a6476');
-  R(tx + 26, ty - 14, 1, 14, '#8a819c'); R(tx + 52, ty - 12, 1, 12, '#8a819c'); R(tx + 25, ty - 15, 3, 2, '#8a819c'); R(tx + 51, ty - 13, 3, 2, '#8a819c');
-  const scx = tx + 5, scy = ty + 5, scw = tw - 20, sch = th - 12;
+  ellipse(x0 + 190, FY + 8, 100, 9, '#5c2234'); ellipse(x0 + 190, FY + 8, 92, 7, '#73283f');
+  // Lowboard 1,6 m × 0,45 m, darüber Fernseher 1,45 m × 0,85 m an der Wand
+  const lb = x0 + 186;
+  R(lb, fy - 12, 42, 12, '#3d2616'); R(lb, fy - 12, 42, 1, '#5c3a22'); R(lb + 20, fy - 10, 1, 9, '#2c1b10'); R(lb + 2, fy - 2, 2, 2, '#2c1b10'); R(lb + 38, fy - 2, 2, 2, '#2c1b10');
+  R(lb + 4, fy - 15, 6, 3, '#2a2630'); R(lb + 5, fy - 14, 1, 1, '#3ddc84');
+  const tw = 38, th = 23, tx = lb + 2, ty = fy - 26 - th;
+  R(tx - 1, ty - 1, tw + 2, th + 2, OUTLINE); R(tx, ty, tw, th, '#15131a');
+  const scx = tx + 1, scy = ty + 1, scw = tw - 2, sch = th - 3;
   const goalNow = st.kind === 'tv' && st.q > 0.42;
   g.save(); g.beginPath(); g.rect(scx, scy, scw, sch); g.clip();
   if (SHOT_GAME.complete && SHOT_GAME.naturalWidth) {
-    const zoom = goalNow ? 1.6 + 0.2 * Math.sin(T * 2) : 1.1, iw = scw * zoom, ih = iw * 9 / 16;
-    const pan = goalNow ? 0.75 : 0.5 + 0.08 * Math.sin(T * 0.6);
+    const zoom = goalNow ? 1.5 + 0.15 * Math.sin(T * 2) : 1.05, iw = scw * zoom, ih = iw * 9 / 16;
+    const pan = goalNow ? 0.8 : 0.5 + 0.08 * Math.sin(T * 0.6);
     g.imageSmoothingEnabled = true; g.drawImage(SHOT_GAME, scx - (iw - scw) * pan, scy - (ih - sch) * 0.45, iw, ih); g.imageSmoothingEnabled = false;
   } else R(scx, scy, scw, sch, '#2f56b0');
-  for (let y = scy; y < scy + sch; y += 2) R(scx, y, scw, 1, 'rgba(0,0,0,.18)');
-  R(scx + 2, scy + 2, 9, 5, '#1a1205'); if (Math.floor(T * 2) % 2) R(scx + 3, scy + 3, 3, 3, '#ff4f3a'); R(scx + 7, scy + 3, 3, 3, '#f3ead6');
-  if (goalNow) {
-    const k = Math.floor(T * 4) % 2;
-    R(scx, scy + sch / 2 - 9, scw, 18, k ? 'rgba(255,200,58,.9)' : 'rgba(255,79,58,.9)');
-    text('TOR!', scx + scw / 2, scy + sch / 2 - 4, '#1a1205', 8, 'center');
-  }
+  if (Math.floor(T * 2) % 2) R(scx + 1, scy + 1, 2, 2, '#ff4f3a');
+  if (goalNow) { R(scx, scy + 5, scw, 10, Math.floor(T * 4) % 2 ? '#ffc83a' : '#ff4f3a'); text('TOR!', scx + scw / 2, scy + 6, '#1a1205', 8, 'center'); }
   g.restore();
-  R(scx + scw + 3, scy + 4, 8, 8, '#2a2630'); R(scx + scw + 5, scy + 6, 4, 4, '#8a819c'); R(scx + scw + 4, scy + 16, 6, 2, '#2a2630'); R(scx + scw + 4, scy + 20, 6, 2, '#2a2630');
-  R(scx + scw + 5, scy + sch - 6, 3, 2, goalNow ? '#3ddc84' : '#ff4f3a');
-  // Bildschirmlicht auf Boden und Wand
-  g.fillStyle = `rgba(124,242,255,${0.08 + 0.03 * Math.sin(T * 7)})`;
-  g.beginPath(); g.moveTo(scx, scy + sch); g.lineTo(scx + scw, scy + sch); g.lineTo(scx + scw + 60, H); g.lineTo(scx - 60, H); g.fill();
-  // Stehlampe und Pflanze
-  const lx = x0 + 330; R(lx, fy - 70, 2, 70, '#8a819c'); R(lx - 6, fy + 0, 14, 3, '#3a3450');
-  g.fillStyle = '#ffc83a'; g.beginPath(); g.moveTo(lx - 8, fy - 70); g.lineTo(lx + 10, fy - 70); g.lineTo(lx + 6, fy - 84); g.lineTo(lx - 4, fy - 84); g.fill();
-  glow(lx + 1, fy - 70, 40, 'rgba(255,200,58,A)', 0.22);
-  const plx = x0 + 60; R(plx - 6, fy - 4, 12, 14, '#8c4a2a'); R(plx - 7, fy - 5, 14, 2, '#a65c36');
-  for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.35 + Math.sin(T + k) * 0.03; g.strokeStyle = k % 2 ? '#2f9a5a' : '#3ddc84'; g.lineWidth = 2; g.beginPath(); g.moveTo(plx, fy - 4); g.lineTo(plx + Math.cos(a) * 18, fy - 4 + Math.sin(a) * 20); g.stroke(); }
+  R(tx + tw / 2 - 1, ty + th - 1, 2, 1, '#3a3450');
+  g.fillStyle = `rgba(124,242,255,${0.07 + 0.03 * Math.sin(T * 7)})`;
+  g.beginPath(); g.moveTo(scx, scy + sch); g.lineTo(scx + scw, scy + sch); g.lineTo(scx + scw + 40, H); g.lineTo(scx - 40, H); g.fill();
+  glow(tx + tw / 2, ty + th / 2, 34, 'rgba(124,242,255,A)', 0.1);
+  // Stehlampe 1,6 m, Zimmerpflanze 1 m
+  const lx = x0 + 262; R(lx, fy - 40, 1, 40, '#8a819c'); R(lx - 4, fy - 1, 9, 2, '#3a3450');
+  g.fillStyle = '#ffc83a'; g.beginPath(); g.moveTo(lx - 5, fy - 40); g.lineTo(lx + 6, fy - 40); g.lineTo(lx + 4, fy - 47); g.lineTo(lx - 3, fy - 47); g.fill();
+  glow(lx, fy - 40, 30, 'rgba(255,200,58,A)', 0.2);
+  const plx = x0 + 104; R(plx - 4, fy - 8, 8, 8, '#8c4a2a'); R(plx - 5, fy - 9, 10, 2, '#a65c36');
+  for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.32 + Math.sin(T + k) * 0.03; g.strokeStyle = k % 2 ? '#2f9a5a' : '#3ddc84'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(plx, fy - 8); g.lineTo(plx + Math.cos(a) * 12, fy - 8 + Math.sin(a) * 16); g.stroke(); }
 }
 
 // ---------- Szene: Küche mit Zeitung ----------
@@ -370,50 +381,56 @@ function kitchen(s, st) {
   const x0 = sx(s.x), fy = FY - 22;
   const q = st.kind === 'zeitung' ? st.q : (st.x > s.x + s.at ? 1 : 0);
   room(s, '#3a2f4d', '#3e3352', '#2b2438', '#352c45');
-  // Fliesenspiegel
-  for (let y = fy - 34; y < fy - 6; y += 6) for (let k = 0; k < s.w; k += 6) R(x0 + k, y, 5, 5, ((k / 6 + (y / 6) | 0) % 2) ? '#4a4060' : '#453b5a');
-  // Fenster mit Sonnenaufgang (Himmel wird mit dem Lesen heller)
-  const wx = x0 + 250, wy = Math.max(8, fy - 104), ww = 92, wh = 58;
-  R(wx - 4, wy - 4, ww + 8, wh + 8, '#5c4a72');
+  // Küchenzeile 4 m lang, Arbeitsplatte 0,9 m; Fliesen darüber, Fenster darüber
+  const kx = x0 + 236, kw = 104;
+  for (let y = fy - 41; y < fy - 23; y += 4) for (let k = 0; k < kw; k += 4) R(kx + k, y, 3, 3, ((k / 4 + y / 4) | 0) % 2 ? '#4a4060' : '#453b5a');
+  const ww = 52, wh = 28, wx = kx + 26, wy = fy - 43 - wh;
+  R(wx - 2, wy - 2, ww + 4, wh + 4, '#5c4a72');
   const sky = g.createLinearGradient(0, wy, 0, wy + wh);
   sky.addColorStop(0, mix('#1a2a6a', '#7cc4ff', q)); sky.addColorStop(1, mix('#ff7a4a', '#ffd9a0', q));
   g.fillStyle = sky; g.fillRect(wx, wy, ww, wh);
-  ellipse(wx + 60, wy + wh - 6 - q * 26, 7, 7, '#ffe27a'); glow(wx + 60, wy + wh - 6 - q * 26, 24, 'rgba(255,226,122,A)', 0.35);
-  for (let k = 0; k < 6; k++) R(wx + k * 16 - 4, wy + wh - 6 - hash(k, 9) * 8, 16, 14, '#2a2448');
-  R(wx + ww / 2 - 1, wy, 2, wh, '#5c4a72'); R(wx - 6, wy + wh + 4, ww + 12, 3, '#6e5a86');
-  // Wanduhr: Zeiger drehen sich beim Lesen
-  const cx = x0 + 120, cy = Math.max(20, fy - 78);
-  ellipse(cx, cy, 13, 13, OUTLINE); ellipse(cx, cy, 12, 12, '#f3ead6'); ellipse(cx, cy, 10, 10, '#fff8e8');
-  for (let k = 0; k < 12; k++) R(cx + Math.cos(k * Math.PI / 6) * 9 - 0.5, cy + Math.sin(k * Math.PI / 6) * 9 - 0.5, 1, 1, '#3a2f4d');
+  ellipse(wx + 34, wy + wh - 4 - q * 14, 4, 4, '#ffe27a'); glow(wx + 34, wy + wh - 4 - q * 14, 16, 'rgba(255,226,122,A)', 0.35);
+  for (let k = 0; k < 6; k++) R(wx + k * 9 - 2, wy + wh - 4 - hash(k, 9) * 5, 9, 8, '#2a2448');
+  R(wx + ww / 2 - 1, wy, 2, wh, '#5c4a72');
+  R(kx, fy - 23, kw, 23, '#4a3b5c'); R(kx, fy - 23, kw, 2, '#8a7fa0');
+  for (let k = 0; k < kw; k += 26) { R(kx + k, fy - 20, 1, 20, '#3a2f4d'); R(kx + k + 20, fy - 15, 3, 1, '#c9c2b0'); }
+  R(kx + 60, fy - 26, 10, 3, '#c9c2b0'); R(kx + 63, fy - 29, 1, 3, '#c9c2b0');   // Spüle mit Hahn
+  const fx = kx + kw + 4;                                                         // Kühlschrank 1,8 m
+  R(fx, fy - 47, 16, 47, '#c9c2b0'); R(fx, fy - 47, 16, 1, '#e8e2d2'); R(fx, fy - 31, 16, 1, '#8a819c'); R(fx + 13, fy - 44, 1, 8, '#8a819c'); R(fx + 13, fy - 27, 1, 10, '#8a819c');
+  // Wanduhr (35 cm), Zeiger drehen sich beim Lesen
+  const cx = x0 + 120, cy = fy - 58;
+  ellipse(cx, cy, 6, 6, OUTLINE); ellipse(cx, cy, 5, 5, '#fff8e8');
+  for (let k = 0; k < 4; k++) R(cx + Math.round(Math.cos(k * Math.PI / 2) * 4), cy + Math.round(Math.sin(k * Math.PI / 2) * 4), 1, 1, '#3a2f4d');
   const mA = -Math.PI / 2 + q * Math.PI * 6, hA = -Math.PI / 2 + 0.9 + q * Math.PI / 2;
   g.strokeStyle = '#1a1205'; g.lineWidth = 1;
-  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(mA) * 8, cy + Math.sin(mA) * 8); g.stroke();
-  g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(hA) * 5, cy + Math.sin(hA) * 5); g.stroke();
-  // Hängeleuchte
-  const lx = x0 + 216; R(lx, 0, 1, fy - 64, '#5c4a72'); R(lx - 7, fy - 64, 15, 5, '#ffc83a'); glow(lx, fy - 58, 46, 'rgba(255,200,58,A)', 0.2);
-  // Stuhl
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(mA) * 4, cy + Math.sin(mA) * 4); g.stroke();
+  g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(hA) * 2.5, cy + Math.sin(hA) * 2.5); g.stroke();
+  // Hängeleuchte über dem Tisch
+  const lx = x0 + s.at + 24; R(lx, 0, 1, FY - 46, '#5c4a72'); R(lx - 5, FY - 46, 11, 3, '#ffc83a'); glow(lx, FY - 42, 34, 'rgba(255,200,58,A)', 0.2);
+  // Stuhl: Sitz 0,46 m, Lehne 0,95 m
   const ch = x0 + s.at - 2;
-  R(ch - 9, FY - 12, 16, 3, '#8c5a32'); R(ch - 9, FY - 9, 2, 9, '#6e4426'); R(ch + 5, FY - 9, 2, 9, '#6e4426'); R(ch - 10, FY - 34, 3, 25, '#8c5a32'); R(ch - 10, FY - 34, 3, 2, '#a66c3e');
+  R(ch - 7, FY - 12, 13, 2, '#8c5a32'); R(ch - 6, FY - 10, 1, 10, '#6e4426'); R(ch + 4, FY - 10, 1, 10, '#6e4426'); R(ch - 8, FY - 25, 2, 15, '#8c5a32'); R(ch - 8, FY - 25, 2, 1, '#a66c3e');
 }
 function kitchenFront(s, st) {
   const x0 = sx(s.x);
-  // Tisch vor der Figur
-  const tx = x0 + s.at + 12;
-  R(tx, FY - 22, 64, 4, '#a66c3e'); R(tx, FY - 18, 64, 2, '#6e4426'); R(tx + 4, FY - 16, 3, 18, '#6e4426'); R(tx + 56, FY - 16, 3, 18, '#6e4426');
-  // Kaffeetasse mit Dampf
-  const mx = tx + 40;
-  R(mx, FY - 29, 7, 7, '#f3ead6'); R(mx + 7, FY - 27, 2, 3, '#f3ead6'); R(mx + 1, FY - 29, 5, 1, '#5a3a24');
-  for (let k = 0; k < 3; k++) for (let j = 0; j < 6; j++) R(mx + 2 + k * 2 + Math.round(Math.sin(T * 3 + j * 0.8 + k) * 1.5), FY - 32 - j * 2 - k, 1, 1, `rgba(243,234,214,${0.5 - j * 0.07})`);
-  R(tx + 18, FY - 24, 12, 2, '#efe6cf'); R(tx + 52, FY - 25, 5, 3, '#ffc83a');
+  // Tisch 1,2 m × 0,76 m vor der Figur
+  const tx = x0 + s.at + 8;
+  R(tx, FY - 20, 32, 2, '#a66c3e'); R(tx, FY - 18, 32, 1, '#6e4426'); R(tx + 1, FY - 17, 2, 17, '#6e4426'); R(tx + 29, FY - 17, 2, 17, '#6e4426');
+  // Teller mit Brötchen, Kaffeetasse mit Dampf
+  R(tx + 7, FY - 21, 8, 1, '#efe6cf'); R(tx + 9, FY - 23, 4, 2, '#d9a45c');
+  const mx = tx + 22;
+  R(mx, FY - 23, 3, 3, '#f3ead6'); R(mx + 3, FY - 22, 1, 1, '#f3ead6'); R(mx, FY - 23, 3, 1, '#5a3a24');
+  for (let k = 0; k < 2; k++) for (let j = 0; j < 4; j++) R(mx + k * 2 + Math.round(Math.sin(T * 3 + j * 0.9 + k) * 1), FY - 25 - j * 2, 1, 1, `rgba(243,234,214,${0.45 - j * 0.09})`);
 }
 function newspaper(px, q, fr) {
-  const x = sx(px) + 5, y = FY - 46 - fr;
+  // aufgeschlagene Zeitung, etwa 0,55 m × 0,4 m
+  const x = sx(px) + 6, y = FY - 34 - fr;
   const flip = seg(q, 0.48, 0.58);
-  R(x - 1, y - 1, 26, 21, OUTLINE); R(x, y, 24, 19, '#efe6cf'); R(x + 12, y, 1, 19, '#cfc4a8');
-  R(x + 1, y + 1, 22, 3, '#1a1205'); R(x + 2, y + 2, 20, 1, '#efe6cf');
-  R(x + 1, y + 6, 10, 2, '#1a1205'); R(x + 1, y + 9, 10, 1, '#8a7f66'); R(x + 1, y + 11, 8, 1, '#8a7f66'); R(x + 1, y + 13, 10, 1, '#8a7f66'); R(x + 1, y + 15, 9, 1, '#8a7f66');
-  R(x + 14, y + 2, 9, 7, q > 0.55 ? '#2f56b0' : '#ff4f3a'); R(x + 14, y + 11, 9, 1, '#8a7f66'); R(x + 14, y + 13, 7, 1, '#8a7f66'); R(x + 14, y + 15, 9, 1, '#8a7f66');
-  if (flip > 0 && flip < 1) { const w = Math.round(12 * Math.cos(flip * Math.PI)); R(x + 12, y - 1, w, 21, '#fff8e8'); }
+  R(x - 1, y - 1, 16, 13, OUTLINE); R(x, y, 14, 11, '#efe6cf'); R(x + 7, y, 1, 11, '#cfc4a8');
+  R(x + 1, y + 1, 12, 2, '#1a1205');
+  R(x + 1, y + 4, 5, 1, '#1a1205'); R(x + 1, y + 6, 5, 1, '#8a7f66'); R(x + 1, y + 8, 4, 1, '#8a7f66');
+  R(x + 9, y + 4, 4, 3, q > 0.55 ? '#2f56b0' : '#ff4f3a'); R(x + 9, y + 8, 4, 1, '#8a7f66');
+  if (flip > 0 && flip < 1) { const w = Math.round(7 * Math.cos(flip * Math.PI)); R(x + 7 + Math.min(0, w), y - 1, Math.abs(w), 13, '#fff8e8'); }
 }
 
 // ---------- Szene: Büro mit Statistik und Pokal ----------
@@ -421,44 +438,44 @@ function office(s, st) {
   room(s, '#1d2238', '#20263e', '#2a2438', '#241f31');
   const x0 = sx(s.x), fy = FY - 22;
   const q = st.kind === 'buero' ? st.q : (st.x > s.x + s.at ? 1 : 0);
-  // Tafel mit wachsender Kurve
-  const bx = x0 + 40, by = Math.max(10, fy - 94), bw = 110, bh = 62;
-  R(bx - 3, by - 3, bw + 6, bh + 6, '#8a819c'); R(bx, by, bw, bh, '#f3ead6');
-  R(bx + 4, by + 5, 40, 2, '#3a2f4d');
-  for (let k = 0; k < 4; k++) R(bx + 6, by + 16 + k * 11, bw - 12, 1, '#d9cfb8');
-  const pts = [14, 40, 30, 34, 22, 18, 10, 12, 6, 4, 2, 2];
-  const grow = clamp(0.25 + (q * 1.4), 0, 1), n = Math.max(2, Math.round(pts.length * grow));
-  g.strokeStyle = '#ff4f3a'; g.lineWidth = 2; g.beginPath();
-  for (let k = 0; k < n; k++) { const px2 = bx + 8 + k * 8.5, py = by + 14 + pts[k]; k ? g.lineTo(px2, py) : g.moveTo(px2, py); }
+  // Whiteboard 1,8 m × 1 m mit wachsender Tabellenkurve
+  const bw = 47, bh = 26, bx = x0 + s.at - 128, by = fy - 27 - bh;
+  R(bx - 2, by - 2, bw + 4, bh + 4, '#8a819c'); R(bx, by, bw, bh, '#f3ead6'); R(bx + 2, by + bh + 2, bw - 4, 1, '#5c5470');
+  R(bx + 3, by + 3, 16, 1, '#3a2f4d');
+  for (let k = 0; k < 3; k++) R(bx + 3, by + 8 + k * 6, bw - 6, 1, '#d9cfb8');
+  const pts = [8, 18, 14, 15, 10, 8, 5, 6, 3, 2, 1, 1];
+  const grow = clamp(0.25 + q * 1.4, 0, 1), n = Math.max(2, Math.round(pts.length * grow));
+  g.strokeStyle = '#ff4f3a'; g.lineWidth = 1; g.beginPath();
+  for (let k = 0; k < n; k++) { const px2 = bx + 4.5 + k * 3.6, py = by + 5.5 + pts[k]; k ? g.lineTo(px2, py) : g.moveTo(px2, py); }
   g.stroke();
-  for (let k = 0; k < n; k++) R(bx + 7 + k * 8.5, by + 13 + pts[k], 3, 3, '#1a1205');
-  if (n === pts.length) { text('1.', bx + bw - 14, by + 5, '#ff4f3a', 8); }
+  if (n === pts.length) { R(bx + bw - 6, by + 3, 3, 3, '#ffc83a'); R(bx + bw - 5, by + 2, 1, 5, '#ffc83a'); R(bx + bw - 7, by + 4, 5, 1, '#ffc83a'); }
   // Bilderrahmen
-  R(x0 + 176, Math.max(14, fy - 84), 26, 20, '#ffc83a'); R(x0 + 178, Math.max(14, fy - 84) + 2, 22, 16, '#2f56b0'); R(x0 + 184, Math.max(14, fy - 84) + 8, 10, 6, '#f3ead6');
-  // Schreibtisch mit Monitor (zeigt die echte Statistik-Seite)
-  const dx = x0 + 168, dy = FY - 20;
-  R(dx, dy, 84, 4, '#5c3a22'); R(dx, dy + 4, 84, 2, '#3d2616'); R(dx + 4, dy + 6, 4, 14, '#3d2616'); R(dx + 72, dy + 6, 8, 14, '#3d2616');
-  const mx = dx + 14, my = dy - 40, mw = 56, mh = 34;
-  R(mx - 2, my - 2, mw + 4, mh + 4, OUTLINE); R(mx, my, mw, mh, '#2a2630');
-  if (SHOT_STATS.complete && SHOT_STATS.naturalWidth) { g.imageSmoothingEnabled = true; g.drawImage(SHOT_STATS, 60, 40, 1160, 640, mx + 2, my + 2, mw - 4, mh - 4); g.imageSmoothingEnabled = false; }
-  R(mx + mw / 2 - 3, my + mh + 2, 6, 4, '#2a2630'); R(mx + mw / 2 - 9, my + mh + 6, 18, 2, '#2a2630');
-  glow(mx + mw / 2, my + mh / 2, 50, 'rgba(124,242,255,A)', 0.12);
-  // Sockel mit Pokal
-  const px = x0 + s.at + 22;
-  R(px - 10, FY - 24, 20, 24, '#3a2f4d'); R(px - 11, FY - 25, 22, 3, '#4a3d62'); R(px - 6, FY - 16, 12, 6, '#ffc83a'); R(px - 4, FY - 14, 8, 2, '#c98a1a');
+  const fx = x0 + s.at - 168; R(fx, fy - 58, 13, 10, '#ffc83a'); R(fx + 1, fy - 57, 11, 8, '#2f56b0'); R(fx + 4, fy - 54, 5, 3, '#f3ead6');
+  // Analyse-Bildschirm 1,6 m an der Wand (zeigt die Statistik-Seite), darunter Schreibtisch
+  const mw = 42, mh = 24, mx = x0 + s.at - 68, my = fy - 30 - mh;
+  R(mx - 1, my - 1, mw + 2, mh + 2, OUTLINE); R(mx, my, mw, mh, '#15131a');
+  if (SHOT_STATS.complete && SHOT_STATS.naturalWidth) { g.imageSmoothingEnabled = true; g.drawImage(SHOT_STATS, 60, 40, 1160, 640, mx + 1, my + 1, mw - 2, mh - 2); g.imageSmoothingEnabled = false; }
+  glow(mx + mw / 2, my + mh / 2, 34, 'rgba(124,242,255,A)', 0.1);
+  const dx = mx - 6;
+  R(dx, fy - 20, 54, 2, '#5c3a22'); R(dx + 2, fy - 18, 2, 18, '#3d2616'); R(dx + 50, fy - 18, 2, 18, '#3d2616'); R(dx + 36, fy - 18, 14, 10, '#3d2616');
+  R(dx + 10, fy - 21, 10, 1, '#8a819c'); R(dx + 11, fy - 26, 8, 5, '#2a2630'); R(dx + 12, fy - 25, 6, 3, '#3a6fb0');
+  R(dx + 30, fy - 23, 3, 3, '#f3ead6');
+  // Sockel 1 m mit Pokal (60 cm)
+  const px = x0 + s.at + 16;
+  R(px - 6, FY - 26, 13, 26, '#3a2f4d'); R(px - 7, FY - 27, 15, 2, '#4a3d62'); R(px - 3, FY - 17, 7, 3, '#ffc83a');
   const lifted = st.kind === 'buero' && q > 0.3 && q < 0.92;
-  if (!lifted) trophy(px, FY - 25);
-  // Regal mit Bällen
-  const rx = x0 + 380, ry = Math.max(20, fy - 60);
-  R(rx, ry, 56, 3, '#5c3a22'); R(rx, ry + 26, 56, 3, '#5c3a22');
-  for (let k = 0; k < 4; k++) ball(rx + 8 + k * 13, ry - 4);
-  for (let k = 0; k < 5; k++) R(rx + 4 + k * 10, ry + 12, 7, 14, ['#ff4f3a', '#2f56b0', '#ffc83a', '#3ddc84', '#f3ead6'][k]);
+  if (!lifted) trophy(px, FY - 27);
+  // Regal 1,2 m mit Bällen und Ordnern
+  const rx = x0 + 380, ry = fy - 40;
+  R(rx, ry, 32, 2, '#5c3a22'); R(rx, ry + 14, 32, 2, '#5c3a22');
+  for (let k = 0; k < 3; k++) ball(rx + 5 + k * 9, ry - 3);
+  for (let k = 0; k < 6; k++) R(rx + 2 + k * 5, ry + 5, 4, 9, ['#ff4f3a', '#2f56b0', '#ffc83a', '#3ddc84', '#f3ead6', '#7cf2ff'][k]);
 }
-function trophy(x, y) { // Fuß bei (x, y)
-  R(x - 6, y - 4, 12, 4, '#7a4a12'); R(x - 2, y - 9, 4, 5, '#c98a1a');
-  R(x - 6, y - 19, 12, 10, '#ffc83a'); R(x - 5, y - 10, 10, 2, '#c98a1a'); R(x - 4, y - 18, 2, 7, '#fff0b0');
-  R(x - 9, y - 18, 3, 6, '#c98a1a'); R(x + 6, y - 18, 3, 6, '#c98a1a'); R(x - 9, y - 18, 3, 1, '#ffc83a'); R(x + 6, y - 18, 3, 1, '#ffc83a');
-  if (Math.sin(T * 5) > 0.3) { R(x + 3, y - 23, 1, 3, '#ffffff'); R(x + 2, y - 22, 3, 1, '#ffffff'); }
+function trophy(x, y) { // Fuß bei (x, y), rund 16 px hoch
+  R(x - 4, y - 3, 8, 3, '#7a4a12'); R(x - 1, y - 6, 2, 3, '#c98a1a');
+  R(x - 4, y - 13, 8, 7, '#ffc83a'); R(x - 5, y - 14, 10, 1, '#ffe27a'); R(x - 3, y - 12, 1, 5, '#fff0b0'); R(x - 3, y - 7, 6, 1, '#c98a1a');
+  R(x - 6, y - 13, 2, 4, '#c98a1a'); R(x + 4, y - 13, 2, 4, '#c98a1a');
+  if (Math.sin(T * 5) > 0.3) { R(x + 3, y - 18, 1, 3, '#ffffff'); R(x + 2, y - 17, 3, 1, '#ffffff'); }
 }
 
 // ---------- Szene: Kabine ----------
@@ -468,55 +485,56 @@ function locker(s, st) {
   for (let y = 0; y < fy; y += 8) for (let k = ((y / 8) % 2) * 4; k < s.w; k += 8) R(x0 + k, y, 7, 7, '#2a3648');
   R(x0, fy, s.w, H - fy, '#1e2733');
   for (let y = fy; y < H; y += 6) for (let k = 0; k < s.w; k += 6) R(x0 + k, y, 5, 5, ((k + y) / 6) % 2 ? '#222c39' : '#1b2430');
-  // Spinde
-  const ly = fy - 62;
-  for (let k = 0; k < 9; k++) {
-    const lx = x0 + 8 + k * 21; if (lx > x0 + 190 && lx < x0 + 290) continue;
-    R(lx, ly, 19, 62, '#3d5068'); R(lx, ly, 19, 1, '#5a7090'); R(lx + 18, ly, 1, 62, '#2a3648');
-    for (let j = 0; j < 4; j++) R(lx + 5, ly + 6 + j * 3, 9, 1, '#2a3648');
-    R(lx + 14, ly + 30, 2, 5, '#c9c2b0'); drawDigits(g, k + 2, lx + 4, ly + 46, '#c9c2b0');
-  }
-  for (let k = 0; k < 6; k++) { const lx = x0 + 300 + k * 21; R(lx, ly, 19, 62, '#3d5068'); R(lx, ly, 19, 1, '#5a7090'); R(lx + 18, ly, 1, 62, '#2a3648'); for (let j = 0; j < 4; j++) R(lx + 5, ly + 6 + j * 3, 9, 1, '#2a3648'); }
-  // offener Spind mit Trikot
-  const ox = x0 + 300 + 2 * 21; R(ox, ly, 19, 62, '#121820'); R(ox + 4, ly + 10, 11, 14, '#ff4f3a'); R(ox + 2, ly + 10, 15, 3, '#ff4f3a'); drawDigits(g, 9, ox + 8, ly + 14, '#ffc83a');
-  // Bank
-  R(x0 + 40, FY - 12, 120, 3, '#8c5a32'); R(x0 + 46, FY - 9, 3, 9, '#5c3a22'); R(x0 + 150, FY - 9, 3, 9, '#5c3a22');
-  R(x0 + 70, FY - 15, 10, 3, '#f3ead6'); ball(x0 + 120, FY - 15);
-  // Schild
-  const sxp = x0 + 210, syp = Math.max(8, ly - 22);
-  R(sxp, syp, 70, 14, '#ffc83a'); R(sxp + 1, syp + 1, 68, 12, '#1a1205'); drawDigits(g, 7, sxp + 6, syp + 5, '#ffc83a'); R(sxp + 14, syp + 6, 48, 3, '#ffc83a');
+  // Spinde: 1,8 m hoch, 0,4 m breit
+  const ly = fy - 47, booth = s.at;
+  const spind = (lx, nr, open) => {
+    if (open) { R(lx, ly, 10, 47, '#121820'); R(lx + 1, ly + 8, 8, 10, '#ff4f3a'); R(lx, ly + 8, 10, 2, '#ff4f3a'); drawDigits(g, 9, lx + 4, ly + 11, '#ffc83a'); return; }
+    R(lx, ly, 10, 47, '#3d5068'); R(lx, ly, 10, 1, '#5a7090'); R(lx + 9, ly, 1, 47, '#2a3648');
+    for (let j = 0; j < 3; j++) R(lx + 2, ly + 4 + j * 2, 6, 1, '#2a3648');
+    R(lx + 7, ly + 22, 1, 4, '#c9c2b0'); drawDigits(g, nr, lx + 2, ly + 34, '#c9c2b0');
+  };
+  let nr = 0;
+  const next = () => (nr++ % 9) + 1;
+  for (let lx = 6; lx + 10 < booth - 26; lx += 11) spind(x0 + lx, next(), false);
+  for (let lx = booth + 30, k = 0; lx + 10 < s.w - 6; lx += 11, k++) spind(x0 + lx, next(), k === 2);
+  // Bank 0,45 m mit Handtuch und Ball
+  R(x0 + 40, FY - 12, 80, 3, '#8c5a32'); R(x0 + 44, FY - 9, 2, 9, '#5c3a22'); R(x0 + 114, FY - 9, 2, 9, '#5c3a22');
+  R(x0 + 60, FY - 14, 8, 2, '#f3ead6'); ball(x0 + 100, FY - 15);
+  // Schild über der Umkleide
+  const sxp = x0 + booth - 20, syp = fy - 66;
+  R(sxp, syp, 40, 9, '#ffc83a'); R(sxp + 1, syp + 1, 38, 7, '#1a1205'); drawDigits(g, 7, sxp + 3, syp + 2, '#ffc83a'); R(sxp + 9, syp + 3, 27, 2, '#ffc83a');
 }
-function curtain(s, st) { // vor der Figur
-  const x0 = sx(s.x), cx = x0 + s.at, top = FY - 66;
+function curtain(s, st) { // vor der Figur: Stange 2,15 m, Vorhang gut 1 m breit
+  const x0 = sx(s.x), cx = x0 + s.at, top = FY - 56;
   const q = st.kind === 'kabine' ? st.q : (st.x > s.x + s.at ? 1 : 0);
   // Vorhang schließt (0–0.12), wackelt, öffnet (0.78–0.9)
   const close = st.kind === 'kabine' ? seg(q, 0.02, 0.12) * (1 - seg(q, 0.78, 0.9)) : 0;
-  R(cx - 22, top - 3, 46, 3, '#c9c2b0'); R(cx - 23, top - 4, 2, 5, '#8a819c'); R(cx + 22, top - 4, 2, 5, '#8a819c');
-  const wob = q > 0.15 && q < 0.75 ? Math.sin(T * 18) * 1.5 : 0;
-  const cw = Math.round(lerp(10, 44, close));
+  R(cx - 16, top - 2, 33, 2, '#c9c2b0'); R(cx - 17, top - 3, 2, 4, '#8a819c'); R(cx + 16, top - 3, 2, 4, '#8a819c');
+  const wob = q > 0.15 && q < 0.75 ? Math.sin(T * 18) * 1.2 : 0;
+  const cw = Math.round(lerp(6, 31, close));
   for (let k = 0; k < cw; k++) {
-    const fold = (k % 6) < 3 ? '#c22f2f' : '#a32424', sway = Math.round(wob * Math.sin(k * 0.6 + T * 6));
-    R(cx - 22 + k + sway, top, 1, 64 - (k % 3 === 0 ? 1 : 0), fold);
+    const fold = (k % 4) < 2 ? '#c22f2f' : '#a32424', sway = Math.round(wob * Math.sin(k * 0.6 + T * 6));
+    R(cx - 15 + k + sway, top, 1, 55 - (k % 3 === 0 ? 1 : 0), fold);
   }
-  R(cx - 22, top, cw, 2, '#e04848');
+  R(cx - 15, top, cw, 1, '#e04848');
 }
 // fliegende Kleidung beim Umziehen
 function clothes(s, q) {
   const cx = sx(s.x + s.at);
   const items = [
-    { t0: 0.24, c: '#ff4f3a', w: 9, h: 8, num: true, dx: -70, up: 40 },
-    { t0: 0.36, c: '#1d1830', w: 8, h: 5, dx: -40, up: 30 },
-    { t0: 0.46, c: '#f2f2f2', w: 5, h: 3, dx: -95, up: 34 },
-    { t0: 0.52, c: '#ff4f3a', w: 3, h: 6, dx: -58, up: 26 },
+    { t0: 0.24, c: '#ff4f3a', w: 8, h: 7, num: true, dx: -64, up: 34 },
+    { t0: 0.36, c: '#1d1830', w: 6, h: 4, dx: -38, up: 26 },
+    { t0: 0.46, c: '#f2f2f2', w: 4, h: 2, dx: -84, up: 30 },
+    { t0: 0.52, c: '#ff4f3a', w: 2, h: 5, dx: -52, up: 22 },
   ];
   items.forEach(it => {
     const k = seg(q, it.t0, it.t0 + 0.16); if (k <= 0) return;
-    const x = cx + it.dx * k, y = FY - 50 - it.up * Math.sin(k * Math.PI) + 46 * k * k;
+    const x = cx + it.dx * k, y = FY - 42 - it.up * Math.sin(k * Math.PI) + 40 * k * k;
     g.save(); g.translate(Math.round(x), Math.round(Math.min(y, FY - it.h))); g.rotate(k < 1 ? k * 8 : 0.3);
     R(-it.w / 2, -it.h / 2, it.w, it.h, it.c); if (it.num) drawDigits(g, 7, -1, -2, '#ffc83a');
     g.restore();
   });
-  if (q > 0.62 && q < 0.86) for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2 + T * 2, r = 18 + 6 * Math.sin(T * 6 + k); if (hash(k, Math.floor(T * 8)) > 0.3) R(cx + Math.cos(a) * r, FY - 30 + Math.sin(a) * r * 1.2, 2, 2, k % 2 ? '#ffc83a' : '#ffffff'); }
+  if (q > 0.62 && q < 0.86) for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI * 2 + T * 2, r = 15 + 5 * Math.sin(T * 6 + k); if (hash(k, Math.floor(T * 8)) > 0.3) R(cx + Math.cos(a) * r, FY - 28 + Math.sin(a) * r * 1.2, 1, 1, k % 2 ? '#ffc83a' : '#ffffff'); }
 }
 
 // ---------- Szene: Finale ----------
@@ -524,8 +542,8 @@ function finaleExtras(s, st) {
   const x0 = sx(s.x);
   // Trainerbank mit Ersatzspielern
   const bx = x0 + s.at + 46;
-  R(bx - 6, FY - 40, 92, 4, '#2a2140'); R(bx - 6, FY - 40, 4, 40, '#2a2140'); R(bx + 82, FY - 40, 4, 40, '#2a2140');
-  R(bx - 2, FY - 36, 84, 22, 'rgba(124,242,255,.08)');
+  R(bx - 6, FY - 52, 92, 4, '#2a2140'); R(bx - 6, FY - 52, 3, 52, '#2a2140'); R(bx + 83, FY - 52, 3, 52, '#2a2140');
+  R(bx - 3, FY - 48, 86, 34, 'rgba(124,242,255,.08)');
   BENCH.forEach((L, k) => { const fr = Math.sin(T * 6 + k) > 0.6 ? 1 : 0; g.drawImage(sprite(L, st.kind === 'finale' && st.q > 0.3 ? 'jubel' : 'sit', fr), bx + 12 + k * 22 - AX, FY - 4 - AY); });
   R(bx - 2, FY - 12, 84, 3, '#8a819c');
   // Scheinwerfer, die kreisen
@@ -579,21 +597,22 @@ function hero(st) {
       return;
     }
     case 'tor': {
-      const q = st.q, gx = tor.x + tor.at + 132;
+      const q = st.q, gx = tor.x + tor.at + GOAL_DX, nearY = FY - 2;
       let pose = 'hold', fr = idleFr, lift = 0;
       if (q < 0.12) { pose = 'drib'; fr = Math.floor(q * 60) % 6; }
       else if (q < 0.22) { pose = 'wind'; fr = 0; }
       else if (q < 0.42) { pose = 'wind'; fr = 1; lift = Math.sin(seg(q, 0.22, 0.62) * Math.PI) * 16; }
       else if (q < 0.62) { pose = 'throw'; fr = 1; lift = Math.sin(seg(q, 0.22, 0.62) * Math.PI) * 16; }
       else { pose = 'jubel'; fr = Math.floor(T * 6) % 2; }
-      drawSprite(L, pose, fr, st.x, lift);
+      const jx = st.x + Math.round(seg(q, 0.22, 0.62) * 14); // Sprung in den Kreis
+      drawSprite(L, pose, fr, jx, lift);
       // Ball: in der Hand, dann Flug ins Tor
-      const hx = sx(st.x);
+      const hx = sx(jx);
       if (q < 0.12) ball(hx + 10, FY - 4 - Math.abs(Math.sin(q * 30)) * 12);
       else if (q < 0.45) ball(hx + (q < 0.22 ? 9 : -6), FY - (q < 0.22 ? 24 : 46) - lift);
       else {
-        const k = seg(q, 0.45, 0.6), bx = lerp(hx + 12, sx(gx) + 8, k), by = lerp(FY - 44 - 16, FY - 14, k) - Math.sin(k * Math.PI) * 10;
-        ball(Math.round(bx), Math.round(q < 0.75 ? by : FY - 3));
+        const k = seg(q, 0.45, 0.6), bx = lerp(hx + 12, sx(gx) + 12, k), by = lerp(FY - 44 - 16, nearY - 36, k) - Math.sin(k * Math.PI) * 8;
+        if (q < 0.6) ball(Math.round(bx), Math.round(by)); else ball(sx(gx) + 14, Math.round(lerp(nearY - 36, FY - 9, ease(seg(q, 0.6, 0.72)))));
       }
       return;
     }
@@ -614,7 +633,7 @@ function hero(st) {
       const q = st.q, lifted = q > 0.3 && q < 0.92;
       const fr = Math.floor(T * 4) % 2;
       drawSprite(L, lifted ? 'lift' : 'idle', lifted ? fr : idleFr, st.x + (lifted ? 6 : 0), 0);
-      if (lifted) trophy(sx(st.x + 6) + 1, FY - 46 - fr - 1);
+      if (lifted) trophy(sx(st.x + 6) + 2, FY - 46 - fr);
       return;
     }
     case 'kabine': {
@@ -659,10 +678,10 @@ function render() {
     if (s.id === 'tor') {
       arena(s, { cheer, board: torQ > 0.6 ? '+++ TOOOR! +++ TOOOR! +++ ' : undefined });
       const net = st.kind === 'tor' ? seg(torQ, 0.58, 0.62) * (1 - seg(torQ, 0.62, 0.8)) : 0;
-      goal(sx(s.x + s.at + 132), net);
+      goal(sx(s.x + s.at + GOAL_DX), net);
       // Torwart
       const gq = torQ, dive = st.kind === 'tor' && gq > 0.5 && gq < 0.85;
-      g.drawImage(sprite(KEEPER, dive ? 'star' : 'gk', dive ? 0 : Math.floor(T * 3) % 2, true), sx(s.x + s.at + 122) - AX + (dive ? -2 : 0), FY - 2 - AY - (dive ? 6 : 0));
+      g.drawImage(sprite(KEEPER, dive ? 'star' : 'gk', dive ? 0 : Math.floor(T * 3) % 2, true), sx(s.x + s.at + GOAL_DX - 14) - AX + (dive ? -2 : 0), FY - 5 - AY - (dive ? 8 : 0));
     }
     if (s.id === 'tv') tvScene(s, st);
     if (s.id === 'zeitung') kitchen(s, st);
@@ -711,7 +730,7 @@ let unitPx = 3;
 function resize() {
   const vw = sticky.clientWidth, vh = sticky.clientHeight;
   // Pixelgröße: Höhe mindestens 180 logische Pixel, Breite mindestens 230
-  SCALE = Math.max(1.5, Math.min(vh / 200, vw / 170));
+  SCALE = Math.max(1.5, Math.min(vh / 165, vw / 150));
   W = Math.ceil(vw / SCALE); H = Math.ceil(vh / SCALE);
   FY = H - 24;
   cv.width = W; cv.height = H;

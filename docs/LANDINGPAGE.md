@@ -24,6 +24,8 @@ Die Figur nutzt die Sprites aus dem Spiel (`src/p03_sprites.js`, nach `assets/st
 | `kabine` | Vorhang zu, Trikot und Schuhe fliegen raus, Vorhang auf: Anzug |
 | `finale` | Halle am Abend, Ersatzbank jubelt, der Manager zeigt aufs Feld |
 
+Alles ist im gleichen Maßstab gezeichnet: Die Figur ist rund 50 px groß (≈ 1,9 m), also `M = 26` Pixel pro Meter. Tor 2 m hoch auf der Torlinie am Ende des Torraums, Fernseher 1,45 m, Tisch 0,76 m, Spinde 1,8 m usw. Neue Möbel bitte in diesem Maßstab anlegen.
+
 Die Zeitachse ergibt sich aus `SCENES` (Breite `w`, Haltepunkt `at`, Länge der Aktion `act`). Lauf-Abschnitte sind 1:1 an den Scroll gekoppelt, in Aktionen bleibt die Figur stehen und der Scroll treibt die Animation. Die Texte (`[data-scene]` in `index.html`) gleiten pro Szene von rechts herein und nach links hinaus. Mit `window.__story` lässt sich die Zeitachse im Browser untersuchen.
 
 Ohne JavaScript werden die Texte als normale Liste untereinander gezeigt.
