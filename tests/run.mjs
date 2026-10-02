@@ -262,6 +262,94 @@ test('Karriere: 9 Spieltage, Statistik und Pokal-Turnierbaum', async () => {
   }
 });
 
+// ---------------------------------------------------------------- Wirtschaft
+test('Wirtschaft: Saisonlänge ändert Gehälter und Einnahmen pro Saison kaum', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 4711);
+  const r = await page.evaluate(() => [0, 1, 2].map(len => {
+    careerCreate(12, len, 1, 1, true, 3); while (!CAREER.season.done) ACT.cSim(); const F = finOf();
+    return { wages: F.wages, income: F.gate + F.sponsor };
+  }));
+  const span = k => Math.max(...r.map(x => x[k])) / Math.min(...r.map(x => x[k]));
+  ok(span('wages') < 1.1, 'Gehälter pro Saison weichen ab: ' + JSON.stringify(r));
+  ok(span('income') < 1.6, 'Einnahmen pro Saison weichen stark ab: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Wirtschaft: kein Geld aus dem Nichts (Sperre, Sofortverkauf, zahlender Käufer)', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 99);
+  const r = await page.evaluate(() => {
+    careerCreate(3, 1, 1, 1); refreshMarket(true);
+    const fa = CAREER.market.filter(x => x.from < 0).sort((a, b) => a.price - b.price)[0], m0 = CAREER.money;
+    const bought = buyPlayer(fa.pid) === '', blocked = sellPlayer(fa.pid) !== '';
+    const p = CAREER.squads[CAREER.team].find(q => q.pid === fa.pid);
+    while (isLocked(p)) ACT.cSim();
+    const price = quickSalePrice(p), before = CAREER.money, aiBefore = Object.values(CAREER.aiMoney).reduce((a, c) => a + c, 0);
+    const sold = sellPlayer(fa.pid) === '', aiAfter = Object.values(CAREER.aiMoney).reduce((a, c) => a + c, 0);
+    return { bought, blocked, sold, profit: price - fa.price, got: CAREER.money - before, aiPaid: aiBefore - aiAfter };
+  });
+  ok(r.bought && r.blocked, 'Neuzugang ließ sich sofort weiterverkaufen: ' + JSON.stringify(r));
+  ok(r.sold && r.profit < 0, 'Kauf und Wiederverkauf bringt Gewinn: ' + JSON.stringify(r));
+  ok(r.got === r.aiPaid, 'Käufer hat den Verkaufspreis nicht bezahlt: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Wirtschaft: Schulden führen zu Transfersperre und Notverkauf', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 99);
+  const r = await page.evaluate(() => {
+    careerCreate(12, 1, 1, 1); CAREER.money = -300000; refreshMarket(true);
+    const ban = buyPlayer(CAREER.market[0].pid).startsWith('Transfersperre'), n0 = CAREER.squads[CAREER.team].length;
+    for (let i = 0; i < debtLimit(); i++) ACT.cSim();
+    return { ban, sold: n0 - CAREER.squads[CAREER.team].length, money: CAREER.money, news: CAREER.news.some(t => t.startsWith('Notverkauf')) };
+  });
+  ok(r.ban, 'keine Transfersperre bei Schulden'); ok(r.sold >= 1 && r.news && r.money >= 0, 'kein Notverkauf: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Wirtschaft: Vorstand entlässt nach zweimal deutlich verfehltem Ziel, neuer Job startet sauber', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 99);
+  const r = await page.evaluate(() => {
+    careerCreate(3, 0, 1, 1); const v = [];
+    for (let s = 0; s < 2; s++) {
+      while (!CAREER.season.done) ACT.cSim();
+      const T = CAREER.season.table[CAREER.team]; T.s = T.u = T.tp = 0; T.n = T.sp;   // eigenen Verein ans Tabellenende
+      v.push(careerEndSeason().board);
+    }
+    const offers = (CAREER.jobOffers || []).slice(), old = CAREER.team;
+    if (offers.length) ACT.cJob(offers[0]);
+    return { warn: v[0].warn && !v[0].fired, fired: v[1].fired, offers: offers.length, team: CAREER.team, old, round: CAREER.season.round, lg: CAREER.season.lg, inTable: CAREER.season.table[CAREER.team] !== undefined };
+  });
+  ok(r.warn && r.fired, 'Warnung/Entlassung fehlt: ' + JSON.stringify(r));
+  ok(r.offers >= 2 && r.team !== r.old && r.round === 0 && r.inTable, 'Jobwechsel: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Wirtschaft: CPU-Budgets bleiben über drei Saisons stabil', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 4711);
+  const r = await page.evaluate(() => {
+    careerCreate(12, 1, 1, 1, true, 3); const avgAi = () => { const v = Object.entries(CAREER.aiMoney).filter(([id]) => +id !== CAREER.team).map(([, x]) => x); return v.reduce((a, c) => a + c, 0) / v.length; };
+    const a0 = avgAi();
+    for (let s = 0; s < 3; s++) { while (!CAREER.season.done) ACT.cSim(); careerEndSeason(); if (CAREER.jobOffers) ACT.cJob(CAREER.jobOffers[0]); }
+    return { a0, a3: avgAi() };
+  });
+  ok(r.a3 > r.a0 * 0.5 && r.a3 < r.a0 * 2, `CPU-Durchschnitt ${Math.round(r.a0 / 1000)}k -> ${Math.round(r.a3 / 1000)}k`);
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Handy-Hochformat: keine Karriere-Ansicht ragt über den Fensterrand', async () => {
+  const { page, ctx, errors } = await open({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }, 5);
+  const bad = await page.evaluate(() => {
+    document.body.classList.add('touch', 'portraitok'); careerCreate(8, 1, 1, 1, true, 3);
+    while (!CAREER.season.done) ACT.cSim(); careerEndSeason();
+    const out = [], check = name => { const panel = menu.querySelector('.panel'); if (!panel) return; const pr = panel.getBoundingClientRect();
+      menu.querySelectorAll('.panel *').forEach(el => { const r = el.getBoundingClientRect(); if (r.width && r.right > pr.right + 1 && !el.closest('.ctabs') && !el.closest('.bracket')) out.push(`${name}: ${el.tagName.toLowerCase()} +${Math.round(r.right - pr.right)}px`); }); };
+    careerHub(); check('Saisonabschluss'); ACT.cNext(); for (let i = 0; i < 5; i++) ACT.cSim();
+    for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'stats', 'hist']) { ACT.cTab(t); check(t); }
+    ACT.cPick(CAREER.squads[CAREER.team][0].pid); check('Spieler');
+    return [...new Set(out)].slice(0, 5);
+  });
+  ok(!bad.length, bad.join(', ')); ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 // ---------------------------------------------------------------- Handy-Zoom
 test('Handy: kein Zoom mit zwei Daumen, Menü scrollt mit einem Finger', async () => {
   const { page, ctx, errors } = await open(MOBILE);

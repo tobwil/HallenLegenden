@@ -2,6 +2,17 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.2: Finanzen im Karrieremodus
+- **Zuschauereinnahmen:** Jedes Heimspiel bringt Geld nach Hallengröße und Auslastung. Die Auslastung steigt mit Tabellenplatz, Siegesserie, starkem Gegner und im Pokal. Pokal-Heimspiele bringen jetzt auch Zuschauergeld. Die Zeitung nennt die Zuschauerzahl. Dazu Sponsoren pro Spieltag und TV-Geld nach Platz. Die Pauschalen für Sieg, Remis und Niederlage entfallen.
+- **Saisonlänge egal:** Gehälter und Einnahmen sind auf eine Saison geeicht. Bei 6 oder 34 Spieltagen wird pro Spieltag umgerechnet, Zuschauergeld über die tatsächliche Zahl der Heimspiele. Spielergehälter werden pro Saison angezeigt.
+- **CPU-Vereine** haben Einnahmen und Gehälter nach denselben Regeln, statt nur Geld dazuzubekommen. Ihre Budgets bleiben über mehrere Saisons stabil.
+- **Fehler behoben (Geld aus dem Nichts):** Ablösefreie Spieler für 60 % kaufen und sofort für 85 % verkaufen brachte beliebig viel Geld. Jetzt sind Neuzugänge ein Drittel der Saison gesperrt, ein Sofortverkauf bringt 55 % des Marktwerts, und der Käufer muss zahlen können. Beim Kauf von einem Verein bekommt dieser die Ablöse.
+- **Vorstand:** Bonus bei erreichtem Saisonziel. Knapp verfehlt (bis 2 Plätze) hat keine Folgen. Deutlich verfehlt oder Schulden zum Saisonende bringen eine Warnung, beim zweiten Mal in Folge die Entlassung mit Jobangeboten schwächerer Vereine.
+- **Schulden:** Transfersperre, solange die Kasse im Minus ist. Nach einigen Spieltagen im Minus verkauft der Vorstand den günstigsten Spieler, dessen Erlös die Schulden deckt.
+- **Statistik und Saisonabschluss** zeigen die Finanzbilanz der Saison, dazu Zuschauerschnitt und Hallengröße
+- 5 neue Regressionstests für die Wirtschaft (`tests/run.mjs`)
+- **Fehler behoben:** Die Historie ragte auf dem Handy im Hochformat über den Fensterrand. Sie erscheint dort jetzt als Karten (Saison · Liga · Platz, darunter Ziel, Meister, Pokal, Torjäger). Ein neuer Test prüft alle Karriere-Ansichten im Hochformat auf Überlauf.
+
 ## v8.1: Kein Zoom beim Spielen mit zwei Daumen, Regressionstests
 - **Fehler behoben:** Auf dem iPhone (Safari) konnte das Bild beim Spielen plötzlich heranzoomen, wenn ein Daumen auf dem Stick und der andere auf einem Knopf lag. Safari erkennt das als Zwei-Finger-Zoom und ignoriert die übliche Zoom-Sperre. Jetzt werden Safaris Gesten-Events und Zwei-Finger-Bewegungen abgefangen, das Viewport-Tag sperrt den Zoom auch für andere Browser, und ein dennoch eingetretener Zoom wird automatisch zurückgesetzt. Ein-Finger-Scrollen in den Menüs funktioniert weiter.
 - **Regressionstests im Repository** (`tests/`, Playwright): 15 Tests für Laden, Overlay, Menüfenster, Tastenbelegung, Aktionen, Eingabepuffer, Passquote, Spielerwechsel, komplettes Spiel, Kraftverlust, Zufallseingaben, Simulation, Editor, Karriere mit Statistik und Pokal sowie Handy-Zoom. Aufruf: `cd tests && npm install && npm test`.

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Baut das Spiel aus den Quelldateien (Reihenfolge ist wichtig, alle Module teilen sich einen Script-Block)
 cd "$(dirname "$0")"
-JS="p01_core.js p02_audio.js p03_sprites.js p04_arena.js p05_match.js p06_actions.js p07_ai.js p08_rules.js p09_fx.js p10_render.js p11_menus.js p13_career.js p15_cup.js p14_career_ui.js p12_main.js"
+JS="p01_core.js p02_audio.js p03_sprites.js p04_arena.js p05_match.js p06_actions.js p07_ai.js p08_rules.js p09_fx.js p10_render.js p11_menus.js p13_career.js p15_cup.js p16_finance.js p14_career_ui.js p12_main.js"
 
 # Artifact-Fassung: ohne <html>-Gerüst
 { cat head.html; echo '<script>'; cat $JS; echo '</script>'; } > ../hallen-legenden.html

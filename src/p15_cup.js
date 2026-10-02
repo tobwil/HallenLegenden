@@ -18,6 +18,7 @@ function autoCup() { while (cupDue() && !ownCupTie()) playCupRound(null); }
 function playCupRound(own, force) {
   const C = CAREER.cup, me = CAREER.team, rows = [];
   for (const [a, b] of C.ties) {
+    cupGate(a, b, C.round);   // Zuschauereinnahmen für den Gastgeber
     let r = own && own.a === a && own.b === b ? own : null;
     if (!r) {
       const m = simMatch(a, b); r = { a, b, ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb };
@@ -27,7 +28,7 @@ function playCupRound(own, force) {
     rows.push([r.a, r.b, r.ga, r.gb, !!r.so, r.win]);
     if (a === me || b === me) {
       const opp = a === me ? b : a, won = r.win === me, sc = a === me ? `${r.ga}:${r.gb}` : `${r.gb}:${r.ga}`;
-      if (won) { CAREER.money += CUP_PRIZE[C.round]; C.myBest = C.round + 1; news(`Pokal ${CUP_ROUNDS[C.round]}: Weiter! ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}. Prämie ${euro(CUP_PRIZE[C.round])}.`); }
+      if (won) { CAREER.money += CUP_PRIZE[C.round]; finOf().cup += CUP_PRIZE[C.round]; C.myBest = C.round + 1; news(`Pokal ${CUP_ROUNDS[C.round]}: Weiter! ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}. Prämie ${euro(CUP_PRIZE[C.round])}.`); }
       else { C.myOut = true; news(`Pokal-Aus im ${CUP_ROUNDS[C.round].toLowerCase()}: ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}.`); }
       CAREER.cupLast = { round: C.round, opp, sc, won, so: !!r.so };
     }
@@ -53,6 +54,6 @@ function extendContract(pid, years) {
   const sal = extendDemand(p), bonus = sal * 5;
   if (CAREER.money < bonus) return `Für die Handgeld-Zahlung (${euro(bonus)}) reicht das Budget nicht.`;
   CAREER.money -= bonus; p.vt = Math.max(1, p.vt) + years; p.sal = sal;
-  news(`Vertrag verlängert: ${p.name} bleibt ${years} weitere ${years === 1 ? 'Saison' : 'Saisons'} (${euro(sal)}/Spieltag).`); saveCareer(); return '';
+  news(`Vertrag verlängert: ${p.name} bleibt ${years} weitere ${years === 1 ? 'Saison' : 'Saisons'} (${euro(sal * REF_LEN)} pro Saison).`); saveCareer(); return '';
 }
 if (CAREER && CAREER.cup === undefined) { newCup(); saveCareer(); }

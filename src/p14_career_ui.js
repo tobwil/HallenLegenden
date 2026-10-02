@@ -65,7 +65,7 @@ function paper() {
       ${next}
       <div class="np-box"><h4>TABELLE · PLATZ ${pos}</h4>${leagueTable(CAREER.team, k => k < 3 || Math.abs(k - (pos - 1)) <= 1 || k >= st.length - 2, true)}
         <h4>TORJÄGER</h4><p>${topS.map((s, i) => `${i + 1}. ${esc(s.name)} (${TEAMS[s.tid].k}) ${s.n}`).join('<br>') || 'Noch keine Tore.'}</p></div>
-      <div class="np-box"><h4>VORSTAND</h4><p>Saisonziel: <b>${esc(CAREER.goal.txt)}</b><br>Stimmung: <b>${mood.txt}</b></p><div class="np-meter"><i style="width:${Math.round(mood.v * 100)}%"></i></div>
+      <div class="np-box"><h4>VORSTAND</h4><p>Saisonziel: <b>${esc(CAREER.goal.txt)}</b><br>Stimmung: <b>${mood.txt}</b>${CAREER.board && CAREER.board.miss ? '<br><b style="color:#a3170d">Letzte Saison verfehlt: Es gibt keine zweite Warnung.</b>' : ''}${CAREER.money < 0 ? `<br><b style="color:#a3170d">Schulden: ${euro(-CAREER.money)}. Transfersperre${CAREER.debt ? `, Notverkauf nach ${Math.max(0, debtLimit() - CAREER.debt)} weiteren Spieltagen im Minus` : ''}.</b>` : ''}</p><div class="np-meter"><i style="width:${Math.round(mood.v * 100)}%"></i></div>
         <h4>KABINE</h4><p>${hot ? `In Topform: ${esc(hot.name)} (${formTxtPlain(hot.form)}). ` : ''}${cold ? `Formkrise: ${esc(cold.name)}. ` : ''}${tired.length ? `Müde: ${tired.map(p => `${esc(p.name)} (${Math.round(p.fit)} %)`).join(', ')}.` : 'Der Kader ist fit.'}
           ${sq.some(p => p.inj) ? `<br><b>Verletzt:</b> ${sq.filter(p => p.inj).map(p => `${esc(p.name)} (${p.inj})`).join(', ')}` : ''}
           ${S.round >= S.fixtures.length * 0.6 && sq.some(p => p.vt <= 1) ? `<br><b>Verträge laufen aus:</b> ${sq.filter(p => p.vt <= 1).map(p => esc(p.name)).join(', ')}` : ''}</p>
@@ -80,17 +80,17 @@ function paper() {
 // ---------- Spieler-Detail ----------
 function playerDetail(p) {
   const attrs = (p.role === 'TW' ? [['Torwart', p.gk], ['Tempo', p.spd]] : [['Wurf', p.att], ['Pass', p.pas], ['Abwehr', p.def], ['Tempo', p.spd]]).concat([['Ausdauer', p.sta ?? 75]]);
-  const sellP = Math.round(pValue(p) * 0.85 / 5000) * 5000;
+  const sellP = quickSalePrice(p), locked = isLocked(p);
   return `<div class="pdet"><canvas id="pdC" width="40" height="40"></canvas>
     <div class="pdet-info"><h2>#${p.num} ${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''}</h2>
       <p class="muted">${ROLE_LONG[p.role]} · ${p.age} Jahre · Gesamt <b style="color:var(--gold)">${ovr(p)}</b>${p.age < 24 ? ` · Potenzial ${Math.round(p.pot)}` : ''}${p.trait ? ` · ${esc(p.trait)}` : ''}</p>
       <div class="bars">${attrs.map(([l, v]) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}</span>`).join('')}</div>
       ${p.inj ? `<p style="margin:0;color:var(--hot)">Verletzt: fällt noch ${p.inj === 1 ? 'einen Spieltag' : `${p.inj} Spieltage`} aus.</p>` : ''}
-      <p class="muted">Vertrag: ${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · Gehalt ${euro(p.sal || salaryFor(p))}/Spieltag</p>
-      ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p))}/Spieltag, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
+      <p class="muted">Vertrag: ${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · Gehalt ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</p>
+      ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p) * REF_LEN)} pro Saison, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
       <p class="muted">Form ${formTxt(p.form)} · Fitness ${fitBar(Math.round(p.fit), 60)} ${Math.round(p.fit)} %<br>Saison: ${p.apps} Spiele, ${p.role === 'TW' ? `${p.ss} Paraden` : `${p.sg} Tore`} · Karriere: ${p.tg} Tore · Marktwert ${euro(pValue(p))}</p>
       <div class="row">${p.start ? '<span class="tag" style="color:var(--gold)">IN DER STARTSIEBEN</span>' : p.inj ? '<span class="tag" style="color:var(--hot)">VERLETZT</span>' : `<button class="main" data-act="cStart" data-v="${p.pid}">AUFSTELLEN</button>`}
-        <button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : 'VERKAUFEN'}</button><button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
+        ${locked ? `<span class="tag">NEUZUGANG · VERKAUF AB SPIELTAG ${p.lock.r + 1}</span>` : `<button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : `SOFORTVERKAUF (${euro(sellP)})`}</button>`}<button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
     </div></div>`;
 }
 // ---------- Statistik: Kennzahlen, Platz-Verlauf, Torjäger, eigener Kader ----------
@@ -121,7 +121,15 @@ function statsView() {
   const fArrow = f => f > 1 ? '<b style="color:var(--green)">▲</b>' : f > 0.3 ? '<b style="color:var(--green)">↗</b>' : f < -1 ? '<b style="color:var(--hot)">▼</b>' : f < -0.3 ? '<b style="color:var(--hot)">↘</b>' : '<b style="color:var(--dim)">→</b>';
   const squad = mine.length ? `<table class="sqt stt"><thead><tr><th>POS</th><th>NAME</th><th class="num">SP</th><th class="num">TORE</th><th class="num">Ø</th><th class="num">PAR.</th><th class="num">FORM</th><th class="num">FIT</th></tr></thead><tbody>${
     mine.map(p => `<tr><td>${p.role}</td><td>${esc(p.name)}</td><td class="num">${p.apps}</td><td class="num">${p.role === 'TW' ? '–' : p.sg}</td><td class="num">${p.role === 'TW' ? '–' : (p.sg / p.apps).toFixed(1)}</td><td class="num">${p.role === 'TW' ? p.ss : '–'}</td><td class="num">${fArrow(p.form)}</td><td class="num" style="color:${p.fit < 60 ? 'var(--hot)' : p.fit < 80 ? 'var(--gold)' : 'inherit'}">${Math.round(p.fit)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine Spiele.</p>';
-  return `${kpis}<h3>TABELLENPLATZ NACH SPIELTAG</h3>${chart}<div class="stat2"><div><h3>TORJÄGER DER LIGA</h3>${scorers}</div><div><h3>DEIN KADER · SAISON</h3>${squad}</div></div>`;
+  return `${kpis}<h3>TABELLENPLATZ NACH SPIELTAG</h3>${chart}<div class="stat2"><div><h3>TORJÄGER DER LIGA</h3>${scorers}${finTable(finOf(), CAREER.money)}</div><div><h3>DEIN KADER · SAISON</h3>${squad}</div></div>`;
+}
+// Finanzbilanz einer Saison (Saisonabschluss und Statistik)
+function finTable(F, money) {
+  const rows = [['Zuschauer (Liga)', F.gate], ['Sponsoren', F.sponsor], ['Pokal (Zuschauer und Prämien)', F.cup], ['Ligaprämie', F.prize], ['Vorstandsbonus', F.bonus], ['Transfers (Saldo)', F.transfer], ['Gehälter', -F.wages]].filter(r => r[1]);
+  const sum = rows.reduce((s, r) => s + r[1], 0), fmt = v => `<span style="color:${v < 0 ? 'var(--hot)' : 'inherit'}">${v < 0 ? '−' : '+'}${euro(Math.abs(v))}</span>`;
+  const fans = F.fans && F.fans.length ? `Ø ${Math.round(avg(F.fans)).toLocaleString('de-DE')} Zuschauer bei ${F.fans.length} Heimspielen · Halle ${hallCap(CAREER.team).toLocaleString('de-DE')} Plätze` : '';
+  return `<h3>FINANZEN DER SAISON</h3><table class="sqt stt fin"><tbody>${rows.map(([l, v]) => `<tr><td class="lbl">${l}</td><td class="num">${fmt(v)}</td></tr>`).join('')}
+    <tr><td class="lbl"><b>Saldo</b></td><td class="num"><b>${fmt(sum)}</b></td></tr>${money !== undefined ? `<tr><td class="lbl">Kontostand</td><td class="num">${fmt(money)}</td></tr>` : ''}</tbody></table>${fans ? `<p class="muted" style="margin:0">${fans}</p>` : ''}`;
 }
 // ---------- Pokal als Turnierbaum ----------
 function cupView() {
@@ -155,7 +163,7 @@ function careerHub(tab) {
   if (CAREER.summary) return seasonSummary();
   const S = CAREER.season, me = TEAMS[CAREER.team];
   const head = `<div class="row spread"><div class="tname"><img src="${icon(me)}" alt=""><span>${esc(me.n.toUpperCase())}<br><span class="tag">${S.lg}. LIGA · ${seasonName(CAREER.year)} · SPIELTAG ${Math.min(S.round + 1, S.fixtures.length)}/${S.fixtures.length}</span></span></div>
-    <div style="text-align:right"><span class="tag">BUDGET · GEHÄLTER ${euro(wageBill())}/SPIELTAG</span><br><b style="font-family:var(--pix);font-size:11px;color:${CAREER.money < 0 ? 'var(--hot)' : 'var(--gold)'}">${CAREER.money < 0 ? '−' + euro(-CAREER.money) : euro(CAREER.money)}</b></div></div>`;
+    <div style="text-align:right"><span class="tag">BUDGET · GEHÄLTER ${euro(wagesPerRound())}/SPIELTAG${CAREER.money < 0 ? ' · TRANSFERSPERRE' : ''}</span><br><b style="font-family:var(--pix);font-size:11px;color:${CAREER.money < 0 ? 'var(--hot)' : 'var(--gold)'}">${CAREER.money < 0 ? '−' + euro(-CAREER.money) : euro(CAREER.money)}</b></div></div>`;
   let body = '';
   if (CTAB === 'home') body = paper();
   else if (CTAB === 'squad') {
@@ -180,7 +188,7 @@ function careerHub(tab) {
       <div class="btns menu-list">${TRAINING.map(t => `<button class="${CAREER.training === t.k ? 'main' : ''}" data-act="cTrain" data-v="${t.k}">${t.n} <i>${t.d}</i></button>`).join('')}</div>`;
   } else if (CTAB === 'market') {
     const sq = CAREER.squads[CAREER.team];
-    body = `<div class="row spread"><p class="muted">Kader ${sq.length}/18 (mindestens 12). Die Liste wird alle zwei Spieltage neu gemischt.</p>
+    body = `<div class="row spread"><p class="muted">Kader ${sq.length}/18 (mindestens 12). Die Liste wird alle zwei Spieltage neu gemischt. Neuzugänge sind ${lockRounds()} Spieltage gesperrt, ein Sofortverkauf bringt 55 % des Marktwerts. Mehr gibt es über Angebote.${CAREER.money < 0 ? ' <b style="color:var(--hot)">Transfersperre: Die Kasse ist im Minus.</b>' : ''}</p>
       <div class="row"><span class="tag">CPU-TRANSFERS</span><button class="small ${CAREER.aiTransfers ? 'on' : ''}" data-act="cAiT" data-v="1">AN</button><button class="small ${CAREER.aiTransfers ? '' : 'on'}" data-act="cAiT" data-v="0">AUS</button></div></div>`;
     if (CAREER.offers.length) body += `<h3>ANGEBOTE FÜR DEINE SPIELER</h3><table class="sqt cards"><tbody>${CAREER.offers.map(o => { const p = findCareerPlayer(CAREER.team, o.pid); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name">${esc(p.name)} <span class="age">${ovr(p)}</span></td><td data-l="VON">${esc(TEAMS[o.from].short)}</td><td data-l="BIETET">${euro(o.price)}</td><td data-l="BIS">${o.exp}. Sp.</td><td class="c-act"><button class="small main" data-act="cOffer" data-v="${p.pid}:1">ANNEHMEN</button> <button class="small" data-act="cOffer" data-v="${p.pid}:0">ABLEHNEN</button></td></tr>`; }).join('')}</tbody></table>`;
     body += `<h3>TRANSFERLISTE</h3><table class="sqt cards"><thead><tr><th>POS</th><th>NAME</th><th>VON</th><th>GES</th><th>POT</th><th>PREIS</th><th></th></tr></thead><tbody>${
@@ -192,8 +200,9 @@ function careerHub(tab) {
   } else if (CTAB === 'cup') body = cupView();
   else if (CTAB === 'stats') body = statsView();
   else if (CTAB === 'hist') {
-    body = CAREER.history.length ? `<table class="sqt"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th class="hm">POKAL</th><th class="hm">TORJÄGER</th></tr></thead><tbody>${
-      CAREER.history.map(h => `<tr><td>${seasonName(h.year)}</td><td>${h.lg}.</td><td>${h.pos}</td><td style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td>${esc(TEAMS[h.champ].n)}</td><td class="hm" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td class="hm">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
+    // Handy: Karten statt Spalten (Kopfzeile Saison · Liga · Platz, darunter beschriftete Felder)
+    body = CAREER.history.length ? `<table class="sqt cards hist"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th>POKAL</th><th>TORJÄGER</th></tr></thead><tbody>${
+      CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
   }
   showMenu(`<div class="panel wide"><div class="csticky">${head}${tabs()}</div>${CMSG ? `<p style="margin:0;color:var(--hot)">${esc(CMSG)}</p>` : ''}${body}<div class="row"><button data-act="main">HAUPTMENÜ</button></div></div>`);
@@ -207,6 +216,8 @@ function seasonSummary() {
   showMenu(`<div class="panel"><h2>SAISON ${seasonName(s.year)} · ABSCHLUSS</h2>
     <p class="res" style="color:${s.move === 'ab' ? 'var(--hot)' : 'var(--gold)'}">${head}</p>
     <p class="muted" style="text-align:center">${esc(me.n)} beendet die ${s.lg}. Liga auf Platz ${s.pos}. Saisonziel „${esc(s.goal || '')}“ ${s.goalMet ? '<b style="color:var(--green)">erreicht</b>' : '<b style="color:var(--hot)">verfehlt</b>'}. Prämie: ${euro(s.prize)}.</p>
+    ${s.board ? `<p class="muted" style="text-align:center;color:${s.board.fired ? 'var(--hot)' : s.board.warn ? 'var(--gold)' : 'var(--green)'}"><b>VORSTAND:</b> ${esc(s.board.txt)}</p>` : ''}
+    ${s.fin ? finTable(s.fin, s.money) : ''}
     <table class="sqt"><tbody>
       <tr><td>Meister 1. Liga</td><td>${esc(TEAMS[s.champ1].n)}</td></tr>
       <tr><td>Meister 2. Liga</td><td>${esc(TEAMS[s.champ2].n)}</td></tr>
@@ -219,7 +230,9 @@ function seasonSummary() {
     ${s.gone && s.gone.length ? `<p class="muted">Vertrag ausgelaufen, ablösefrei weg: ${s.gone.map(esc).join(', ')}.</p>` : ''}
     ${s.youth && s.youth.length ? `<p class="muted">Aus der Jugend rücken nach: ${s.youth.map(esc).join(', ')}.</p>` : ''}
     ${s.retired.length ? `<p class="muted">Karriereende: ${s.retired.map(esc).join(', ')}. Talente aus der Jugend rücken nach.</p>` : ''}
-    <div class="row"><button class="main" data-act="cNext">SAISON ${seasonName(CAREER.year)} STARTEN</button></div></div>`);
+    ${CAREER.jobOffers ? `<h3>JOBANGEBOTE</h3><p class="muted">Diese Vereine wollen dich als Trainer. Du startest mit ihrem Kader und ihrem Budget in die neue Saison.</p>
+      <div class="btns menu-list">${CAREER.jobOffers.map(id => `<button data-act="cJob" data-v="${id}">${esc(TEAMS[id].n)} <i>${CAREER.lgOf[id]}. Liga · Stärke ${strength(id).ovr} · ${euro(CAREER.aiMoney[id])}</i></button>`).join('')}</div>`
+    : `<div class="row"><button class="main" data-act="cNext">SAISON ${seasonName(CAREER.year)} STARTEN</button></div>`}</div>`);
 }
 Object.assign(ACT, {
   cNew() { SEASON_PICK = false; careerCreate(SEL.a, SEL.len, SEL.half, SEL.diff, SEL.ait === 0, SEL.coach); track('karriere-neu'); careerHub('home'); },
@@ -248,5 +261,6 @@ Object.assign(ACT, {
   cTrain(v) { CAREER.training = v; if (CAREER.coach.training) { CAREER.coach.training = false; CMSG = 'Du bestimmst das Training jetzt selbst.'; } saveCareer(); careerHub('train'); },
   cEnd() { careerEndSeason(); careerHub(); },
   cNext() { CAREER.summary = null; saveCareer(); careerHub('home'); },
+  cJob(v) { takeJob(+v); CAREER.summary = null; saveCareer(); careerHub('home'); },
   cDel() { if (!CDEL) { CDEL = true; return careerHub('hist'); } CDEL = false; store.del(CAREER_KEY); store.del(SAVE_KEY); CAREER = null; ACT.main(); },
 });

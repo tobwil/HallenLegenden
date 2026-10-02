@@ -111,6 +111,10 @@ input:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
 .stat2{display:grid;grid-template-columns:1fr 1.5fr;gap:18px;align-items:start}
 .stat2 > div{display:flex;flex-direction:column;gap:6px;min-width:0}
 .stt td.num,.stt th.num{text-align:right}
+.stt td.lbl{text-align:left}
+.hm-only{display:none}
+@media (max-width:600px){table.hist .hm-only{display:inline}}
+table.fin{max-width:520px}
 .stt td.barc{width:30%}
 .sbar{display:block;height:6px;background:var(--gold);opacity:.8}
 .stt tr.me .sbar{background:var(--hot)}
@@ -195,6 +199,9 @@ body.touch button.link{min-height:0;font-size:19px}
   table.cards .age{display:inline}
   table.cards td.gkc{grid-column:span 3}
   table.cards td.c-act{grid-column:1/-1}
+  table.hist tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  table.hist td{white-space:normal}
+  table.hist .hd-only{display:none}
   .np-date{font-size:14px}
 }
 #rotate{display:none;position:fixed;inset:0;z-index:30;background:rgba(7,6,11,.96);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px}
@@ -2602,7 +2609,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
-    aiTransfers, aiMoney: {}, offers: [], streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
+    aiTransfers, aiMoney: {}, offers: [], board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
   TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 1 ? 25000 : 12000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
@@ -2712,10 +2719,9 @@ function playRound(own) {
   CAREER.lastMatch = { round: S.round + 1, home: own.a === me, opp, my: mine[0], their: mine[1], res, top: top ? { name: top[0].name, g: top[1] } : null, gk: gk ? { name: gk.name, sv: (own.stats[gk.pid] || {}).sv || 0 } : null };
   CAREER.streak = (CAREER.streak && Math.sign(CAREER.streak) === (res === 'S' ? 1 : res === 'N' ? -1 : 0)) ? CAREER.streak + Math.sign(CAREER.streak) : (res === 'S' ? 1 : res === 'N' ? -1 : 0);
   CAREER.form5.push(res); CAREER.form5 = CAREER.form5.slice(-5);
-  const inc = Math.round(({ S: 30000, U: 15000, N: 6000 }[res] + (own.a === me ? 12000 : 0)) * (S.lg === 1 ? 1 : 0.55));
-  const wages = wageBill();
-  CAREER.money += inc - wages;
-  news(`${S.round + 1}. Spieltag: ${res === 'S' ? 'Sieg' : res === 'U' ? 'Remis' : 'Niederlage'} gegen ${TEAMS[opp].n} (${mine[0]}:${mine[1]}). Einnahmen ${euro(inc)}, Gehälter ${euro(wages)}.`);
+  const fin = roundFinances(fx, own.a === me, opp), g = fin.gate;
+  if (g) CAREER.lastMatch.fans = g.n;
+  news(`${S.round + 1}. Spieltag: ${res === 'S' ? 'Sieg' : res === 'U' ? 'Remis' : 'Niederlage'} gegen ${TEAMS[opp].n} (${mine[0]}:${mine[1]}). ${g ? `${g.n.toLocaleString('de-DE')} Zuschauer${g.full ? ' (ausverkauft)' : ''}: ${euro(g.money)}, ` : 'Auswärtsspiel, '}Sponsor ${euro(fin.sponsor)}, Gehälter ${euro(fin.wages)}.`);
   const gains = weeklyTraining(); if (gains.length) news(`Training: ${gains.slice(0, 3).join(', ')}${gains.length > 3 ? ' …' : ''}`);
   S.round++;
   for (const t of TEAMS) for (const p of CAREER.squads[t.id]) if (p.inj) { p.inj--; if (!p.inj && t.id === me) news(`${p.name} ist wieder fit.`); }
@@ -2723,9 +2729,10 @@ function playRound(own) {
   if (CAREER.cup) autoCup();
   if (S.round >= S.fixtures.length) { S.done = true; news('Letzter Spieltag gespielt. Zeit für den Saisonabschluss!'); }
   if (S.round % 2 === 0) refreshMarket(false);
-  for (const t of TEAMS) if (t.id !== me) CAREER.aiMoney[t.id] += CAREER.lgOf[t.id] === 1 ? 18000 : 8000;
   CAREER.offers = CAREER.offers.filter(o => o.exp > S.round && findCareerPlayer(me, o.pid));
   if (CAREER.aiTransfers) aiTransferRound(1);
+  checkDebt();
+  if (boardMood().v <= 0.2 && !CAREER.board.warned) { CAREER.board.warned = true; news('Der Vorstand ist verärgert. Wird das Saisonziel verfehlt, gibt es Konsequenzen.'); }
   saveCareer();
 }
 const salaryFor = p => Math.max(1500, Math.round(pValue(p) * 0.0035 / 500) * 500);
@@ -2771,12 +2778,13 @@ function buyPlayer(pid) {
   const m = CAREER.market.find(x => x.pid === pid), sq = CAREER.squads[CAREER.team];
   if (!m) return 'Spieler nicht mehr verfügbar.';
   if (sq.length >= 18) return 'Der Kader ist voll (18 Spieler). Verkaufe zuerst jemanden.';
+  if (CAREER.money < 0) return 'Transfersperre: Die Kasse ist im Minus.';
   if (CAREER.money < m.price) return 'Dafür reicht das Budget nicht.';
-  if (sq.length >= 16 && CAREER.money - m.price < wageBill() * 3) return 'Zu riskant: Nach dem Kauf wären die Gehälter der nächsten Spieltage nicht gedeckt.';
+  if (sq.length >= 16 && CAREER.money - m.price < wagesPerRound() * 3) return 'Zu riskant: Nach dem Kauf wären die Gehälter der nächsten Spieltage nicht gedeckt.';
   const p = marketPlayer(m); if (!p) return 'Spieler nicht mehr verfügbar.';
   if (m.from < 0) CAREER.free = CAREER.free.filter(x => x !== p);
   else { const src = CAREER.squads[m.from]; src.splice(src.indexOf(p), 1); if (src.length < 13) { src.push(finalize(genPlayer(p.role, TEAMS[m.from].r - 10, Math.random, 18, 20))); fixNumbers(src); } ensureAiRoles(m.from); }
-  CAREER.money -= m.price; p.start = false; p.num = 0; p.vt = 2 + ((Math.random() * 3) | 0); p.sal = Math.round(salaryFor(p) * 1.1 / 500) * 500; sq.push(p); fixNumbers(sq);
+  CAREER.money -= m.price; finOf().transfer -= m.price; if (m.from >= 0) CAREER.aiMoney[m.from] += m.price; p.lock = { y: CAREER.year, r: CAREER.season.round + lockRounds() }; p.start = false; p.num = 0; p.vt = 2 + ((Math.random() * 3) | 0); p.sal = Math.round(salaryFor(p) * 1.1 / 500) * 500; sq.push(p); fixNumbers(sq);
   CAREER.market = CAREER.market.filter(x => x.pid !== pid);
   news(`Transfer: ${p.name} (${ROLE_LONG[p.role]}, ${ovr(p)}) kommt für ${euro(m.price)}.`); saveCareer(); return '';
 }
@@ -2785,11 +2793,11 @@ function sellPlayer(pid) {
   if (!p) return '';
   if (sq.length <= 12) return 'Mindestens 12 Spieler müssen im Kader bleiben.';
   if (sq.filter(x => x.role === p.role).length <= 1) return `Du brauchst mindestens einen ${ROLE_LONG[p.role]}.`;
-  const price = Math.round(pValue(p) * 0.85 / 5000) * 5000;
-  sq.splice(sq.indexOf(p), 1); CAREER.money += price; ensureStarters(CAREER.team);
-  const dest = TEAMS.filter(t => t.id !== CAREER.team && CAREER.squads[t.id].length < 16);
-  if (dest.length) { const t = pick(dest); p.start = false; p.num = 0; CAREER.squads[t.id].push(p); fixNumbers(CAREER.squads[t.id]); news(`${p.name} wechselt für ${euro(price)} zu ${t.n}.`); }
-  else news(`${p.name} verlässt den Verein für ${euro(price)}.`);
+  if (isLocked(p)) return `${p.name} ist gerade erst gekommen und kann bis Spieltag ${p.lock.r + 1} nicht verkauft werden.`;
+  const price = quickSalePrice(p), t = buyerFor(p, price);
+  if (!t) return `Kein Verein kann sich ${p.name} gerade leisten.`;
+  sq.splice(sq.indexOf(p), 1); CAREER.money += price; CAREER.aiMoney[t.id] -= price; finOf().transfer += price; ensureStarters(CAREER.team);
+  p.start = false; p.num = 0; CAREER.squads[t.id].push(p); fixNumbers(CAREER.squads[t.id]); news(`${p.name} wechselt für ${euro(price)} zu ${t.n}.`);
   saveCareer(); return '';
 }
 function ensureAiRoles(tid) { const sq = CAREER.squads[tid]; for (const role of ROLES) if (!sq.some(p => p.role === role)) sq.push(finalize(genPlayer(role, TEAMS[tid].r - 10, Math.random, 18, 21))); fixNumbers(sq); }
@@ -2812,8 +2820,9 @@ function careerEndSeason() {
   const l1 = lg === 1 ? st : other, l2 = lg === 2 ? st : other;
   const down = l1.slice(-2).map(x => x.i), up = l2.slice(0, 2).map(x => x.i);
   const pos = st.findIndex(x => x.i === me) + 1;
-  const prize = Math.round((19 - pos) * (lg === 1 ? 30000 : 12000) / 5000) * 5000;
-  CAREER.money += prize;
+  const prize = leaguePrize(pos, lg);
+  CAREER.money += prize; finOf().prize += prize;
+  const verdict = boardVerdict(pos, CAREER.goal, lg), finSeason = { ...finOf() };
   const topE = Object.entries(S.scorers).sort((a, b) => b[1].n - a[1].n)[0];
   const top = topE ? { name: topE[1].name, tid: topE[1].tid, n: topE[1].n } : null;
   down.forEach(id => CAREER.lgOf[id] = 2); up.forEach(id => CAREER.lgOf[id] = 1);
@@ -2856,12 +2865,14 @@ function careerEndSeason() {
   ensureStarters(me);
   var sum = { year: CAREER.year, lg, pos, prize, top, champ: st[0].i, champ1: l1[0].i, champ2: l2[0].i, up, down, move, dev: dev.sort((a, b) => b.d - a.d), retired, gone, youth, cupWinner: CAREER.cup ? CAREER.cup.winner : null, cupMy: CAREER.cup ? CAREER.cup.myBest : 0, final: st.slice(0, 18).map(x => [x.i, x.pk, x.d]) };
   const goalMet = pos <= CAREER.goal.pos;
-  sum.goal = CAREER.goal.txt; sum.goalMet = goalMet;
+  sum.goal = CAREER.goal.txt; sum.goalMet = goalMet; sum.board = verdict; sum.fin = finSeason; sum.money = CAREER.money;
   CAREER.history.push({ year: CAREER.year, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null });
-  for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += (19 - k - 1) * (l === 1 ? 30000 : 12000); });
+  for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += leaguePrize(k + 1, l); });
   if (CAREER.aiTransfers) aiTransferRound(4);
   CAREER.year++;
+  CAREER.board.warned = false; TEAMS.forEach(t => CAREER.squads[t.id].forEach(p => delete p.lock));
   newSeason();
+  if (verdict.fired) CAREER.jobOffers = jobOffers();
   CAREER.summary = sum;
   news(move === 'auf' ? `AUFSTIEG! ${TEAMS[me].n} spielt ab sofort in der 1. Liga.` : move === 'ab' ? `Abstieg in die 2. Liga. Jetzt heißt es: sofort zurückkommen!` : `Neue Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
   saveCareer();
@@ -2893,7 +2904,7 @@ function aiTransferRound(passes) {
   // Angebote für deine Spieler
   if (passes === 1 && Math.random() < 0.18 && CAREER.offers.length < 3) {
     const sq = CAREER.squads[me], level = avg(lineup(me).map(ovr));
-    const cand = sq.filter(p => (ovr(p) >= level - 1 || (p.age < 22 && p.pot - ovr(p) > 8)) && !CAREER.offers.some(o => o.pid === p.pid));
+    const cand = sq.filter(p => (ovr(p) >= level - 1 || (p.age < 22 && p.pot - ovr(p) > 8)) && !isLocked(p) && !CAREER.offers.some(o => o.pid === p.pid));
     const p = cand.length ? pick(cand) : null, buyers = TEAMS.filter(t => t.id !== me && CAREER.aiMoney[t.id] > (p ? pValue(p) * 1.1 : 1e9));
     if (p && buyers.length) {
       const t = pick(buyers), price = Math.round(pValue(p) * rnd(1.05, 1.45) / 5000) * 5000;
@@ -2909,7 +2920,8 @@ function answerOffer(pid, accept) {
   if (!accept) { news(`Abgelehnt: ${p.name} bleibt. ${TEAMS[o.from].short} zieht das Angebot zurück.`); p.form = clamp(p.form + 0.5, -3, 3); saveCareer(); return ''; }
   if (sq.length <= 12) return 'Mindestens 12 Spieler müssen im Kader bleiben.';
   if (sq.filter(x => x.role === p.role).length <= 1) return `Du brauchst mindestens einen ${ROLE_LONG[p.role]}.`;
-  sq.splice(sq.indexOf(p), 1); CAREER.money += o.price; CAREER.aiMoney[o.from] -= o.price; ensureStarters(CAREER.team);
+  if (CAREER.aiMoney[o.from] < o.price) return `${TEAMS[o.from].short} kann das Angebot nicht mehr bezahlen.`;
+  sq.splice(sq.indexOf(p), 1); CAREER.money += o.price; CAREER.aiMoney[o.from] -= o.price; finOf().transfer += o.price; ensureStarters(CAREER.team);
   p.start = false; p.num = 0; CAREER.squads[o.from].push(p); fixNumbers(CAREER.squads[o.from]);
   news(`Verkauft: ${p.name} geht für ${euro(o.price)} zu ${TEAMS[o.from].n}.`); saveCareer(); return '';
 }
@@ -2932,7 +2944,7 @@ function headline() {
   else if (diff === 0) h = pk([`PUNKTETEILUNG MIT ${o.short.toUpperCase()}`, `REMIS-KRIMI: ${sc}`]);
   else if (diff > -8) h = pk([`PLEITE GEGEN ${o.short.toUpperCase()}`, `${me.short.toUpperCase()} VERLIERT ${sc}`, `KNAPP DANEBEN IN ${m.home ? me.short.toUpperCase() : o.short.toUpperCase()}`]);
   else h = pk([`DEBAKEL! ${sc} GEGEN ${o.short.toUpperCase()}`, `${me.short.toUpperCase()} GEHT UNTER`]);
-  const s = [`${m.round}. Spieltag, ${m.home ? 'vor heimischem Publikum' : 'auswärts'}: ${me.short} ${m.my > m.their ? 'gewinnt' : m.my === m.their ? 'spielt' : 'verliert'} ${sc} gegen ${o.n}.`];
+  const s = [`${m.round}. Spieltag, ${m.home ? (m.fans ? `vor ${m.fans.toLocaleString('de-DE')} Zuschauern` : 'vor heimischem Publikum') : 'auswärts'}: ${me.short} ${m.my > m.their ? 'gewinnt' : m.my === m.their ? 'spielt' : 'verliert'} ${sc} gegen ${o.n}.`];
   if (m.top && m.top.g) s.push(`Bester Werfer war ${m.top.name} mit ${m.top.g} Toren.`);
   if (m.gk) s.push(`${m.gk.name} kam auf ${m.gk.sv} Paraden.`);
   if (Math.abs(CAREER.streak) >= 3) s.push(CAREER.streak > 0 ? `Das ist der ${CAREER.streak}. Sieg in Folge!` : `Bereits die ${-CAREER.streak}. Niederlage am Stück.`);
@@ -2994,6 +3006,7 @@ function autoCup() { while (cupDue() && !ownCupTie()) playCupRound(null); }
 function playCupRound(own, force) {
   const C = CAREER.cup, me = CAREER.team, rows = [];
   for (const [a, b] of C.ties) {
+    cupGate(a, b, C.round);   // Zuschauereinnahmen für den Gastgeber
     let r = own && own.a === a && own.b === b ? own : null;
     if (!r) {
       const m = simMatch(a, b); r = { a, b, ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb };
@@ -3003,7 +3016,7 @@ function playCupRound(own, force) {
     rows.push([r.a, r.b, r.ga, r.gb, !!r.so, r.win]);
     if (a === me || b === me) {
       const opp = a === me ? b : a, won = r.win === me, sc = a === me ? `${r.ga}:${r.gb}` : `${r.gb}:${r.ga}`;
-      if (won) { CAREER.money += CUP_PRIZE[C.round]; C.myBest = C.round + 1; news(`Pokal ${CUP_ROUNDS[C.round]}: Weiter! ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}. Prämie ${euro(CUP_PRIZE[C.round])}.`); }
+      if (won) { CAREER.money += CUP_PRIZE[C.round]; finOf().cup += CUP_PRIZE[C.round]; C.myBest = C.round + 1; news(`Pokal ${CUP_ROUNDS[C.round]}: Weiter! ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}. Prämie ${euro(CUP_PRIZE[C.round])}.`); }
       else { C.myOut = true; news(`Pokal-Aus im ${CUP_ROUNDS[C.round].toLowerCase()}: ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}.`); }
       CAREER.cupLast = { round: C.round, opp, sc, won, so: !!r.so };
     }
@@ -3029,9 +3042,112 @@ function extendContract(pid, years) {
   const sal = extendDemand(p), bonus = sal * 5;
   if (CAREER.money < bonus) return `Für die Handgeld-Zahlung (${euro(bonus)}) reicht das Budget nicht.`;
   CAREER.money -= bonus; p.vt = Math.max(1, p.vt) + years; p.sal = sal;
-  news(`Vertrag verlängert: ${p.name} bleibt ${years} weitere ${years === 1 ? 'Saison' : 'Saisons'} (${euro(sal)}/Spieltag).`); saveCareer(); return '';
+  news(`Vertrag verlängert: ${p.name} bleibt ${years} weitere ${years === 1 ? 'Saison' : 'Saisons'} (${euro(sal * REF_LEN)} pro Saison).`); saveCareer(); return '';
 }
 if (CAREER && CAREER.cup === undefined) { newCup(); saveCareer(); }
+// ================= Finanzen: Zuschauer, Sponsoren, Gehälter, Vorstand, Schulden =================
+// Gehälter (p.sal) und Einnahmen sind auf eine Saison mit 17 Spieltagen geeicht. Bei 6 oder 34 Spieltagen wird pro Spieltag
+// umgerechnet, damit eine Saison immer ähnlich viel kostet und einbringt. Ablösen und Prämien bleiben feste Beträge.
+const REF_LEN = 17;
+const seasonScale = () => REF_LEN / Math.max(1, CAREER.season.fixtures.length);
+const hallCap = tid => clamp(Math.round((1000 + (TEAMS[tid].r - 65) * 330) / 100) * 100, 1300, 9800);
+const ticketNet = (lg, cup) => (lg === 1 ? 7 : 6) * (cup ? 1.2 : 1);                     // Erlös pro Zuschauer nach Kosten
+const sponsorOf = tid => CAREER.lgOf[tid] === 1 ? 5000 + (TEAMS[tid].r - 75) * 250 : 12000 + (TEAMS[tid].r - 70) * 300;
+const leaguePrize = (pos, lg) => Math.round((19 - pos) * (lg === 1 ? 15000 : 6000) / 5000) * 5000;   // TV-Geld und Prämie nach Platz
+// Zuschauereinnahmen über die tatsächliche Zahl der Heimspiele hochrechnen (2 oder 3 Heimspiele bei 6 Spieltagen zählen gleich viel)
+function homeScale(tid) { const S = CAREER.season, H = S.homes ??= {}; H[tid] ??= S.fixtures.filter(rd => rd.some(([a]) => a === tid)).length; return REF_LEN / 2 / Math.max(1, H[tid]); }
+const wagesOf = tid => CAREER.squads[tid].reduce((s, p) => s + (p.sal || salaryFor(p)), 0);
+const wagesPerRound = () => Math.round(wageBill() * seasonScale() / 1000) * 1000;           // was dein Verein pro Spieltag zahlt
+// Zuschauer: Kapazität × Auslastung. Auslastung steigt mit Tabellenplatz, Siegesserie, starkem Gegner und im Pokal
+function attendance(home, away, cupRound) {
+  const S = CAREER.season, lg = CAREER.lgOf[home], cap = hallCap(home);
+  let rate = lg === 1 ? 0.62 : 0.5;
+  if (S.table[home]) { const st = standingsOf(S.table), f = st.length > 1 ? st.findIndex(r => r.i === home) / (st.length - 1) : 0.5; if (S.round) rate += 0.3 * (0.5 - f); }
+  rate += (TEAMS[away].r - 78) * 0.008;
+  if (home === CAREER.team) rate += clamp((CAREER.streak || 0) * 0.02, -0.08, 0.08);
+  if (cupRound !== undefined) rate += 0.12 + cupRound * 0.05;
+  rate = clamp(rate + rnd(-0.05, 0.05), 0.3, 1);
+  const full = rate >= 0.99, n = full ? cap : Math.round(cap * rate / 10) * 10;
+  return { n, cap, full, money: Math.round(n * ticketNet(lg, cupRound !== undefined)) };
+}
+function finOf() { return CAREER.season.fin ??= { gate: 0, sponsor: 0, cup: 0, prize: 0, bonus: 0, transfer: 0, wages: 0, fans: [] }; }
+// Ein Liga-Spieltag: dein Verein (Zuschauer bei Heimspiel, Sponsor, Gehälter) und alle KI-Vereine nach demselben Modell
+function roundFinances(fx, myHome, myOpp) {
+  const me = CAREER.team, sc = seasonScale(), F = finOf(), out = { gate: null, sponsor: Math.round(sponsorOf(me) * sc), wages: wagesPerRound() };
+  if (myHome) { const a = attendance(me, myOpp); a.money = Math.round(a.money * homeScale(me)); out.gate = a; F.gate += a.money; F.fans.push(a.n); CAREER.money += a.money; }
+  CAREER.money += out.sponsor - out.wages; F.sponsor += out.sponsor; F.wages += out.wages;
+  const homeIn = new Map(fx.map(([a, b]) => [a, b]));
+  for (const t of TEAMS) {
+    if (t.id === me) continue;
+    let g;
+    if (homeIn.has(t.id)) g = attendance(t.id, homeIn.get(t.id)).money * homeScale(t.id);          // Heimspiel in deiner Liga
+    else if (CAREER.lgOf[t.id] !== CAREER.season.lg) g = attendance(t.id, t.id).money * 0.5 * sc;  // andere Liga: im Schnitt jedes zweite Spiel daheim
+    else g = 0;
+    CAREER.aiMoney[t.id] += Math.round(g + (sponsorOf(t.id) - wagesOf(t.id)) * sc);
+  }
+  return out;
+}
+// Pokal-Heimspiel: Zuschauereinnahmen für den Gastgeber
+function cupGate(a, b, round) {
+  const g = attendance(a, b, round);
+  if (a === CAREER.team) { CAREER.money += g.money; finOf().cup += g.money; finOf().fans.push(g.n); } else CAREER.aiMoney[a] += g.money;
+  return g;
+}
+// ---------- Transfers: Sperre für Neuzugänge, Sofortverkauf nur an zahlende Vereine ----------
+const lockRounds = () => Math.max(2, Math.round(CAREER.season.fixtures.length / 3));
+const isLocked = p => !!p.lock && p.lock.y === CAREER.year && CAREER.season.round < p.lock.r;
+const quickSalePrice = p => Math.round(pValue(p) * 0.55 / 5000) * 5000;
+function buyerFor(p, price) {
+  const c = TEAMS.filter(t => t.id !== CAREER.team && CAREER.squads[t.id].length < 16 && CAREER.aiMoney[t.id] >= price);
+  return c.length ? pick(c) : null;
+}
+// ---------- Schulden: Transfersperre, nach einigen Spieltagen Notverkäufe ----------
+const debtLimit = () => Math.max(2, Math.round(CAREER.season.fixtures.length * 0.15));
+function checkDebt() {
+  if (CAREER.money >= 0) { if (CAREER.debt) news('Die Kasse ist wieder im Plus. Die Transfersperre ist aufgehoben.'); CAREER.debt = 0; return; }
+  CAREER.debt = (CAREER.debt || 0) + 1;
+  if (CAREER.debt === 1) news(`Die Kasse ist im Minus (${euro(CAREER.money)}). Transfersperre, bis wieder Geld da ist. Nach ${debtLimit()} Spieltagen im Minus muss der Vorstand Spieler verkaufen.`);
+  if (CAREER.debt < debtLimit()) return;
+  const sq = CAREER.squads[CAREER.team], sold = [];
+  while (CAREER.money < 0) {
+    const c = sq.filter(p => sq.length > 12 && sq.filter(x => x.role === p.role).length > 1 && buyerFor(p, Math.round(pValue(p) * 0.5 / 5000) * 5000)).sort((a, b) => pValue(a) - pValue(b));
+    const p = c.find(x => pValue(x) * 0.5 >= -CAREER.money) || c[c.length - 1]; if (!p) break;   // günstigster, der die Schulden deckt, sonst der wertvollste
+    const price = Math.round(pValue(p) * 0.5 / 5000) * 5000, t = buyerFor(p, price);
+    sq.splice(sq.indexOf(p), 1); CAREER.money += price; CAREER.aiMoney[t.id] -= price; finOf().transfer += price;
+    p.start = false; p.num = 0; delete p.lock; CAREER.squads[t.id].push(p); fixNumbers(CAREER.squads[t.id]); sold.push(`${p.name} (${euro(price)} an ${t.short})`);
+  }
+  if (sold.length) { ensureStarters(CAREER.team); news(`Notverkauf wegen Schulden: ${sold.join(', ')}.`); }
+}
+// ---------- Vorstand: Bonus, Warnung, Entlassung ----------
+// Ziel erreicht: Bonus. Knapp verfehlt (bis 2 Plätze): keine Folgen. Deutlich verfehlt oder Schulden: Warnung, beim zweiten Mal in Folge Entlassung
+function boardVerdict(pos, goal, lg) {
+  const B = CAREER.board ??= { miss: 0 }, debt = CAREER.money < 0, met = pos <= goal.pos && !debt, clear = debt || pos > goal.pos + 2;
+  let bonus = 0, txt;
+  if (met) { B.miss = 0; bonus = (lg === 1 ? 60000 : 25000) * (pos <= goal.pos - 3 ? 1.5 : 1); txt = `Der Vorstand ist zufrieden und zahlt einen Bonus von ${euro(bonus)}.`; }
+  else if (!clear) { B.miss = 0; txt = 'Saisonziel knapp verfehlt. Der Vorstand ist enttäuscht, hält aber an dir fest.'; }
+  else { B.miss++; txt = B.miss >= 2 ? 'Zum zweiten Mal in Folge deutlich verfehlt: Der Vorstand trennt sich von dir.' : `Saisonziel deutlich verfehlt${debt ? ', dazu Schulden' : ''}. Der Vorstand spricht eine Warnung aus: Noch einmal, und du bist raus.`; }
+  CAREER.money += bonus; finOf().bonus += bonus;
+  return { met, bonus, warn: clear && B.miss === 1, fired: B.miss >= 2, txt };
+}
+// Jobangebote nach einer Entlassung: drei schwächere Vereine, eher aus der 2. Liga
+function jobOffers() {
+  const me = CAREER.team, r = TEAMS[me].r;
+  const pool = TEAMS.filter(t => t.id !== me && t.r <= r - 2).sort((a, b) => (CAREER.lgOf[b.id] - CAREER.lgOf[a.id]) || (b.r - a.r));
+  const lg2 = pool.filter(t => CAREER.lgOf[t.id] === 2), lg1 = pool.filter(t => CAREER.lgOf[t.id] === 1);
+  const picks = [...lg1.slice(-1), ...lg2.slice(0, 6).sort(() => Math.random() - 0.5).slice(0, 2)];
+  return (picks.length >= 2 ? picks : TEAMS.filter(t => t.id !== me && CAREER.lgOf[t.id] === 2).slice(0, 3)).map(t => t.id);
+}
+function takeJob(tid) {
+  const old = CAREER.team;
+  CAREER.aiMoney[old] = CAREER.money; CAREER.money = CAREER.aiMoney[tid]; CAREER.aiMoney[tid] = 0;
+  CAREER.squads[old].forEach(p => delete p.lock);
+  CAREER.team = tid; CAREER.board = { miss: 0 }; CAREER.debt = 0; CAREER.jobOffers = null; CAREER.offers = []; CAREER.streak = 0;
+  ensureStarters(tid); newSeason();
+  news(`Neuer Job: Du übernimmst ${TEAMS[tid].n} (${CAREER.lgOf[tid]}. Liga). Saisonziel: ${CAREER.goal.txt}.`);
+  saveCareer();
+}
+// alte Spielstände ergänzen
+if (CAREER) { CAREER.board ??= { miss: 0 }; CAREER.debt ??= 0; if (CAREER.season) finOf(); }
 // ================= Karriere-Bildschirme: Zeitung, Kader, Transfers =================
 let CTAB = 'home', CMSG = '', CDEL = false, CSEL = null, CSELL = null;
 const seasonName = y => `${y}/${String(y + 1).slice(2)}`;
@@ -3099,7 +3215,7 @@ function paper() {
       ${next}
       <div class="np-box"><h4>TABELLE · PLATZ ${pos}</h4>${leagueTable(CAREER.team, k => k < 3 || Math.abs(k - (pos - 1)) <= 1 || k >= st.length - 2, true)}
         <h4>TORJÄGER</h4><p>${topS.map((s, i) => `${i + 1}. ${esc(s.name)} (${TEAMS[s.tid].k}) ${s.n}`).join('<br>') || 'Noch keine Tore.'}</p></div>
-      <div class="np-box"><h4>VORSTAND</h4><p>Saisonziel: <b>${esc(CAREER.goal.txt)}</b><br>Stimmung: <b>${mood.txt}</b></p><div class="np-meter"><i style="width:${Math.round(mood.v * 100)}%"></i></div>
+      <div class="np-box"><h4>VORSTAND</h4><p>Saisonziel: <b>${esc(CAREER.goal.txt)}</b><br>Stimmung: <b>${mood.txt}</b>${CAREER.board && CAREER.board.miss ? '<br><b style="color:#a3170d">Letzte Saison verfehlt: Es gibt keine zweite Warnung.</b>' : ''}${CAREER.money < 0 ? `<br><b style="color:#a3170d">Schulden: ${euro(-CAREER.money)}. Transfersperre${CAREER.debt ? `, Notverkauf nach ${Math.max(0, debtLimit() - CAREER.debt)} weiteren Spieltagen im Minus` : ''}.</b>` : ''}</p><div class="np-meter"><i style="width:${Math.round(mood.v * 100)}%"></i></div>
         <h4>KABINE</h4><p>${hot ? `In Topform: ${esc(hot.name)} (${formTxtPlain(hot.form)}). ` : ''}${cold ? `Formkrise: ${esc(cold.name)}. ` : ''}${tired.length ? `Müde: ${tired.map(p => `${esc(p.name)} (${Math.round(p.fit)} %)`).join(', ')}.` : 'Der Kader ist fit.'}
           ${sq.some(p => p.inj) ? `<br><b>Verletzt:</b> ${sq.filter(p => p.inj).map(p => `${esc(p.name)} (${p.inj})`).join(', ')}` : ''}
           ${S.round >= S.fixtures.length * 0.6 && sq.some(p => p.vt <= 1) ? `<br><b>Verträge laufen aus:</b> ${sq.filter(p => p.vt <= 1).map(p => esc(p.name)).join(', ')}` : ''}</p>
@@ -3114,17 +3230,17 @@ function paper() {
 // ---------- Spieler-Detail ----------
 function playerDetail(p) {
   const attrs = (p.role === 'TW' ? [['Torwart', p.gk], ['Tempo', p.spd]] : [['Wurf', p.att], ['Pass', p.pas], ['Abwehr', p.def], ['Tempo', p.spd]]).concat([['Ausdauer', p.sta ?? 75]]);
-  const sellP = Math.round(pValue(p) * 0.85 / 5000) * 5000;
+  const sellP = quickSalePrice(p), locked = isLocked(p);
   return `<div class="pdet"><canvas id="pdC" width="40" height="40"></canvas>
     <div class="pdet-info"><h2>#${p.num} ${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''}</h2>
       <p class="muted">${ROLE_LONG[p.role]} · ${p.age} Jahre · Gesamt <b style="color:var(--gold)">${ovr(p)}</b>${p.age < 24 ? ` · Potenzial ${Math.round(p.pot)}` : ''}${p.trait ? ` · ${esc(p.trait)}` : ''}</p>
       <div class="bars">${attrs.map(([l, v]) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}</span>`).join('')}</div>
       ${p.inj ? `<p style="margin:0;color:var(--hot)">Verletzt: fällt noch ${p.inj === 1 ? 'einen Spieltag' : `${p.inj} Spieltage`} aus.</p>` : ''}
-      <p class="muted">Vertrag: ${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · Gehalt ${euro(p.sal || salaryFor(p))}/Spieltag</p>
-      ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p))}/Spieltag, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
+      <p class="muted">Vertrag: ${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · Gehalt ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</p>
+      ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p) * REF_LEN)} pro Saison, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
       <p class="muted">Form ${formTxt(p.form)} · Fitness ${fitBar(Math.round(p.fit), 60)} ${Math.round(p.fit)} %<br>Saison: ${p.apps} Spiele, ${p.role === 'TW' ? `${p.ss} Paraden` : `${p.sg} Tore`} · Karriere: ${p.tg} Tore · Marktwert ${euro(pValue(p))}</p>
       <div class="row">${p.start ? '<span class="tag" style="color:var(--gold)">IN DER STARTSIEBEN</span>' : p.inj ? '<span class="tag" style="color:var(--hot)">VERLETZT</span>' : `<button class="main" data-act="cStart" data-v="${p.pid}">AUFSTELLEN</button>`}
-        <button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : 'VERKAUFEN'}</button><button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
+        ${locked ? `<span class="tag">NEUZUGANG · VERKAUF AB SPIELTAG ${p.lock.r + 1}</span>` : `<button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : `SOFORTVERKAUF (${euro(sellP)})`}</button>`}<button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
     </div></div>`;
 }
 // ---------- Statistik: Kennzahlen, Platz-Verlauf, Torjäger, eigener Kader ----------
@@ -3155,7 +3271,15 @@ function statsView() {
   const fArrow = f => f > 1 ? '<b style="color:var(--green)">▲</b>' : f > 0.3 ? '<b style="color:var(--green)">↗</b>' : f < -1 ? '<b style="color:var(--hot)">▼</b>' : f < -0.3 ? '<b style="color:var(--hot)">↘</b>' : '<b style="color:var(--dim)">→</b>';
   const squad = mine.length ? `<table class="sqt stt"><thead><tr><th>POS</th><th>NAME</th><th class="num">SP</th><th class="num">TORE</th><th class="num">Ø</th><th class="num">PAR.</th><th class="num">FORM</th><th class="num">FIT</th></tr></thead><tbody>${
     mine.map(p => `<tr><td>${p.role}</td><td>${esc(p.name)}</td><td class="num">${p.apps}</td><td class="num">${p.role === 'TW' ? '–' : p.sg}</td><td class="num">${p.role === 'TW' ? '–' : (p.sg / p.apps).toFixed(1)}</td><td class="num">${p.role === 'TW' ? p.ss : '–'}</td><td class="num">${fArrow(p.form)}</td><td class="num" style="color:${p.fit < 60 ? 'var(--hot)' : p.fit < 80 ? 'var(--gold)' : 'inherit'}">${Math.round(p.fit)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine Spiele.</p>';
-  return `${kpis}<h3>TABELLENPLATZ NACH SPIELTAG</h3>${chart}<div class="stat2"><div><h3>TORJÄGER DER LIGA</h3>${scorers}</div><div><h3>DEIN KADER · SAISON</h3>${squad}</div></div>`;
+  return `${kpis}<h3>TABELLENPLATZ NACH SPIELTAG</h3>${chart}<div class="stat2"><div><h3>TORJÄGER DER LIGA</h3>${scorers}${finTable(finOf(), CAREER.money)}</div><div><h3>DEIN KADER · SAISON</h3>${squad}</div></div>`;
+}
+// Finanzbilanz einer Saison (Saisonabschluss und Statistik)
+function finTable(F, money) {
+  const rows = [['Zuschauer (Liga)', F.gate], ['Sponsoren', F.sponsor], ['Pokal (Zuschauer und Prämien)', F.cup], ['Ligaprämie', F.prize], ['Vorstandsbonus', F.bonus], ['Transfers (Saldo)', F.transfer], ['Gehälter', -F.wages]].filter(r => r[1]);
+  const sum = rows.reduce((s, r) => s + r[1], 0), fmt = v => `<span style="color:${v < 0 ? 'var(--hot)' : 'inherit'}">${v < 0 ? '−' : '+'}${euro(Math.abs(v))}</span>`;
+  const fans = F.fans && F.fans.length ? `Ø ${Math.round(avg(F.fans)).toLocaleString('de-DE')} Zuschauer bei ${F.fans.length} Heimspielen · Halle ${hallCap(CAREER.team).toLocaleString('de-DE')} Plätze` : '';
+  return `<h3>FINANZEN DER SAISON</h3><table class="sqt stt fin"><tbody>${rows.map(([l, v]) => `<tr><td class="lbl">${l}</td><td class="num">${fmt(v)}</td></tr>`).join('')}
+    <tr><td class="lbl"><b>Saldo</b></td><td class="num"><b>${fmt(sum)}</b></td></tr>${money !== undefined ? `<tr><td class="lbl">Kontostand</td><td class="num">${fmt(money)}</td></tr>` : ''}</tbody></table>${fans ? `<p class="muted" style="margin:0">${fans}</p>` : ''}`;
 }
 // ---------- Pokal als Turnierbaum ----------
 function cupView() {
@@ -3189,7 +3313,7 @@ function careerHub(tab) {
   if (CAREER.summary) return seasonSummary();
   const S = CAREER.season, me = TEAMS[CAREER.team];
   const head = `<div class="row spread"><div class="tname"><img src="${icon(me)}" alt=""><span>${esc(me.n.toUpperCase())}<br><span class="tag">${S.lg}. LIGA · ${seasonName(CAREER.year)} · SPIELTAG ${Math.min(S.round + 1, S.fixtures.length)}/${S.fixtures.length}</span></span></div>
-    <div style="text-align:right"><span class="tag">BUDGET · GEHÄLTER ${euro(wageBill())}/SPIELTAG</span><br><b style="font-family:var(--pix);font-size:11px;color:${CAREER.money < 0 ? 'var(--hot)' : 'var(--gold)'}">${CAREER.money < 0 ? '−' + euro(-CAREER.money) : euro(CAREER.money)}</b></div></div>`;
+    <div style="text-align:right"><span class="tag">BUDGET · GEHÄLTER ${euro(wagesPerRound())}/SPIELTAG${CAREER.money < 0 ? ' · TRANSFERSPERRE' : ''}</span><br><b style="font-family:var(--pix);font-size:11px;color:${CAREER.money < 0 ? 'var(--hot)' : 'var(--gold)'}">${CAREER.money < 0 ? '−' + euro(-CAREER.money) : euro(CAREER.money)}</b></div></div>`;
   let body = '';
   if (CTAB === 'home') body = paper();
   else if (CTAB === 'squad') {
@@ -3214,7 +3338,7 @@ function careerHub(tab) {
       <div class="btns menu-list">${TRAINING.map(t => `<button class="${CAREER.training === t.k ? 'main' : ''}" data-act="cTrain" data-v="${t.k}">${t.n} <i>${t.d}</i></button>`).join('')}</div>`;
   } else if (CTAB === 'market') {
     const sq = CAREER.squads[CAREER.team];
-    body = `<div class="row spread"><p class="muted">Kader ${sq.length}/18 (mindestens 12). Die Liste wird alle zwei Spieltage neu gemischt.</p>
+    body = `<div class="row spread"><p class="muted">Kader ${sq.length}/18 (mindestens 12). Die Liste wird alle zwei Spieltage neu gemischt. Neuzugänge sind ${lockRounds()} Spieltage gesperrt, ein Sofortverkauf bringt 55 % des Marktwerts. Mehr gibt es über Angebote.${CAREER.money < 0 ? ' <b style="color:var(--hot)">Transfersperre: Die Kasse ist im Minus.</b>' : ''}</p>
       <div class="row"><span class="tag">CPU-TRANSFERS</span><button class="small ${CAREER.aiTransfers ? 'on' : ''}" data-act="cAiT" data-v="1">AN</button><button class="small ${CAREER.aiTransfers ? '' : 'on'}" data-act="cAiT" data-v="0">AUS</button></div></div>`;
     if (CAREER.offers.length) body += `<h3>ANGEBOTE FÜR DEINE SPIELER</h3><table class="sqt cards"><tbody>${CAREER.offers.map(o => { const p = findCareerPlayer(CAREER.team, o.pid); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name">${esc(p.name)} <span class="age">${ovr(p)}</span></td><td data-l="VON">${esc(TEAMS[o.from].short)}</td><td data-l="BIETET">${euro(o.price)}</td><td data-l="BIS">${o.exp}. Sp.</td><td class="c-act"><button class="small main" data-act="cOffer" data-v="${p.pid}:1">ANNEHMEN</button> <button class="small" data-act="cOffer" data-v="${p.pid}:0">ABLEHNEN</button></td></tr>`; }).join('')}</tbody></table>`;
     body += `<h3>TRANSFERLISTE</h3><table class="sqt cards"><thead><tr><th>POS</th><th>NAME</th><th>VON</th><th>GES</th><th>POT</th><th>PREIS</th><th></th></tr></thead><tbody>${
@@ -3226,8 +3350,9 @@ function careerHub(tab) {
   } else if (CTAB === 'cup') body = cupView();
   else if (CTAB === 'stats') body = statsView();
   else if (CTAB === 'hist') {
-    body = CAREER.history.length ? `<table class="sqt"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th class="hm">POKAL</th><th class="hm">TORJÄGER</th></tr></thead><tbody>${
-      CAREER.history.map(h => `<tr><td>${seasonName(h.year)}</td><td>${h.lg}.</td><td>${h.pos}</td><td style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td>${esc(TEAMS[h.champ].n)}</td><td class="hm" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td class="hm">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
+    // Handy: Karten statt Spalten (Kopfzeile Saison · Liga · Platz, darunter beschriftete Felder)
+    body = CAREER.history.length ? `<table class="sqt cards hist"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th>POKAL</th><th>TORJÄGER</th></tr></thead><tbody>${
+      CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
   }
   showMenu(`<div class="panel wide"><div class="csticky">${head}${tabs()}</div>${CMSG ? `<p style="margin:0;color:var(--hot)">${esc(CMSG)}</p>` : ''}${body}<div class="row"><button data-act="main">HAUPTMENÜ</button></div></div>`);
@@ -3241,6 +3366,8 @@ function seasonSummary() {
   showMenu(`<div class="panel"><h2>SAISON ${seasonName(s.year)} · ABSCHLUSS</h2>
     <p class="res" style="color:${s.move === 'ab' ? 'var(--hot)' : 'var(--gold)'}">${head}</p>
     <p class="muted" style="text-align:center">${esc(me.n)} beendet die ${s.lg}. Liga auf Platz ${s.pos}. Saisonziel „${esc(s.goal || '')}“ ${s.goalMet ? '<b style="color:var(--green)">erreicht</b>' : '<b style="color:var(--hot)">verfehlt</b>'}. Prämie: ${euro(s.prize)}.</p>
+    ${s.board ? `<p class="muted" style="text-align:center;color:${s.board.fired ? 'var(--hot)' : s.board.warn ? 'var(--gold)' : 'var(--green)'}"><b>VORSTAND:</b> ${esc(s.board.txt)}</p>` : ''}
+    ${s.fin ? finTable(s.fin, s.money) : ''}
     <table class="sqt"><tbody>
       <tr><td>Meister 1. Liga</td><td>${esc(TEAMS[s.champ1].n)}</td></tr>
       <tr><td>Meister 2. Liga</td><td>${esc(TEAMS[s.champ2].n)}</td></tr>
@@ -3253,7 +3380,9 @@ function seasonSummary() {
     ${s.gone && s.gone.length ? `<p class="muted">Vertrag ausgelaufen, ablösefrei weg: ${s.gone.map(esc).join(', ')}.</p>` : ''}
     ${s.youth && s.youth.length ? `<p class="muted">Aus der Jugend rücken nach: ${s.youth.map(esc).join(', ')}.</p>` : ''}
     ${s.retired.length ? `<p class="muted">Karriereende: ${s.retired.map(esc).join(', ')}. Talente aus der Jugend rücken nach.</p>` : ''}
-    <div class="row"><button class="main" data-act="cNext">SAISON ${seasonName(CAREER.year)} STARTEN</button></div></div>`);
+    ${CAREER.jobOffers ? `<h3>JOBANGEBOTE</h3><p class="muted">Diese Vereine wollen dich als Trainer. Du startest mit ihrem Kader und ihrem Budget in die neue Saison.</p>
+      <div class="btns menu-list">${CAREER.jobOffers.map(id => `<button data-act="cJob" data-v="${id}">${esc(TEAMS[id].n)} <i>${CAREER.lgOf[id]}. Liga · Stärke ${strength(id).ovr} · ${euro(CAREER.aiMoney[id])}</i></button>`).join('')}</div>`
+    : `<div class="row"><button class="main" data-act="cNext">SAISON ${seasonName(CAREER.year)} STARTEN</button></div>`}</div>`);
 }
 Object.assign(ACT, {
   cNew() { SEASON_PICK = false; careerCreate(SEL.a, SEL.len, SEL.half, SEL.diff, SEL.ait === 0, SEL.coach); track('karriere-neu'); careerHub('home'); },
@@ -3282,6 +3411,7 @@ Object.assign(ACT, {
   cTrain(v) { CAREER.training = v; if (CAREER.coach.training) { CAREER.coach.training = false; CMSG = 'Du bestimmst das Training jetzt selbst.'; } saveCareer(); careerHub('train'); },
   cEnd() { careerEndSeason(); careerHub(); },
   cNext() { CAREER.summary = null; saveCareer(); careerHub('home'); },
+  cJob(v) { takeJob(+v); CAREER.summary = null; saveCareer(); careerHub('home'); },
   cDel() { if (!CDEL) { CDEL = true; return careerHub('hist'); } CDEL = false; store.del(CAREER_KEY); store.del(SAVE_KEY); CAREER = null; ACT.main(); },
 });
 // ================= Touch, Hauptschleife, Start =================

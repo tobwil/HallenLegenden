@@ -111,6 +111,10 @@ input:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
 .stat2{display:grid;grid-template-columns:1fr 1.5fr;gap:18px;align-items:start}
 .stat2 > div{display:flex;flex-direction:column;gap:6px;min-width:0}
 .stt td.num,.stt th.num{text-align:right}
+.stt td.lbl{text-align:left}
+.hm-only{display:none}
+@media (max-width:600px){table.hist .hm-only{display:inline}}
+table.fin{max-width:520px}
 .stt td.barc{width:30%}
 .sbar{display:block;height:6px;background:var(--gold);opacity:.8}
 .stt tr.me .sbar{background:var(--hot)}
@@ -195,6 +199,9 @@ body.touch button.link{min-height:0;font-size:19px}
   table.cards .age{display:inline}
   table.cards td.gkc{grid-column:span 3}
   table.cards td.c-act{grid-column:1/-1}
+  table.hist tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  table.hist td{white-space:normal}
+  table.hist .hd-only{display:none}
   .np-date{font-size:14px}
 }
 #rotate{display:none;position:fixed;inset:0;z-index:30;background:rgba(7,6,11,.96);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px}
