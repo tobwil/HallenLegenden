@@ -59,8 +59,10 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
   - 6, 17 oder 34 Spieltage, Auf- und Abstieg zwischen beiden Ligen
   - 14er-Kader mit Werten für Wurf, Pass, Abwehr, Tempo, Torwart und Ausdauer, dazu Alter, Potenzial, Form und Fitness
   - Training mit sechs Schwerpunkten, Spielerentwicklung und Karriereende, Jugendspieler rücken nach
-  - Transfermarkt, Gehälter, Verträge mit Laufzeit und Verlängerung, Angebote anderer Vereine
-  - CPU-Transfers (abschaltbar), Verletzungen, Vorstand mit Saisonziel
+  - Transfermarkt, Gehälter, Verträge mit Laufzeit und Verlängerung, Angebote anderer Vereine. Neuzugänge sind ein Drittel der Saison gesperrt, ein Sofortverkauf bringt 55 % des Marktwerts
+  - Finanzen: Zuschauereinnahmen bei Heimspielen (Hallengröße, Tabellenplatz, Form, Gegner, Pokal), Sponsoren, TV-Geld nach Platz. Alles ist auf eine Saison geeicht, die Saisonlänge verändert die Bilanz nicht. Die CPU-Vereine wirtschaften nach denselben Regeln
+  - CPU-Transfers (abschaltbar), Verletzungen
+  - Vorstand mit Saisonziel: Bonus bei Erfolg, Warnung bei deutlichem Verfehlen, Entlassung beim zweiten Mal mit Jobangeboten anderer Vereine. Schulden bedeuten Transfersperre und nach einigen Spieltagen Notverkäufe
   - Co-Trainer für Aufstellung und Training (optional)
   - Pokal mit 32 Teams und Final Four
   - Jede Partie selbst spielen oder simulieren
@@ -203,8 +205,10 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
   - 6, 17 or 34 matchdays, promotion and relegation between both leagues
   - 14-player squad with ratings for shooting, passing, defence, pace, goalkeeping and stamina, plus age, potential, form and fitness
   - Training with six focus areas, player development and retirement, youth players move up
-  - Transfer market, salaries, contracts with length and extensions, offers from other clubs
-  - CPU transfers (can be switched off), injuries, board with a season target
+  - Transfer market, salaries, contracts with length and extensions, offers from other clubs. New signings are locked for a third of the season, a quick sale brings 55 % of the market value
+  - Finances: gate receipts for home games (arena size, table position, form, opponent, cup), sponsors, TV money by position. Everything is calibrated per season, so the season length does not change the balance. CPU clubs follow the same rules
+  - CPU transfers (can be switched off), injuries
+  - Board with a season target: bonus on success, warning when clearly missed, sacked the second time with job offers from other clubs. Debt means a transfer ban and, after a few matchdays, forced sales
   - Assistant coach for line-up and training (optional)
   - Cup with 32 teams and a Final Four
   - Play every match yourself or simulate it

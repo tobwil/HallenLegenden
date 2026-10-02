@@ -75,7 +75,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
-    aiTransfers, aiMoney: {}, offers: [], streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
+    aiTransfers, aiMoney: {}, offers: [], board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
   TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 1 ? 25000 : 12000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
@@ -185,10 +185,9 @@ function playRound(own) {
   CAREER.lastMatch = { round: S.round + 1, home: own.a === me, opp, my: mine[0], their: mine[1], res, top: top ? { name: top[0].name, g: top[1] } : null, gk: gk ? { name: gk.name, sv: (own.stats[gk.pid] || {}).sv || 0 } : null };
   CAREER.streak = (CAREER.streak && Math.sign(CAREER.streak) === (res === 'S' ? 1 : res === 'N' ? -1 : 0)) ? CAREER.streak + Math.sign(CAREER.streak) : (res === 'S' ? 1 : res === 'N' ? -1 : 0);
   CAREER.form5.push(res); CAREER.form5 = CAREER.form5.slice(-5);
-  const inc = Math.round(({ S: 30000, U: 15000, N: 6000 }[res] + (own.a === me ? 12000 : 0)) * (S.lg === 1 ? 1 : 0.55));
-  const wages = wageBill();
-  CAREER.money += inc - wages;
-  news(`${S.round + 1}. Spieltag: ${res === 'S' ? 'Sieg' : res === 'U' ? 'Remis' : 'Niederlage'} gegen ${TEAMS[opp].n} (${mine[0]}:${mine[1]}). Einnahmen ${euro(inc)}, Gehälter ${euro(wages)}.`);
+  const fin = roundFinances(fx, own.a === me, opp), g = fin.gate;
+  if (g) CAREER.lastMatch.fans = g.n;
+  news(`${S.round + 1}. Spieltag: ${res === 'S' ? 'Sieg' : res === 'U' ? 'Remis' : 'Niederlage'} gegen ${TEAMS[opp].n} (${mine[0]}:${mine[1]}). ${g ? `${g.n.toLocaleString('de-DE')} Zuschauer${g.full ? ' (ausverkauft)' : ''}: ${euro(g.money)}, ` : 'Auswärtsspiel, '}Sponsor ${euro(fin.sponsor)}, Gehälter ${euro(fin.wages)}.`);
   const gains = weeklyTraining(); if (gains.length) news(`Training: ${gains.slice(0, 3).join(', ')}${gains.length > 3 ? ' …' : ''}`);
   S.round++;
   for (const t of TEAMS) for (const p of CAREER.squads[t.id]) if (p.inj) { p.inj--; if (!p.inj && t.id === me) news(`${p.name} ist wieder fit.`); }
@@ -196,9 +195,10 @@ function playRound(own) {
   if (CAREER.cup) autoCup();
   if (S.round >= S.fixtures.length) { S.done = true; news('Letzter Spieltag gespielt. Zeit für den Saisonabschluss!'); }
   if (S.round % 2 === 0) refreshMarket(false);
-  for (const t of TEAMS) if (t.id !== me) CAREER.aiMoney[t.id] += CAREER.lgOf[t.id] === 1 ? 18000 : 8000;
   CAREER.offers = CAREER.offers.filter(o => o.exp > S.round && findCareerPlayer(me, o.pid));
   if (CAREER.aiTransfers) aiTransferRound(1);
+  checkDebt();
+  if (boardMood().v <= 0.2 && !CAREER.board.warned) { CAREER.board.warned = true; news('Der Vorstand ist verärgert. Wird das Saisonziel verfehlt, gibt es Konsequenzen.'); }
   saveCareer();
 }
 const salaryFor = p => Math.max(1500, Math.round(pValue(p) * 0.0035 / 500) * 500);
@@ -244,12 +244,13 @@ function buyPlayer(pid) {
   const m = CAREER.market.find(x => x.pid === pid), sq = CAREER.squads[CAREER.team];
   if (!m) return 'Spieler nicht mehr verfügbar.';
   if (sq.length >= 18) return 'Der Kader ist voll (18 Spieler). Verkaufe zuerst jemanden.';
+  if (CAREER.money < 0) return 'Transfersperre: Die Kasse ist im Minus.';
   if (CAREER.money < m.price) return 'Dafür reicht das Budget nicht.';
-  if (sq.length >= 16 && CAREER.money - m.price < wageBill() * 3) return 'Zu riskant: Nach dem Kauf wären die Gehälter der nächsten Spieltage nicht gedeckt.';
+  if (sq.length >= 16 && CAREER.money - m.price < wagesPerRound() * 3) return 'Zu riskant: Nach dem Kauf wären die Gehälter der nächsten Spieltage nicht gedeckt.';
   const p = marketPlayer(m); if (!p) return 'Spieler nicht mehr verfügbar.';
   if (m.from < 0) CAREER.free = CAREER.free.filter(x => x !== p);
   else { const src = CAREER.squads[m.from]; src.splice(src.indexOf(p), 1); if (src.length < 13) { src.push(finalize(genPlayer(p.role, TEAMS[m.from].r - 10, Math.random, 18, 20))); fixNumbers(src); } ensureAiRoles(m.from); }
-  CAREER.money -= m.price; p.start = false; p.num = 0; p.vt = 2 + ((Math.random() * 3) | 0); p.sal = Math.round(salaryFor(p) * 1.1 / 500) * 500; sq.push(p); fixNumbers(sq);
+  CAREER.money -= m.price; finOf().transfer -= m.price; if (m.from >= 0) CAREER.aiMoney[m.from] += m.price; p.lock = { y: CAREER.year, r: CAREER.season.round + lockRounds() }; p.start = false; p.num = 0; p.vt = 2 + ((Math.random() * 3) | 0); p.sal = Math.round(salaryFor(p) * 1.1 / 500) * 500; sq.push(p); fixNumbers(sq);
   CAREER.market = CAREER.market.filter(x => x.pid !== pid);
   news(`Transfer: ${p.name} (${ROLE_LONG[p.role]}, ${ovr(p)}) kommt für ${euro(m.price)}.`); saveCareer(); return '';
 }
@@ -258,11 +259,11 @@ function sellPlayer(pid) {
   if (!p) return '';
   if (sq.length <= 12) return 'Mindestens 12 Spieler müssen im Kader bleiben.';
   if (sq.filter(x => x.role === p.role).length <= 1) return `Du brauchst mindestens einen ${ROLE_LONG[p.role]}.`;
-  const price = Math.round(pValue(p) * 0.85 / 5000) * 5000;
-  sq.splice(sq.indexOf(p), 1); CAREER.money += price; ensureStarters(CAREER.team);
-  const dest = TEAMS.filter(t => t.id !== CAREER.team && CAREER.squads[t.id].length < 16);
-  if (dest.length) { const t = pick(dest); p.start = false; p.num = 0; CAREER.squads[t.id].push(p); fixNumbers(CAREER.squads[t.id]); news(`${p.name} wechselt für ${euro(price)} zu ${t.n}.`); }
-  else news(`${p.name} verlässt den Verein für ${euro(price)}.`);
+  if (isLocked(p)) return `${p.name} ist gerade erst gekommen und kann bis Spieltag ${p.lock.r + 1} nicht verkauft werden.`;
+  const price = quickSalePrice(p), t = buyerFor(p, price);
+  if (!t) return `Kein Verein kann sich ${p.name} gerade leisten.`;
+  sq.splice(sq.indexOf(p), 1); CAREER.money += price; CAREER.aiMoney[t.id] -= price; finOf().transfer += price; ensureStarters(CAREER.team);
+  p.start = false; p.num = 0; CAREER.squads[t.id].push(p); fixNumbers(CAREER.squads[t.id]); news(`${p.name} wechselt für ${euro(price)} zu ${t.n}.`);
   saveCareer(); return '';
 }
 function ensureAiRoles(tid) { const sq = CAREER.squads[tid]; for (const role of ROLES) if (!sq.some(p => p.role === role)) sq.push(finalize(genPlayer(role, TEAMS[tid].r - 10, Math.random, 18, 21))); fixNumbers(sq); }
@@ -285,8 +286,9 @@ function careerEndSeason() {
   const l1 = lg === 1 ? st : other, l2 = lg === 2 ? st : other;
   const down = l1.slice(-2).map(x => x.i), up = l2.slice(0, 2).map(x => x.i);
   const pos = st.findIndex(x => x.i === me) + 1;
-  const prize = Math.round((19 - pos) * (lg === 1 ? 30000 : 12000) / 5000) * 5000;
-  CAREER.money += prize;
+  const prize = leaguePrize(pos, lg);
+  CAREER.money += prize; finOf().prize += prize;
+  const verdict = boardVerdict(pos, CAREER.goal, lg), finSeason = { ...finOf() };
   const topE = Object.entries(S.scorers).sort((a, b) => b[1].n - a[1].n)[0];
   const top = topE ? { name: topE[1].name, tid: topE[1].tid, n: topE[1].n } : null;
   down.forEach(id => CAREER.lgOf[id] = 2); up.forEach(id => CAREER.lgOf[id] = 1);
@@ -329,12 +331,14 @@ function careerEndSeason() {
   ensureStarters(me);
   var sum = { year: CAREER.year, lg, pos, prize, top, champ: st[0].i, champ1: l1[0].i, champ2: l2[0].i, up, down, move, dev: dev.sort((a, b) => b.d - a.d), retired, gone, youth, cupWinner: CAREER.cup ? CAREER.cup.winner : null, cupMy: CAREER.cup ? CAREER.cup.myBest : 0, final: st.slice(0, 18).map(x => [x.i, x.pk, x.d]) };
   const goalMet = pos <= CAREER.goal.pos;
-  sum.goal = CAREER.goal.txt; sum.goalMet = goalMet;
+  sum.goal = CAREER.goal.txt; sum.goalMet = goalMet; sum.board = verdict; sum.fin = finSeason; sum.money = CAREER.money;
   CAREER.history.push({ year: CAREER.year, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null });
-  for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += (19 - k - 1) * (l === 1 ? 30000 : 12000); });
+  for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += leaguePrize(k + 1, l); });
   if (CAREER.aiTransfers) aiTransferRound(4);
   CAREER.year++;
+  CAREER.board.warned = false; TEAMS.forEach(t => CAREER.squads[t.id].forEach(p => delete p.lock));
   newSeason();
+  if (verdict.fired) CAREER.jobOffers = jobOffers();
   CAREER.summary = sum;
   news(move === 'auf' ? `AUFSTIEG! ${TEAMS[me].n} spielt ab sofort in der 1. Liga.` : move === 'ab' ? `Abstieg in die 2. Liga. Jetzt heißt es: sofort zurückkommen!` : `Neue Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
   saveCareer();
@@ -366,7 +370,7 @@ function aiTransferRound(passes) {
   // Angebote für deine Spieler
   if (passes === 1 && Math.random() < 0.18 && CAREER.offers.length < 3) {
     const sq = CAREER.squads[me], level = avg(lineup(me).map(ovr));
-    const cand = sq.filter(p => (ovr(p) >= level - 1 || (p.age < 22 && p.pot - ovr(p) > 8)) && !CAREER.offers.some(o => o.pid === p.pid));
+    const cand = sq.filter(p => (ovr(p) >= level - 1 || (p.age < 22 && p.pot - ovr(p) > 8)) && !isLocked(p) && !CAREER.offers.some(o => o.pid === p.pid));
     const p = cand.length ? pick(cand) : null, buyers = TEAMS.filter(t => t.id !== me && CAREER.aiMoney[t.id] > (p ? pValue(p) * 1.1 : 1e9));
     if (p && buyers.length) {
       const t = pick(buyers), price = Math.round(pValue(p) * rnd(1.05, 1.45) / 5000) * 5000;
@@ -382,7 +386,8 @@ function answerOffer(pid, accept) {
   if (!accept) { news(`Abgelehnt: ${p.name} bleibt. ${TEAMS[o.from].short} zieht das Angebot zurück.`); p.form = clamp(p.form + 0.5, -3, 3); saveCareer(); return ''; }
   if (sq.length <= 12) return 'Mindestens 12 Spieler müssen im Kader bleiben.';
   if (sq.filter(x => x.role === p.role).length <= 1) return `Du brauchst mindestens einen ${ROLE_LONG[p.role]}.`;
-  sq.splice(sq.indexOf(p), 1); CAREER.money += o.price; CAREER.aiMoney[o.from] -= o.price; ensureStarters(CAREER.team);
+  if (CAREER.aiMoney[o.from] < o.price) return `${TEAMS[o.from].short} kann das Angebot nicht mehr bezahlen.`;
+  sq.splice(sq.indexOf(p), 1); CAREER.money += o.price; CAREER.aiMoney[o.from] -= o.price; finOf().transfer += o.price; ensureStarters(CAREER.team);
   p.start = false; p.num = 0; CAREER.squads[o.from].push(p); fixNumbers(CAREER.squads[o.from]);
   news(`Verkauft: ${p.name} geht für ${euro(o.price)} zu ${TEAMS[o.from].n}.`); saveCareer(); return '';
 }
@@ -405,7 +410,7 @@ function headline() {
   else if (diff === 0) h = pk([`PUNKTETEILUNG MIT ${o.short.toUpperCase()}`, `REMIS-KRIMI: ${sc}`]);
   else if (diff > -8) h = pk([`PLEITE GEGEN ${o.short.toUpperCase()}`, `${me.short.toUpperCase()} VERLIERT ${sc}`, `KNAPP DANEBEN IN ${m.home ? me.short.toUpperCase() : o.short.toUpperCase()}`]);
   else h = pk([`DEBAKEL! ${sc} GEGEN ${o.short.toUpperCase()}`, `${me.short.toUpperCase()} GEHT UNTER`]);
-  const s = [`${m.round}. Spieltag, ${m.home ? 'vor heimischem Publikum' : 'auswärts'}: ${me.short} ${m.my > m.their ? 'gewinnt' : m.my === m.their ? 'spielt' : 'verliert'} ${sc} gegen ${o.n}.`];
+  const s = [`${m.round}. Spieltag, ${m.home ? (m.fans ? `vor ${m.fans.toLocaleString('de-DE')} Zuschauern` : 'vor heimischem Publikum') : 'auswärts'}: ${me.short} ${m.my > m.their ? 'gewinnt' : m.my === m.their ? 'spielt' : 'verliert'} ${sc} gegen ${o.n}.`];
   if (m.top && m.top.g) s.push(`Bester Werfer war ${m.top.name} mit ${m.top.g} Toren.`);
   if (m.gk) s.push(`${m.gk.name} kam auf ${m.gk.sv} Paraden.`);
   if (Math.abs(CAREER.streak) >= 3) s.push(CAREER.streak > 0 ? `Das ist der ${CAREER.streak}. Sieg in Folge!` : `Bereits die ${-CAREER.streak}. Niederlage am Stück.`);
