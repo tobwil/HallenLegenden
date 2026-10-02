@@ -6,12 +6,27 @@
 
 | Bereich | Inhalt |
 |---|---|
-| Hero | Logo, Kurzbeschreibung, „Jetzt spielen“ und „Feature wünschen“ |
-| Horizontal-Scroll | Abschnitt `.hs`: Beim normalen Runterscrollen bleibt der Bereich stehen (`position: sticky`) und die Panels fahren seitlich durch. Die Höhe von `.hs` wird per JavaScript auf Track-Breite + Fensterhöhe gesetzt. Dahinter liegt ein als SVG gezeichnetes Handballfeld, unten eine Anzeigetafel mit Fortschritt. |
+| Story-Film | Abschnitt `#film`: Beim Scrollen bleibt ein Pixel-Canvas stehen (`position: sticky`), eine Figur läuft von links nach rechts durch sieben Szenen. Code in `assets/story.js`. |
 | Wunsch-Formular | `#wunsch`, schreibt in die Google-Tabelle |
 | Fuß | Hinweis Fan-Projekt, Lizenz, Impressum, Datenschutz |
 
-Ein neues Panel ist ein weiteres `<article class="panel" data-label="NAME">` im `.hs-track`. `flip` tauscht Bild und Text, `text-only` macht ein schmales Text-Panel. Elemente mit der Klasse `more` werden auf kleinen Bildschirmen ausgeblendet.
+### Story-Film
+
+Die Figur nutzt die Sprites aus dem Spiel (`src/p03_sprites.js`, nach `assets/story.js` kopiert) und hat zusätzlich einen Anzug und die Posen `walk`, `read`, `lift`, `point`, `jubel`, `bounce`.
+
+| Szene | Was passiert |
+|---|---|
+| `halle` | Intro mit Logo, dann dribbelt die Figur durch die volle Halle |
+| `tor` | Sprungwurf, Ball ins Netz, Torwart fliegt, „TOR!“, Konfetti |
+| `tv` | Wohnzimmer, Röhrenfernseher zeigt die echte Spielszene, beim Tor jubelt die Figur |
+| `zeitung` | Küche, die Figur liest den Handball-Kurier, die Uhr läuft, draußen geht die Sonne auf |
+| `buero` | Tafel mit wachsender Tabellenkurve, Monitor mit der Statistik-Seite, Pokal stemmen |
+| `kabine` | Vorhang zu, Trikot und Schuhe fliegen raus, Vorhang auf: Anzug |
+| `finale` | Halle am Abend, Ersatzbank jubelt, der Manager zeigt aufs Feld |
+
+Die Zeitachse ergibt sich aus `SCENES` (Breite `w`, Haltepunkt `at`, Länge der Aktion `act`). Lauf-Abschnitte sind 1:1 an den Scroll gekoppelt, in Aktionen bleibt die Figur stehen und der Scroll treibt die Animation. Die Texte (`[data-scene]` in `index.html`) gleiten pro Szene von rechts herein und nach links hinaus. Mit `window.__story` lässt sich die Zeitachse im Browser untersuchen.
+
+Ohne JavaScript werden die Texte als normale Liste untereinander gezeigt.
 
 ## Wunsch-Formular an die Google-Tabelle anbinden
 
@@ -27,7 +42,9 @@ Einmalig, dauert etwa fünf Minuten:
 
 Test: Die URL im Browser öffnen, sie antwortet mit `{"ok":true,...}`. Bei späteren Änderungen am Script unter **Bereitstellungen verwalten** eine neue Version derselben Bereitstellung anlegen, dann bleibt die URL gleich.
 
-Solange `FEATURE_ENDPOINT` leer ist, öffnet das Formular ein vorausgefülltes GitHub-Issue.
+Solange `FEATURE_ENDPOINT` leer ist, meldet das Formular, dass die Wunschliste gerade angeschlossen wird.
+
+Warum ein Script nötig ist: Auch eine für alle bearbeitbare Tabelle lässt sich über die Google-Schnittstelle nur mit Anmeldung beschreiben. Das Script läuft mit deinem Konto und schreibt stellvertretend. Die Tabelle selbst muss dafür nicht öffentlich sein, „Eingeschränkt“ reicht.
 
 ### Spam-Schutz
 
@@ -56,7 +73,7 @@ Achtung: Spielstände liegen im Browser pro Domain. Wer bisher unter `tobwil.git
 
 ## Netlify (Testumgebung)
 
-`netlify.toml` veröffentlicht den Hauptordner ohne Build-Schritt und leitet `/spielen` auf `/game/` weiter.
+Test-Adresse: https://hallenlegenden.netlify.app. `netlify.toml` veröffentlicht den Hauptordner ohne Build-Schritt und leitet `/spielen` auf `/game/` weiter.
 
 ## Impressum und Datenschutz
 
