@@ -11,6 +11,7 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
 - **Schulden:** Transfersperre, solange die Kasse im Minus ist. Nach einigen Spieltagen im Minus verkauft der Vorstand den günstigsten Spieler, dessen Erlös die Schulden deckt.
 - **Statistik und Saisonabschluss** zeigen die Finanzbilanz der Saison, dazu Zuschauerschnitt und Hallengröße
 - 5 neue Regressionstests für die Wirtschaft (`tests/run.mjs`)
+- **Fehler behoben:** Die Historie ragte auf dem Handy im Hochformat über den Fensterrand. Sie erscheint dort jetzt als Karten (Saison · Liga · Platz, darunter Ziel, Meister, Pokal, Torjäger). Ein neuer Test prüft alle Karriere-Ansichten im Hochformat auf Überlauf.
 
 ## v8.1: Kein Zoom beim Spielen mit zwei Daumen, Regressionstests
 - **Fehler behoben:** Auf dem iPhone (Safari) konnte das Bild beim Spielen plötzlich heranzoomen, wenn ein Daumen auf dem Stick und der andere auf einem Knopf lag. Safari erkennt das als Zwei-Finger-Zoom und ignoriert die übliche Zoom-Sperre. Jetzt werden Safaris Gesten-Events und Zwei-Finger-Bewegungen abgefangen, das Viewport-Tag sperrt den Zoom auch für andere Browser, und ein dennoch eingetretener Zoom wird automatisch zurückgesetzt. Ein-Finger-Scrollen in den Menüs funktioniert weiter.

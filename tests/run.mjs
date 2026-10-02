@@ -335,6 +335,21 @@ test('Wirtschaft: CPU-Budgets bleiben über drei Saisons stabil', async () => {
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Handy-Hochformat: keine Karriere-Ansicht ragt über den Fensterrand', async () => {
+  const { page, ctx, errors } = await open({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }, 5);
+  const bad = await page.evaluate(() => {
+    document.body.classList.add('touch', 'portraitok'); careerCreate(8, 1, 1, 1, true, 3);
+    while (!CAREER.season.done) ACT.cSim(); careerEndSeason();
+    const out = [], check = name => { const panel = menu.querySelector('.panel'); if (!panel) return; const pr = panel.getBoundingClientRect();
+      menu.querySelectorAll('.panel *').forEach(el => { const r = el.getBoundingClientRect(); if (r.width && r.right > pr.right + 1 && !el.closest('.ctabs') && !el.closest('.bracket')) out.push(`${name}: ${el.tagName.toLowerCase()} +${Math.round(r.right - pr.right)}px`); }); };
+    careerHub(); check('Saisonabschluss'); ACT.cNext(); for (let i = 0; i < 5; i++) ACT.cSim();
+    for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'stats', 'hist']) { ACT.cTab(t); check(t); }
+    ACT.cPick(CAREER.squads[CAREER.team][0].pid); check('Spieler');
+    return [...new Set(out)].slice(0, 5);
+  });
+  ok(!bad.length, bad.join(', ')); ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 // ---------------------------------------------------------------- Handy-Zoom
 test('Handy: kein Zoom mit zwei Daumen, Menü scrollt mit einem Finger', async () => {
   const { page, ctx, errors } = await open(MOBILE);

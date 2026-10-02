@@ -119,6 +119,8 @@ input:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
 .stat2 > div{display:flex;flex-direction:column;gap:6px;min-width:0}
 .stt td.num,.stt th.num{text-align:right}
 .stt td.lbl{text-align:left}
+.hm-only{display:none}
+@media (max-width:600px){table.hist .hm-only{display:inline}}
 table.fin{max-width:520px}
 .stt td.barc{width:30%}
 .sbar{display:block;height:6px;background:var(--gold);opacity:.8}
@@ -204,6 +206,9 @@ body.touch button.link{min-height:0;font-size:19px}
   table.cards .age{display:inline}
   table.cards td.gkc{grid-column:span 3}
   table.cards td.c-act{grid-column:1/-1}
+  table.hist tr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  table.hist td{white-space:normal}
+  table.hist .hd-only{display:none}
   .np-date{font-size:14px}
 }
 #rotate{display:none;position:fixed;inset:0;z-index:30;background:rgba(7,6,11,.96);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px}
@@ -3353,8 +3358,9 @@ function careerHub(tab) {
   } else if (CTAB === 'cup') body = cupView();
   else if (CTAB === 'stats') body = statsView();
   else if (CTAB === 'hist') {
-    body = CAREER.history.length ? `<table class="sqt"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th class="hm">POKAL</th><th class="hm">TORJÄGER</th></tr></thead><tbody>${
-      CAREER.history.map(h => `<tr><td>${seasonName(h.year)}</td><td>${h.lg}.</td><td>${h.pos}</td><td style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td>${esc(TEAMS[h.champ].n)}</td><td class="hm" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td class="hm">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
+    // Handy: Karten statt Spalten (Kopfzeile Saison · Liga · Platz, darunter beschriftete Felder)
+    body = CAREER.history.length ? `<table class="sqt cards hist"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th>POKAL</th><th>TORJÄGER</th></tr></thead><tbody>${
+      CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
   }
   showMenu(`<div class="panel wide"><div class="csticky">${head}${tabs()}</div>${CMSG ? `<p style="margin:0;color:var(--hot)">${esc(CMSG)}</p>` : ''}${body}<div class="row"><button data-act="main">HAUPTMENÜ</button></div></div>`);
