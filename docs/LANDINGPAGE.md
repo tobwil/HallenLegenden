@@ -78,7 +78,7 @@ GitHub Pages bleibt dafür in den Repository-Einstellungen eingeschaltet (Branch
 
 ## Nutzungsstatistik (Umami Cloud)
 
-Landingpage und Spiel (`game/index.html`, eingefügt von `src/build.sh`) laden das Umami-Skript mit `data-domains="hallenlegenden.de,www.hallenlegenden.de"`. Auf anderen Adressen (localhost, netlify.app, github.io) wird nichts gezählt. Keine Cookies, „Do Not Track“ wird beachtet. Auswertung im Umami-Dashboard.
+Landingpage und Spiel (`game/index.html`, eingefügt von `src/build.sh`) laden das Umami-Skript mit `data-domains="hallenlegenden.de,www.hallenlegenden.de"`. Auf anderen Adressen (localhost, netlify.app, github.io) wird nichts gezählt. Keine Cookies, „Do Not Track“ wird beachtet, Datenregion EU. Auswertung im Umami-Dashboard.
 
 | Ereignis | Wo | Daten |
 |---|---|---|
