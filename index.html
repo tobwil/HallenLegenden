@@ -5,7 +5,7 @@
 <script src="assets/umzug.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Hallen-Legenden</title>
-<meta name="description" content="Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal und Transfermarkt. Kostenlos im Browser spielen, am Desktop und auf dem Handy.">
+<meta name="description" content="Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal und Transfermarkt. Kostenlos im Browser spielen, am Computer und am Smartphone. Konsole: coming soon.">
 <meta name="author" content="tobwil">
 <meta name="theme-color" content="#07060b">
 <meta property="og:type" content="website">
@@ -97,6 +97,12 @@ html:not(.js) .hud{display:none}
 @keyframes bob{50%{transform:translateY(-5px)}}
 .tagline{font-size:clamp(20px,2.2vw,28px);max-width:40ch;margin:0 auto;text-shadow:0 2px 0 #000,0 0 12px #000}
 .cap-hero .cta{justify-content:center;margin:0}
+.cap .platforms{list-style:none;margin:0;padding:0;display:flex;color:var(--ink);flex-wrap:wrap;justify-content:center;gap:8px 10px}
+.cap .platforms li{font-family:var(--pix);font-size:10px;line-height:1.2;letter-spacing:.04em;padding:7px 10px;background:rgba(13,11,20,.85);border:2px solid var(--line);box-shadow:3px 3px 0 #000;display:flex;align-items:center;gap:8px}
+.cap .platforms li::before{content:"";position:static;flex-shrink:0;width:8px;height:8px;background:var(--green);box-shadow:1px 1px 0 #000}
+.cap .platforms li.soon{color:var(--dim);border-style:dashed}
+.cap .platforms li.soon::before{background:var(--gold)}
+.cap .platforms li.soon b{font-weight:400;color:var(--gold)}
 .scroll-hint{font-family:var(--pix);font-size:10px;color:var(--dim);animation:blink 1.2s steps(2) infinite;margin:0}
 @keyframes blink{50%{opacity:.25}}
 .thumb{display:block;height:auto;margin:4px 0 12px;border:2px solid var(--line);box-shadow:3px 3px 0 #000;image-rendering:pixelated;width:100%;aspect-ratio:16/9;object-fit:cover}
@@ -236,8 +242,10 @@ footer a:hover{color:var(--gold)}
   .cap h2{font-size:14px;margin-bottom:8px}
   .cap ul{font-size:18px}
   .logo{font-size:22px}
-  .tagline{display:none}
+  .tagline,.cap .platforms{display:none}
 }
+@media (max-height:1000px) and (min-width:821px){ .scroll-hint{display:none} }
+@media (max-width:420px){ .cap .platforms li{font-size:8px;padding:6px 7px;gap:6px} }
 @media (prefers-reduced-motion:reduce){ .logo,.scroll-hint{animation:none} }
 </style>
 </head>
@@ -266,6 +274,11 @@ footer a:hover{color:var(--gold)}
           <a class="btn main big" href="game/">▶ JETZT SPIELEN</a>
           <a class="btn big" href="#wunsch">FEATURE WÜNSCHEN</a>
         </div>
+        <ul class="platforms" aria-label="Plattformen">
+          <li>COMPUTER</li>
+          <li>SMARTPHONE</li>
+          <li class="soon">KONSOLE <b>COMING SOON</b></li>
+        </ul>
         <p class="scroll-hint" aria-hidden="true">SCROLLEN ↓ UND DIE LEGENDE LÄUFT LOS</p>
       </div>
 
@@ -285,7 +298,7 @@ footer a:hover{color:var(--gold)}
         <h2>Abheben. Zielen. Tor.</h2>
         <p>Sprungwurf über den Kreis, und die Halle explodiert.</p>
         <ul>
-          <li><b>Wurf mit Zielkreuz:</b> antippen für schnell, halten für Wucht</li>
+          <li><b>Wurf nach Gefühl:</b> kurz tippen für den schnellen Wurf, gedrückt halten für mehr Wucht</li>
           <li><b>Kempa-Trick,</b> Heber, Finte, Blocksprung</li>
           <li class="more"><b>Torwart-Duell</b> beim 7-Meter: Ecke raten</li>
         </ul>
@@ -296,7 +309,7 @@ footer a:hover{color:var(--gold)}
         <h2>Samstagabend, Prime Time.</h2>
         <p>Jedes Spiel sieht aus wie eine Übertragung.</p>
         <ul>
-          <li><b>Intro</b> mit Aufstellungskarten, Anzeigetafel, Radar</li>
+          <li><b>Einlauf wie im Fernsehen</b> mit Aufstellungen und Spielstand-Einblendung</li>
           <li><b>Tor-Einblendung</b> mit Wiederholung</li>
           <li class="more"><b>La-Ola,</b> Trommeln, Torhupe, Chiptune-Musik</li>
         </ul>
@@ -337,7 +350,7 @@ footer a:hover{color:var(--gold)}
       <article class="cap" data-scene="finale">
         <span class="num">07 / 07 · ANWURF</span>
         <h2>Deine Legende beginnt.</h2>
-        <p>Kostenlos im Browser, am Desktop, mit Gamepad oder am Handy.</p>
+        <p>Kostenlos im Browser am Computer (auch mit Gamepad) und am Smartphone. Konsole: coming soon.</p>
         <div class="cta">
           <a class="btn main" href="game/">▶ JETZT SPIELEN</a>
           <a class="btn" href="#wunsch">WAS FEHLT DIR?</a>
@@ -362,7 +375,7 @@ footer a:hover{color:var(--gold)}
       <ol class="steps">
         <li><b>1</b><span>Kategorie wählen und den Wunsch in einem Satz beschreiben.</span></li>
         <li><b>2</b><span>Gerne mit Details: Was passiert, was hättest du erwartet?</span></li>
-        <li><b>3</b><span>Name und Kontakt sind freiwillig, nur falls es Rückfragen gibt.</span></li>
+        <li><b>3</b><span>Name und E-Mail sind freiwillig, nur falls es Rückfragen gibt.</span></li>
       </ol>
     </div>
 
@@ -395,8 +408,8 @@ footer a:hover{color:var(--gold)}
         <span class="count" id="f-count" aria-live="polite">0 / 2000</span>
       </div>
       <div class="field">
-        <label for="f-kontakt">E-MAIL ODER DISCORD <small>freiwillig, für Rückfragen</small></label>
-        <input id="f-kontakt" name="kontakt" maxlength="120" autocomplete="email" placeholder="du@beispiel.de">
+        <label for="f-kontakt">E-MAIL <small>freiwillig, für Rückfragen</small></label>
+        <input id="f-kontakt" name="kontakt" type="email" inputmode="email" maxlength="120" autocomplete="email" placeholder="du@beispiel.de">
       </div>
       <div class="hp" aria-hidden="true"><label for="f-web">Website</label><input id="f-web" name="website" tabindex="-1" autocomplete="off"></div>
       <div class="human" id="f-human-box">
@@ -461,6 +474,12 @@ form.addEventListener('submit', async e => {
   if (!wunsch) {
     setStatus('Bitte schreib kurz, was du dir wünschst.', 'err');
     document.getElementById('f-wunsch').focus();
+    return;
+  }
+  const mail = document.getElementById('f-kontakt');
+  if (mail.value.trim() && !mail.checkValidity()) {
+    setStatus('Die E-Mail-Adresse sieht nicht ganz richtig aus. Du kannst das Feld auch leer lassen.', 'err');
+    mail.focus();
     return;
   }
   if (!human) {
