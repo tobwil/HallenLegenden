@@ -285,7 +285,7 @@ footer a:hover{color:var(--gold)}
         <h2>Abheben. Zielen. Tor.</h2>
         <p>Sprungwurf über den Kreis, und die Halle explodiert.</p>
         <ul>
-          <li><b>Wurf mit Zielkreuz:</b> antippen für schnell, halten für Wucht</li>
+          <li><b>Wurf nach Gefühl:</b> kurz tippen für den schnellen Wurf, gedrückt halten für mehr Wucht</li>
           <li><b>Kempa-Trick,</b> Heber, Finte, Blocksprung</li>
           <li class="more"><b>Torwart-Duell</b> beim 7-Meter: Ecke raten</li>
         </ul>
@@ -296,7 +296,7 @@ footer a:hover{color:var(--gold)}
         <h2>Samstagabend, Prime Time.</h2>
         <p>Jedes Spiel sieht aus wie eine Übertragung.</p>
         <ul>
-          <li><b>Intro</b> mit Aufstellungskarten, Anzeigetafel, Radar</li>
+          <li><b>Einlauf wie im Fernsehen</b> mit Aufstellungen und Spielstand-Einblendung</li>
           <li><b>Tor-Einblendung</b> mit Wiederholung</li>
           <li class="more"><b>La-Ola,</b> Trommeln, Torhupe, Chiptune-Musik</li>
         </ul>
@@ -362,7 +362,7 @@ footer a:hover{color:var(--gold)}
       <ol class="steps">
         <li><b>1</b><span>Kategorie wählen und den Wunsch in einem Satz beschreiben.</span></li>
         <li><b>2</b><span>Gerne mit Details: Was passiert, was hättest du erwartet?</span></li>
-        <li><b>3</b><span>Name und Kontakt sind freiwillig, nur falls es Rückfragen gibt.</span></li>
+        <li><b>3</b><span>Name und E-Mail sind freiwillig, nur falls es Rückfragen gibt.</span></li>
       </ol>
     </div>
 
@@ -395,8 +395,8 @@ footer a:hover{color:var(--gold)}
         <span class="count" id="f-count" aria-live="polite">0 / 2000</span>
       </div>
       <div class="field">
-        <label for="f-kontakt">E-MAIL ODER DISCORD <small>freiwillig, für Rückfragen</small></label>
-        <input id="f-kontakt" name="kontakt" maxlength="120" autocomplete="email" placeholder="du@beispiel.de">
+        <label for="f-kontakt">E-MAIL <small>freiwillig, für Rückfragen</small></label>
+        <input id="f-kontakt" name="kontakt" type="email" inputmode="email" maxlength="120" autocomplete="email" placeholder="du@beispiel.de">
       </div>
       <div class="hp" aria-hidden="true"><label for="f-web">Website</label><input id="f-web" name="website" tabindex="-1" autocomplete="off"></div>
       <div class="human" id="f-human-box">
@@ -461,6 +461,12 @@ form.addEventListener('submit', async e => {
   if (!wunsch) {
     setStatus('Bitte schreib kurz, was du dir wünschst.', 'err');
     document.getElementById('f-wunsch').focus();
+    return;
+  }
+  const mail = document.getElementById('f-kontakt');
+  if (mail.value.trim() && !mail.checkValidity()) {
+    setStatus('Die E-Mail-Adresse sieht nicht ganz richtig aus. Du kannst das Feld auch leer lassen.', 'err');
+    mail.focus();
     return;
   }
   if (!human) {
