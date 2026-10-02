@@ -2,6 +2,10 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.1: Kein Zoom beim Spielen mit zwei Daumen, Regressionstests
+- **Fehler behoben:** Auf dem iPhone (Safari) konnte das Bild beim Spielen plötzlich heranzoomen, wenn ein Daumen auf dem Stick und der andere auf einem Knopf lag. Safari erkennt das als Zwei-Finger-Zoom und ignoriert die übliche Zoom-Sperre. Jetzt werden Safaris Gesten-Events und Zwei-Finger-Bewegungen abgefangen, das Viewport-Tag sperrt den Zoom auch für andere Browser, und ein dennoch eingetretener Zoom wird automatisch zurückgesetzt. Ein-Finger-Scrollen in den Menüs funktioniert weiter.
+- **Regressionstests im Repository** (`tests/`, Playwright): 15 Tests für Laden, Overlay, Menüfenster, Tastenbelegung, Aktionen, Eingabepuffer, Passquote, Spielerwechsel, komplettes Spiel, Kraftverlust, Zufallseingaben, Simulation, Editor, Karriere mit Statistik und Pokal sowie Handy-Zoom. Aufruf: `cd tests && npm install && npm test`.
+
 ## v8.0: Landingpage als Story-Film, Wunschliste, Impressum
 - **Landingpage** im Hauptordner als scrollgesteuerter Pixel-Film: Eine Spielfigur (Sprites aus dem Spiel) dribbelt von links nach rechts durch sieben Szenen: Halle, Sprungwurf-Tor, Wohnzimmer mit Röhrenfernseher, Küche mit Handball-Kurier, Büro mit Statistik und Pokal, Kabine (Trikot aus, Anzug an), Finale als Manager am Spielfeldrand. Texte gleiten pro Szene herein, Anzeigetafel unten zeigt Szene und Fortschritt. Auf Desktop und Handy (hoch und quer) angepasst.
 - **Das Spiel** liegt jetzt unter `/game/`. `spielen.html` leitet dorthin weiter.
