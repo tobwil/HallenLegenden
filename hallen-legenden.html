@@ -3286,6 +3286,15 @@ Object.assign(ACT, {
 });
 // ================= Touch, Hauptschleife, Start =================
 if ('ontouchstart' in window || matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
+// Kein Browser-Zoom beim Spielen mit zwei Daumen: iOS Safari ignoriert user-scalable=no und zoomt bei Stick + Knopf per Pinch.
+// Safaris Gesten-Events und Mehrfinger-Bewegungen abfangen; falls doch gezoomt wurde, Zoom zurücksetzen.
+for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+if (window.visualViewport) visualViewport.addEventListener('resize', () => {
+  const vp = document.getElementById('vp'); if (!vp || visualViewport.scale <= 1.01) return;
+  const c = vp.content; vp.content = 'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
+  setTimeout(() => { vp.content = c; }, 300);
+});
 const buzz = ms => { if (TOUCHDEV && navigator.vibrate) try { navigator.vibrate(ms); } catch (e) { } };
 const attacking = () => !!(G && G.human >= 0 && ((G.ball.owner && G.ball.owner.team === G.human) || (G.ball.passTo && G.ball.passTo.team === G.human)));
 // Tippen aufs Spielfeld: Mitspieler = Pass, Tor = Wurf in diese Ecke, in der Abwehr = Spielerwechsel

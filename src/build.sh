@@ -13,7 +13,7 @@ URL='https://hallenlegenden.de/game/'
 DESC='Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal und Transfermarkt. Läuft direkt im Browser, am Desktop und auf dem Handy.'
 {
   echo '<!doctype html>'
-  echo '<html lang="de"><head><meta charset="utf-8"><script src="../assets/umzug.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
+  echo '<html lang="de"><head><meta charset="utf-8"><script src="../assets/umzug.js"></script><meta name="viewport" id="vp" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">'
   echo "<meta name=\"description\" content=\"$DESC\">"
   echo '<meta name="author" content="tobwil"><meta name="theme-color" content="#07060b">'
   # Nutzungsstatistik (Umami, ohne Cookies), zählt nur auf hallenlegenden.de
