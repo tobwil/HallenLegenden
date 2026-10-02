@@ -93,6 +93,61 @@ function playerDetail(p) {
         <button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : 'VERKAUFEN'}</button><button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
     </div></div>`;
 }
+// ---------- Statistik: Kennzahlen, Platz-Verlauf, Torjäger, eigener Kader ----------
+function statsView() {
+  const S = CAREER.season, me = CAREER.team, st = standingsOf(S.table), n = st.length, row = st.find(r => r.i === me);
+  const rankBy = (k, asc) => st.slice().sort((a, b) => asc ? a[k] - b[k] : b[k] - a[k]).findIndex(r => r.i === me) + 1;
+  const played = row && row.sp > 0, sign = v => v > 0 ? '+' + v : '' + v;
+  const tile = (lbl, val, sub) => `<div class="kpi"><span>${lbl}</span><b>${val}</b>${sub ? `<i>${sub}</i>` : ''}</div>`;
+  const chips = CAREER.form5.length ? CAREER.form5.map(r => `<em class="fchip f${r}">${r}</em>`).join('') : '–';
+  const kpis = `<div class="kpis">${tile('PLATZ', played ? (st.indexOf(row) + 1) + '.' : '–', `von ${n}`)}${tile('PUNKTE', played ? row.pk : '–', played ? `${row.s}S ${row.u}U ${row.n}N` : 'noch kein Spiel')}${
+    tile('TORE', played ? `${row.tp}:${row.tm}` : '–', played ? `Diff. ${sign(row.d)}` : '')}${tile('ANGRIFF', played ? rankBy('tp') + '.' : '–', played ? `Ø ${(row.tp / row.sp).toFixed(1)} Tore` : '')}${
+    tile('ABWEHR', played ? rankBy('tm', true) + '.' : '–', played ? `Ø ${(row.tm / row.sp).toFixed(1)} Gegentore` : '')}<div class="kpi"><span>FORM</span><b class="chips">${chips}</b><i>letzte 5</i></div></div>`;
+  // Platz-Verlauf: eine Linie, Platz 1 oben
+  const h = S.posHist || [], len = S.fixtures.length;
+  let chart = '<p class="muted">Der Verlauf füllt sich ab dem nächsten Spieltag.</p>';
+  if (h.length) {
+    const W = 1000, H = 130, L = 34, R = 12, T = 10, B = 22, x = i => L + (len > 1 ? i / (len - 1) : 0) * (W - L - R), y = p => T + (n > 1 ? (p - 1) / (n - 1) : 0) * (H - T - B);
+    const grid = [1, Math.ceil(n / 2), n].map(p => `<line x1="${L}" x2="${W - R}" y1="${y(p)}" y2="${y(p)}" class="gl"/><text x="${L - 6}" y="${y(p) + 4}" text-anchor="end">${p}.</text>`).join('');
+    const pts = h.map((p, i) => [x(i), y(p), i + 1, p]);
+    chart = `<svg class="poschart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Tabellenplatz nach Spieltag: ${h.map((p, i) => `Spieltag ${i + 1} Platz ${p}`).join(', ')}">${grid}
+      <text x="${L}" y="${H - 4}">ST 1</text><text x="${W - R}" y="${H - 4}" text-anchor="end">ST ${len}</text>
+      ${pts.length > 1 ? `<polyline points="${pts.map(q => q[0] + ',' + q[1]).join(' ')}" class="pl"/>` : ''}
+      ${pts.map((q, i) => `<g class="pt"><circle cx="${q[0]}" cy="${q[1]}" r="${i === pts.length - 1 ? 5 : 3.5}"/><circle cx="${q[0]}" cy="${q[1]}" r="12" class="hit"/><title>Spieltag ${q[2]}: Platz ${q[3]}</title></g>`).join('')}</svg>`;
+  }
+  const top = Object.values(S.scorers).sort((a, b) => b.n - a.n).slice(0, 10), max = top.length ? top[0].n : 1;
+  const scorers = top.length ? `<table class="sqt stt"><tbody>${top.map((s, i) => `<tr class="${s.tid === me ? 'me' : ''}"><td class="num">${i + 1}</td><td>${esc(s.name)}</td><td>${TEAMS[s.tid].k}</td><td class="barc"><span class="sbar" style="width:${Math.round(s.n / max * 100)}%"></span></td><td class="num">${s.n}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine Tore.</p>';
+  const mine = CAREER.squads[me].filter(p => p.apps).sort((a, b) => b.sg - a.sg || b.apps - a.apps);
+  const fArrow = f => f > 1 ? '<b style="color:var(--green)">▲</b>' : f > 0.3 ? '<b style="color:var(--green)">↗</b>' : f < -1 ? '<b style="color:var(--hot)">▼</b>' : f < -0.3 ? '<b style="color:var(--hot)">↘</b>' : '<b style="color:var(--dim)">→</b>';
+  const squad = mine.length ? `<table class="sqt stt"><thead><tr><th>POS</th><th>NAME</th><th class="num">SP</th><th class="num">TORE</th><th class="num">Ø</th><th class="num">PAR.</th><th class="num">FORM</th><th class="num">FIT</th></tr></thead><tbody>${
+    mine.map(p => `<tr><td>${p.role}</td><td>${esc(p.name)}</td><td class="num">${p.apps}</td><td class="num">${p.role === 'TW' ? '–' : p.sg}</td><td class="num">${p.role === 'TW' ? '–' : (p.sg / p.apps).toFixed(1)}</td><td class="num">${p.role === 'TW' ? p.ss : '–'}</td><td class="num">${fArrow(p.form)}</td><td class="num" style="color:${p.fit < 60 ? 'var(--hot)' : p.fit < 80 ? 'var(--gold)' : 'inherit'}">${Math.round(p.fit)}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine Spiele.</p>';
+  return `${kpis}<h3>TABELLENPLATZ NACH SPIELTAG</h3>${chart}<div class="stat2"><div><h3>TORJÄGER DER LIGA</h3>${scorers}</div><div><h3>DEIN KADER · SAISON</h3>${squad}</div></div>`;
+}
+// ---------- Pokal als Turnierbaum ----------
+function cupView() {
+  const C = CAREER.cup, me = CAREER.team;
+  if (!C) return '<p class="muted">Kein Pokal in dieser Saison.</p>';
+  // Spalten: gespielte Runden, aktuelle Auslosung, offene Runden. Ältere Runden so sortiert, dass Sieger neben ihrer nächsten Partie stehen
+  const cols = CUP_ROUNDS.map((_, r) => {
+    const res = C.results.find(x => x.round === r);
+    if (res) return res.rows.map(([a, b, x, y, so, w]) => ({ a, b, x, y, so, w }));
+    if (C.winner === null && r === C.round) return C.ties.map(([a, b]) => ({ a, b }));
+    return Array.from({ length: 16 >> r }, () => ({}));
+  });
+  for (let r = CUP_ROUNDS.length - 2; r >= 0; r--) {
+    const next = cols[r + 1].flatMap(t => [t.a, t.b]);
+    if (next.some(v => v !== undefined)) cols[r].sort((p, q) => (next.indexOf(p.w) + 1 || 99) - (next.indexOf(q.w) + 1 || 99));
+  }
+  const line = (t, id, sc) => id === undefined ? `<div class="bt tbd"><span>–</span></div>`
+    : `<div class="bt ${t.w === undefined ? '' : t.w === id ? 'win' : 'out'} ${id === me ? 'mine' : ''}"><span>${TEAMS[id].k}</span><b>${sc ?? ''}</b></div>`;
+  const tie = t => `<div class="tie ${t.a === me || t.b === me ? 'myt' : ''}" ${t.a !== undefined ? `title="${esc(TEAMS[t.a].n)} – ${esc(TEAMS[t.b].n)}${t.x !== undefined ? ` ${t.x}:${t.y}${t.so ? ' n.7m' : ''}` : ''}"` : ''}>${line(t, t.a, t.x)}${line(t, t.b, t.y)}${t.so ? '<em>n.7m</em>' : ''}</div>`;
+  const status = C.winner !== null ? `Pokalsieger: <b style="color:var(--gold)">${esc(TEAMS[C.winner].n)}</b>.`
+    : C.myOut ? `Ausgeschieden. Nächste Runde: ${CUP_ROUNDS[C.round]} nach Spieltag ${C.sched[C.round]}.`
+    : cupDue() ? `<b style="color:var(--gold)">${CUP_ROUNDS[C.round]} steht jetzt an</b>, vor dem nächsten Ligaspiel.` : `Nächste Runde: ${CUP_ROUNDS[C.round]} nach Spieltag ${C.sched[C.round]}.`;
+  return `<p class="muted">32 Vereine im K.-o.-System, Halbfinale und Finale als Final Four. Unentschieden entscheidet das 7-Meter-Werfen. ${status}</p>
+    <div class="bracket">${cols.map((c, r) => `<div class="bcol"><h3>${CUP_ROUNDS[r]}</h3><div class="bties">${c.map(tie).join('')}</div></div>`).join('')}
+    <div class="bcol champ"><h3>SIEGER</h3><div class="bties"><div class="tie ${C.winner === me ? 'myt' : ''}">${C.winner !== null ? `<div class="bt win ${C.winner === me ? 'mine' : ''}"><span>🏆 ${TEAMS[C.winner].k}</span></div>` : '<div class="bt tbd"><span>?</span></div>'}</div></div></div></div>`;
+}
 function careerHub(tab) {
   if (!CAREER) return careerNewScreen();
   if (tab) { CTAB = tab; if (tab !== 'squad') CSEL = null; }
@@ -134,17 +189,9 @@ function careerHub(tab) {
     if ((CAREER.transferLog || []).length) body += `<h3>WECHSEL IN DER LIGA</h3><p class="muted" style="font-size:17px">${CAREER.transferLog.slice(0, 5).map(esc).join('<br>')}</p>`;
   } else if (CTAB === 'table') {
     body = `<p class="muted">${S.lg === 1 ? 'Grün: Meister · Rot: Abstieg in die 2. Liga' : 'Grün: Aufstieg in die 1. Liga'}</p>${leagueTable(CAREER.team)}`;
-  } else if (CTAB === 'cup') {
-    const C = CAREER.cup;
-    body = !C ? '<p class="muted">Kein Pokal in dieser Saison.</p>' : `<p class="muted">32 Vereine, K.-o.-System, Halbfinale und Finale als Final Four. Unentschieden werden im 7-Meter-Werfen entschieden. ${C.winner !== null ? `Sieger: <b style="color:var(--gold)">${esc(TEAMS[C.winner].n)}</b>.` : `Nächste Runde: ${CUP_ROUNDS[C.round]} nach Spieltag ${C.sched[C.round]}.`}</p>
-      ${C.winner === null ? `<h3>${CUP_ROUNDS[C.round]} · AUSLOSUNG</h3><p class="muted" style="font-size:17px">${C.ties.map(([a, b]) => `${a === CAREER.team || b === CAREER.team ? '<b style="color:var(--gold)">' : ''}${TEAMS[a].k} – ${TEAMS[b].k}${a === CAREER.team || b === CAREER.team ? '</b>' : ''}`).join(' · ')}</p>` : ''}
-      ${C.results.slice().reverse().map(r => `<h3>${CUP_ROUNDS[r.round]}</h3><p class="muted" style="font-size:17px">${r.rows.map(([a, b, x, y, so, w]) => `${a === CAREER.team || b === CAREER.team ? '<b style="color:var(--gold)">' : ''}${w === a ? '<u>' + TEAMS[a].k + '</u>' : TEAMS[a].k} ${x}:${y}${so ? ' n.7m' : ''} ${w === b ? '<u>' + TEAMS[b].k + '</u>' : TEAMS[b].k}${a === CAREER.team || b === CAREER.team ? '</b>' : ''}`).join(' · ')}</p>`).join('')}`;
-  } else if (CTAB === 'stats') {
-    const top = Object.values(S.scorers).sort((a, b) => b.n - a.n).slice(0, 10);
-    const mine = CAREER.squads[CAREER.team].filter(p => p.apps).sort((a, b) => b.sg - a.sg);
-    body = `<h3>TORJÄGER DER LIGA</h3><table class="sqt"><tbody>${top.map((s, i) => `<tr class="${s.tid === CAREER.team ? 'me' : ''}"><td>${i + 1}</td><td>${esc(s.name)}</td><td>${TEAMS[s.tid].k}</td><td>${s.n}</td></tr>`).join('') || '<tr><td>–</td><td>noch keine Spiele</td></tr>'}</tbody></table>
-      <h3>DEIN KADER</h3><table class="sqt"><thead><tr><th>POS</th><th>NAME</th><th>SPIELE</th><th>TORE</th><th>PARADEN</th><th>KARRIERE</th></tr></thead><tbody>${mine.map(p => `<tr><td>${p.role}</td><td>${esc(p.name)}</td><td>${p.apps}</td><td>${p.sg}</td><td>${p.role === 'TW' ? p.ss : '–'}</td><td>${p.tg}</td></tr>`).join('') || '<tr><td>–</td><td>noch keine Spiele</td></tr>'}</tbody></table>`;
-  } else if (CTAB === 'hist') {
+  } else if (CTAB === 'cup') body = cupView();
+  else if (CTAB === 'stats') body = statsView();
+  else if (CTAB === 'hist') {
     body = CAREER.history.length ? `<table class="sqt"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th class="hm">POKAL</th><th class="hm">TORJÄGER</th></tr></thead><tbody>${
       CAREER.history.map(h => `<tr><td>${seasonName(h.year)}</td><td>${h.lg}.</td><td>${h.pos}</td><td style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td>${esc(TEAMS[h.champ].n)}</td><td class="hm" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td class="hm">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
