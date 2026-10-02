@@ -1,6 +1,15 @@
 # Changelog
 
-Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
+Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
+
+## v8.0: Landingpage als Story-Film, Wunschliste, Impressum
+- **Landingpage** im Hauptordner als scrollgesteuerter Pixel-Film: Eine Spielfigur (Sprites aus dem Spiel) dribbelt von links nach rechts durch sieben Szenen: Halle, Sprungwurf-Tor, Wohnzimmer mit Röhrenfernseher, Küche mit Handball-Kurier, Büro mit Statistik und Pokal, Kabine (Trikot aus, Anzug an), Finale als Manager am Spielfeldrand. Texte gleiten pro Szene herein, Anzeigetafel unten zeigt Szene und Fortschritt. Auf Desktop und Handy (hoch und quer) angepasst.
+- **Das Spiel** liegt jetzt unter `/game/`. `spielen.html` leitet dorthin weiter.
+- **Wunsch-Formular:** schreibt über ein Google-Apps-Script in die Tabelle „Feature Requests HallenLegenden“ (`tools/feature-requests.gs`). Spam-Schutz mit Schalter „Ich bin ein Mensch“, unsichtbarem Feld, Mindestzeit, Prüfwert, Mengenbremse und Schutz gegen Formeln in der Tabelle.
+- **Impressum und Datenschutz:** Kontaktdaten erst nach Klick lesbar
+- **Neue Adresse hallenlegenden.de** (Netlify). Die alte Adresse tobwil.github.io/HallenLegenden leitet weiter und nimmt Spielstände automatisch mit.
+- **Schriften lokal** statt von Google Fonts, auch im Spiel
+- **Neue Screenshots** von Statistik-Seite und Pokal-Turnierbaum
 
 ## v7.8: Neue Statistik-Seite, Pokal als Turnierbaum
 - **Statistik:** Kennzahlen-Kacheln (Platz, Punkte mit Siege/Unentschieden/Niederlagen, Tore und Differenz, Rang von Angriff und Abwehr, Form der letzten 5 Spiele), Verlauf des Tabellenplatzes nach Spieltag (wird ab jetzt pro Spieltag gespeichert), Torjäger der Liga mit Balken, eigener Kader mit Spielen, Toren, Toren pro Spiel, Paraden, Form und Fitness

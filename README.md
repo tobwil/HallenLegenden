@@ -1,6 +1,6 @@
 # Hallen-Legenden
 
-[![Jetzt spielen / Play now](https://img.shields.io/badge/%E2%96%B6%20Jetzt%20spielen%20%2F%20Play%20now-tobwil.github.io%2FHallenLegenden-ffc83a?style=for-the-badge&labelColor=07060b)](https://tobwil.github.io/HallenLegenden/)
+[![Jetzt spielen / Play now](https://img.shields.io/badge/%E2%96%B6%20Jetzt%20spielen%20%2F%20Play%20now-hallenlegenden.de-ffc83a?style=for-the-badge&labelColor=07060b)](https://hallenlegenden.de/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3ddc84?style=for-the-badge&labelColor=07060b)](LICENSE)
 
 **[Screenshots](#screenshots) · [Deutsch](#deutsch) · [English](#english)**
@@ -16,6 +16,8 @@ Actual browser gameplay and menus. Click any image to view it at full size.
 | [![Handball-Partie Kiel gegen Flensburg in der Pixel-Halle mit Anzeigetafel und Radar](docs/screenshots/gameplay.jpg)](docs/screenshots/gameplay.jpg) | [![Hallen-Legenden: Titelbildschirm mit Pixel-Halle und Start-Button](docs/screenshots/title-screen.jpg)](docs/screenshots/title-screen.jpg) |
 | **Teamauswahl · Team selection** | **Karriere & Handball-Kurier · Career & newspaper** |
 | [![Schnelles Spiel: Mannschaften, Teamwerte, Schwierigkeit und Abwehrsystem auswählen](docs/screenshots/team-selection.jpg)](docs/screenshots/team-selection.jpg) | [![Karriere-Modus mit Handball-Kurier, nächstem Spiel, Tabelle, Budget und Vorstandsziel](docs/screenshots/career-newspaper.jpg)](docs/screenshots/career-newspaper.jpg) |
+| **Statistik · Statistics** | **Pokal · Cup bracket** |
+| [![Statistik-Seite mit Kennzahlen, Verlauf des Tabellenplatzes, Torjägern und Kaderwerten](docs/screenshots/career-stats.jpg)](docs/screenshots/career-stats.jpg) | [![Pokal als Turnierbaum von der ersten Runde bis zum Sieger](docs/screenshots/career-cup.jpg)](docs/screenshots/career-cup.jpg) |
 
 ---
 
@@ -25,9 +27,9 @@ Actual browser gameplay and menus. Click any image to view it at full size.
 
 Retro-Handball im Pixel-Look, inspiriert von *Legend Bowl*. Ein komplettes Browserspiel in einer einzigen HTML-Datei: kein Server, keine Installation, keine externen Abhängigkeiten außer zwei Google-Schriften.
 
-**▶ Spielen: [tobwil.github.io/HallenLegenden](https://tobwil.github.io/HallenLegenden/)**
+**▶ Spielen: [hallenlegenden.de](https://hallenlegenden.de/)** · Wünsche und Ideen: [Wunsch-Formular](https://hallenlegenden.de/#wunsch)
 
-Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerung (Querformat empfohlen). Offline geht es auch: `index.html` herunterladen und im Browser öffnen.
+Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerung (Querformat empfohlen). Offline geht es auch: `game/index.html` herunterladen und im Browser öffnen.
 
 > Inoffizielles Fan-Projekt. Vereins- und Spielernamen sind Fantasienamen. Es gibt keine Logos und keine Verbindung zu einer Liga oder einem Verein. Im Editor lassen sich alle Namen und Farben lokal im eigenen Browser ändern.
 
@@ -98,11 +100,19 @@ In der Abwehr und bei freiem Ball steuerst du ohne Wechseltaste automatisch den 
 ### Projektstruktur
 
 ```
-index.html            spielbare Datei, wird von GitHub Pages ausgeliefert
-spielen.html          Kopie von index.html
+index.html            Landingpage mit Horizontal-Scroll und Wunsch-Formular
+game/index.html       das Spiel (wird von build.sh erzeugt)
+spielen.html          Weiterleitung auf game/ für alte Links
+impressum.html        Impressum
+datenschutz.html      Datenschutzerklärung
+assets/               Story-Film, Umzugs-Skript, Styles und Kontakt-Skript für Impressum und Datenschutz
+fonts/                Schriften lokal (Press Start 2P, VT323, SIL OFL)
+tools/                Google-Apps-Script für die Wunschliste
+netlify.toml          Einstellungen für Netlify (Hosting von hallenlegenden.de)
 hallen-legenden.html  dieselbe Seite ohne <html>-Gerüst (für die Veröffentlichung als Claude-Artifact)
 src/                  Quellcode in Modulen, wird per build.sh zusammengesetzt
-docs/screenshots/     echte Spielaufnahmen für die README
+docs/screenshots/     echte Spielaufnahmen für README und Landingpage
+docs/LANDINGPAGE.md   Landingpage, Wunsch-Formular und eigene Domain einrichten
 docs/ARCHITEKTUR.md   Aufbau des Codes, Datenmodell, Speicher-Schlüssel
 docs/ENTWICKLUNG.md   Entwicklungsgeschichte: Wünsche, Entscheidungen, Tests
 CHANGELOG.md          Versionen
@@ -117,11 +127,13 @@ Die Module in `src/` werden in fester Reihenfolge zu einer HTML-Datei zusammenge
 sh src/build.sh
 ```
 
-Das erzeugt `index.html`, `spielen.html` und `hallen-legenden.html`. Es gibt keinen Bundler und keine Paketabhängigkeiten. Für einen Syntax-Check reicht `node --check` auf die zusammengefügten JS-Dateien.
+Das erzeugt `game/index.html` und `hallen-legenden.html`. Die Landingpage `index.html` wird von Hand gepflegt. Es gibt keinen Bundler und keine Paketabhängigkeiten. Für einen Syntax-Check reicht `node --check` auf die zusammengefügten JS-Dateien.
 
 #### Als Website veröffentlichen
 
-GitHub Pages liefert den Branch `main`, Ordner `/` (root) aus. Weil `index.html` im Hauptordner liegt, läuft das Spiel direkt unter [tobwil.github.io/HallenLegenden](https://tobwil.github.io/HallenLegenden/). Die leere Datei `.nojekyll` sorgt dafür, dass GitHub die Dateien unverändert ausliefert.
+Die Seite läuft unter [hallenlegenden.de](https://hallenlegenden.de/) bei Netlify, direkt aus dem Branch `main` ohne Build-Schritt (`netlify.toml`). Die Landingpage liegt im Hauptordner, das Spiel unter `/game/`.
+
+Die alte Adresse [tobwil.github.io/HallenLegenden](https://tobwil.github.io/HallenLegenden/) (GitHub Pages) leitet automatisch auf hallenlegenden.de weiter und nimmt dabei vorhandene Spielstände mit (`assets/umzug.js`). Details zu Formular, Domain und Umzug stehen in [docs/LANDINGPAGE.md](docs/LANDINGPAGE.md).
 
 ### Entstehung
 
@@ -141,9 +153,9 @@ Du darfst das Spiel frei nutzen, verändern, weitergeben und auch in eigene Proj
 
 Retro handball in pixel style, inspired by *Legend Bowl*. A complete browser game in a single HTML file: no server, no installation, no external dependencies apart from two Google Fonts.
 
-**▶ Play: [tobwil.github.io/HallenLegenden](https://tobwil.github.io/HallenLegenden/)**
+**▶ Play: [hallenlegenden.de](https://hallenlegenden.de/)** · Ideas and requests: [feature request form](https://hallenlegenden.de/#wunsch) (German)
 
-Runs on desktop with keyboard or gamepad and on phones with touch controls (landscape recommended). Works offline too: download `index.html` and open it in your browser.
+Runs on desktop with keyboard or gamepad and on phones with touch controls (landscape recommended). Works offline too: download `game/index.html` and open it in your browser.
 
 The game itself is in **German** (menus, commentary, newspaper). The controls below are all you need to get started.
 
@@ -216,11 +228,19 @@ In defence and on loose balls you automatically control the player closest to th
 ### Project structure
 
 ```
-index.html            playable file, served by GitHub Pages
-spielen.html          copy of index.html
+index.html            landing page with horizontal scrolling and feature request form
+game/index.html       the game (generated by build.sh)
+spielen.html          redirect to game/ for old links
+impressum.html        legal notice (German)
+datenschutz.html      privacy policy (German)
+assets/               story film, move script, styles and contact script for the legal pages
+fonts/                self-hosted fonts (Press Start 2P, VT323, SIL OFL)
+tools/                Google Apps Script for the wish list
+netlify.toml          Netlify settings (hosting for hallenlegenden.de)
 hallen-legenden.html  same page without the <html> wrapper (for publishing as a Claude Artifact)
 src/                  modular source code, assembled by build.sh
-docs/screenshots/     actual game screenshots used in this README
+docs/screenshots/     actual game screenshots used in this README and the landing page
+docs/LANDINGPAGE.md   landing page, form and custom domain setup (German)
 docs/ARCHITEKTUR.md   code architecture, data model, storage keys (German)
 docs/ENTWICKLUNG.md   development history: requests, decisions, tests (German)
 CHANGELOG.md          versions (German)
@@ -235,11 +255,13 @@ The modules in `src/` are concatenated in a fixed order into one HTML file:
 sh src/build.sh
 ```
 
-This generates `index.html`, `spielen.html` and `hallen-legenden.html`. There is no bundler and there are no package dependencies. For a syntax check, `node --check` on the concatenated JS is enough.
+This generates `game/index.html` and `hallen-legenden.html`. The landing page `index.html` is maintained by hand. There is no bundler and there are no package dependencies. For a syntax check, `node --check` on the concatenated JS is enough.
 
 #### Publishing as a website
 
-GitHub Pages serves the `main` branch, folder `/` (root). Because `index.html` sits in the root folder, the game runs directly at [tobwil.github.io/HallenLegenden](https://tobwil.github.io/HallenLegenden/). The empty `.nojekyll` file makes GitHub serve the files unchanged.
+The site runs at [hallenlegenden.de](https://hallenlegenden.de/) on Netlify, straight from the `main` branch without a build step (`netlify.toml`). The landing page is in the root folder, the game at `/game/`.
+
+The old address [tobwil.github.io/HallenLegenden](https://tobwil.github.io/HallenLegenden/) (GitHub Pages) redirects to hallenlegenden.de and carries existing save games along (`assets/umzug.js`). Form, domain and move details are in [docs/LANDINGPAGE.md](docs/LANDINGPAGE.md) (German).
 
 ### Background
 
