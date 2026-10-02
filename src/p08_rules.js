@@ -177,14 +177,13 @@ function step(dt) {
   if (G.human >= 0) {
     if (!G.ctrl || G.ctrl.out || G.ctrl.team !== G.human) G.ctrl = nearestTo(G.human, b.x, b.y);
     if (G.ctrl && G.ctrl.role === 'TW' && b.owner !== G.ctrl && ph === 'play') G.ctrl = nearestTo(G.human, b.x, b.y);
-    // Automatischer Wechsel in der Abwehr, wenn der Gegner den Ball bekommt und der gesteuerte Spieler weit weg ist
-    const thr = b.owner || b.passTo;
-    if (ph === 'play' && thr && thr.team !== G.human && thr !== G.autoSw) {
-      G.autoSw = thr;
-      const tx = b.owner ? thr.x : (thr.tx ?? thr.x), ty = b.owner ? thr.y : (thr.ty ?? thr.y), n = nearestTo(G.human, tx, ty);
-      if (n && G.ctrl && n !== G.ctrl) { const dc = dist(G.ctrl.x, G.ctrl.y, tx, ty); if (dc > 9 || (Math.hypot(IN.x, IN.y) < 0.2 && dc > 4) || (TOUCHDEV && dc > 5)) G.ctrl = n; }
+    // Ohne Wechseltaste steuerst du in der Abwehr und bei freiem Ball automatisch den ballnächsten Spieler.
+    // Toleranz (2,5 m) und 1 s Pause gegen Hin- und Herspringen, nach einem Tastenwechsel 1,5 s Pause, nie mitten im Block oder Sprung
+    const thr = b.owner || b.passTo, mine = thr && thr.team === G.human;
+    if (ph === 'play' && !mine && G.ctrl && G.t - (G.manT ?? -9) > 1.5 && G.t - (G.autoT ?? -9) > 1.0 && G.ctrl.z <= 0 && !(G.ctrl.block > 0)) {
+      const tx = b.owner ? thr.x : thr ? (thr.tx ?? thr.x) : b.x, ty = b.owner ? thr.y : thr ? (thr.ty ?? thr.y) : b.y, n = nearestTo(G.human, tx, ty);
+      if (n && n !== G.ctrl) { const dc = dist(G.ctrl.x, G.ctrl.y, tx, ty); if (dc > 3 && dist(n.x, n.y, tx, ty) + 2.5 < dc) { G.ctrl = n; G.autoT = G.t; } }
     }
-    if (thr && thr.team === G.human) G.autoSw = null;
   }
   if (ph === 'kickoff' || ph === 'restart') { G.phaseT -= dt; if (G.phaseT <= 0) { G.phase = 'play'; AU.whistle(1); } }
   if (ph === 'whistle') {

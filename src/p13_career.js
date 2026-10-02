@@ -125,8 +125,10 @@ function simMatch(a, b) {
   // Schwierigkeit wirkt auch in der Simulation: Amateur hilft dir, Legende macht es schwerer
   const bonus = [2.5, 0, -2.5][CAREER.diff] || 0;
   for (const [S, tid] of [[A, a], [B, b]]) if (tid === CAREER.team) { S.att += bonus; S.def += bonus; S.gk += bonus; }
-  // Erwartung aus Stärke + deutliche Streuung: Überraschungen sind möglich
-  const g = (X, Y, h) => Math.max(15, Math.round(27 + (X.att - Y.def) * 0.18 + (80 - Y.gk) * 0.08 + h + gauss() * 3.8));
+  // Erwartung aus Stärke + deutliche Streuung: Überraschungen sind möglich.
+  // Skaliert auf die gewählte Halbzeitlänge (gespielt: ~5 Tore pro Team bei 2 Min, ~8 bei 3 Min, ~13 bei 5 Min statt 27 über 60 echte Minuten)
+  const sc = (HALVES[CAREER.half] || HALVES[1]).s * 0.046 / 27;
+  const g = (X, Y, h) => Math.max(Math.round(15 * sc), Math.round(sc * (27 + (X.att - Y.def) * 0.18 + (80 - Y.gk) * 0.08 + h) + gauss() * 3.8 * Math.sqrt(sc)));
   const ga = g(A, B, 1), gb = g(B, A, 0), stats = {};
   const share = (S, goals) => {
     const f = S.L.filter(p => p.role !== 'TW'), w = f.map(p => ({ LA: 0.8, RA: 0.8, RL: 1.2, RR: 1.2, RM: 1, KM: 0.9 }[p.role]) * Math.pow(p.att / 80, 1.5));
@@ -135,7 +137,8 @@ function simMatch(a, b) {
     for (let i = 0; i < goals; i++) { let x = Math.random() * tot, k = 0; while (x > w[k] && k < w.length - 1) { x -= w[k]; k++; } stats[f[k].pid].g++; }
   };
   share(A, ga); share(B, gb);
-  stats[A.L[0].pid].sv = Math.max(2, Math.round(rnd(6, 13) + (A.gk - 80) / 4)); stats[B.L[0].pid].sv = Math.max(2, Math.round(rnd(6, 13) + (B.gk - 80) / 4));
+  const sv = S => Math.max(1, Math.round((rnd(6, 13) + (S.gk - 80) / 4) * sc));
+  stats[A.L[0].pid].sv = sv(A); stats[B.L[0].pid].sv = sv(B);
   return { a, b, ga, gb, stats, La: A.L, Lb: B.L };
 }
 // Ergebnis auf Tabelle, Spieler (Tore, Form, Fitness) anwenden

@@ -24,7 +24,7 @@ function tapAt(cx0, cy0) {
   }
   if (G.phase === 'play' && hit && !attacking()) {
     const n = hit.team === me ? hit : nearestTo(me, hit.x, hit.y);
-    if (n && n.role !== 'TW') { G.ctrl = n; AU.select(); buzz(8); }
+    if (n && n.role !== 'TW') { G.ctrl = n; G.manT = G.t; AU.select(); buzz(8); }
   }
 }
 (() => {

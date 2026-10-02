@@ -2,6 +2,11 @@
 
 Alle Versionen entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v7.7: Simulierte Ergebnisse passend zur Spieldauer, neuer Spielerwechsel
+- **Simulation:** Simulierte Partien (Liga, Pokal, eigene simulierte Spiele) passen jetzt zur gewählten Halbzeitlänge. Tore pro Team im Schnitt: 2 Min ≈ 5,6, 3 Min ≈ 8,3, 5 Min ≈ 14 (gespielt: 5,2 / 7,9 / 13,1). Vorher immer rund 27 wie nach 60 echten Minuten, das hat die Tabelle verzerrt. Paraden skalieren mit. Bereits gespielte Ergebnisse einer laufenden Saison bleiben, wie sie sind.
+- **Spielerwechsel in der Abwehr:** S (oder A) springt zuerst zum ballnächsten Spieler, jedes weitere Drücken innerhalb von 1,2 s zum nächstnäheren. Ohne Wechseltaste steuerst du automatisch den ballnächsten Spieler (Toleranz 2,5 m, höchstens ein Wechsel pro Sekunde, 1,5 s Pause nach einem Tastenwechsel, nie mitten im Block oder Sprung).
+- **Fehler behoben:** Ein Druck auf die Wechseltaste konnte mehrere Spieler weiterschalten, weil der neue Spieler im selben Frame denselben Tastendruck noch einmal verarbeitet hat
+
 ## v7.6: Schnellere Pässe, keine Kurvenbälle
 - **Pässe** fliegen rund 20 % schneller (kurz 16,5 statt 13,5 m/s, lang 21 statt 18 m/s), mittlere Flugzeit 0,47 statt 0,62 s
 - **Keine Kurvenbälle mehr:** Die Ball-Lenkung aus v7.5 ist entfernt. Mit einer neuen Richtung verschiebst du den Empfänger während des Flugs nur noch bis 0,6 m um den Fangpunkt, der Ball fliegt gerade. Angekommene Pässe: 83–87 % in allen Fällen.

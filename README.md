@@ -72,8 +72,8 @@ Rechte Hand auf den Pfeiltasten zum Laufen, linke Hand auf WASD und Leertaste f�
 |---|---|---|
 | Pfeile | Laufen | Laufen |
 | W / Shift | Sprint | Sprint |
-| S | Pass (Richtung = Laufrichtung) | zum balln채chsten Spieler wechseln |
-| A | Kempa-Trick (auch Shift + S) | Spieler wechseln |
+| S | Pass (Richtung = Laufrichtung) | Spieler wechseln: erst zum balln채chsten, mehrmals dr체cken = der N채he nach weiter |
+| A | Kempa-Trick (auch Shift + S) | wie S |
 | Leertaste | Wurf (antippen = schnell, halten = mehr Wucht, hoch/runter = Ecke) | Blocksprung |
 | D | Finte, beim Aufladen: Heber | Ball herausspielen |
 | T | Team-Timeout (Deckung umstellen) | |
@@ -82,6 +82,8 @@ Rechte Hand auf den Pfeiltasten zum Laufen, linke Hand auf WASD und Leertaste f�
 | M | Ton an/aus | |
 
 J, K und L funktionieren weiterhin als Alternative f체r Pass, Wurf und Finte.
+
+In der Abwehr und bei freiem Ball steuerst du ohne Wechseltaste automatisch den balln채chsten Spieler. Nach einem Wechsel per Taste bleibt die Automatik kurz aus.
 
 **Men체s:** Pfeiltasten w채hlen, Enter best채tigt, Esc oder Backspace geht zur체ck.
 
@@ -188,8 +190,8 @@ Right hand on the arrow keys to move, left hand on WASD and Space for the action
 |---|---|---|
 | Arrows | Move | Move |
 | W / Shift | Sprint | Sprint |
-| S | Pass (direction = movement direction) | Switch to the player closest to the ball |
-| A | Kempa trick (also Shift + S) | Switch player |
+| S | Pass (direction = movement direction) | Switch player: first to the one closest to the ball, press again = next closest |
+| A | Kempa trick (also Shift + S) | same as S |
 | Space | Shoot (tap = quick, hold = more power, up/down = corner) | Block jump |
 | D | Feint, while charging: lob | Steal the ball |
 | T | Team timeout (change defence) | |
@@ -198,6 +200,8 @@ Right hand on the arrow keys to move, left hand on WASD and Space for the action
 | M | Sound on/off | |
 
 J, K and L still work as alternatives for pass, shoot and feint.
+
+In defence and on loose balls you automatically control the player closest to the ball unless you switch manually. After a manual switch the automatic switching pauses briefly.
 
 **Menus:** arrow keys to select, Enter to confirm, Esc or Backspace to go back.
 
