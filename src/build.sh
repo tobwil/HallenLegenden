@@ -10,7 +10,7 @@ JS="p01_core.js p02_audio.js p03_sprites.js p04_arena.js p05_match.js p06_action
 # Die Startseite index.html im Hauptordner ist die Landingpage und wird hier nicht erzeugt.
 mkdir -p ../game
 URL='https://hallenlegenden.de/game/'
-DESC='Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal und Transfermarkt. Läuft direkt im Browser, am Desktop und auf dem Handy.'
+DESC='Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal, Europapokal mit Final Four und Transfermarkt. Läuft direkt im Browser, am Desktop und auf dem Handy.'
 {
   echo '<!doctype html>'
   echo '<html lang="de"><head><meta charset="utf-8"><script src="../assets/umzug.js"></script><meta name="viewport" id="vp" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">'

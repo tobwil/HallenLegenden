@@ -170,7 +170,7 @@ const SCENES = [
   { id: 'tor', w: 400, at: 120, act: 300, cam: 0.22, need: 148, label: 'DIE MOVES' },
   { id: 'tv', w: 440, at: 150, act: 200, cam: 0.3, need: 92, label: 'TV-AUFTRITT' },
   { id: 'zeitung', w: 420, at: 186, act: 260, cam: 0.36, need: 50, label: 'KARRIERE' },
-  { id: 'buero', w: 460, at: 290, act: 260, cam: 0.5, label: 'STATISTIK' },
+  { id: 'buero', w: 460, at: 290, act: 260, cam: 0.5, label: 'POKAL & EUROPA' },
   { id: 'kabine', w: 400, at: 214, act: 320, cam: 0.42, label: 'MANAGER' },
   { id: 'finale', w: 560, at: 290, act: 160, cam: 0.42, need: 142, label: 'ANWURF!' },
 ];

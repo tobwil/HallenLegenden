@@ -49,7 +49,7 @@ Pro Frame laufen: Eingabe lesen, `step` (Spieler, Kollisionen, Ball), Wiederholu
 ```
 year, team, len, half, diff, money, training, coach{lineup,training}, aiTransfers
 lgOf{teamId: 1|2}          Ligazugehörigkeit (ändert sich durch Auf-/Abstieg)
-squads{teamId: [Spieler]}  Kader aller 36 Vereine
+squads{teamId: [Spieler]}  Kader aller 52 Vereine (36 deutsche, 16 internationale)
 season{lg, round, fixtures, table, last, scorers, done}
 cup{round, sched, ties, results, winner, myOut, myBest}
 market, free, offers, transferLog, news, history, goal, streak, lastMatch, summary
