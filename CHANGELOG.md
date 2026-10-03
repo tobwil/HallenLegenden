@@ -12,6 +12,8 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
   - Die Pixel-Karte (1080 × 1350) zeigt Wappen, Ergebnis (zum Beispiel DOUBLE!), Punkte, Bilanz, Pokal, Europapokal, Torjäger, Zuschauer und hallenlegenden.de.
   - Am Handy öffnet sich das Teilen-Menü (WhatsApp und Co.) mit Bild und Text, sonst eine Vorschau zum Speichern und Text kopieren.
 - Der Saisonabschluss zeigt gewonnene Titel als Pokale.
+- **Entlassung:** Die Jobangebote stehen jetzt direkt unter der Vorstandsmeldung in einem auffälligen Kasten („ENTLASSEN · DEINE JOBANGEBOTE“). Vorher standen sie ganz unten im langen Saisonabschluss, ohne Weiter-Knopf war nicht klar, wie es weitergeht.
+- Der Entlassungs-Test klickt jetzt alles über die Oberfläche: Saisonabschluss, Jobangebot (muss ohne Scrollen sichtbar sein), Neuladen, mit dem neuen Verein selbst spielen bis Abpfiff, Saison zu Ende, Historie.
 - Die Historie merkt sich den Verein jeder Saison (wichtig nach einem Trainerwechsel).
 - 2 neue Regressionstests (Rekorde nachgerechnet aus allen eigenen Spielen, Titel, Ehrenhalle, Teilen-Karte; Nachtragen aus alter Historie), insgesamt 32
 

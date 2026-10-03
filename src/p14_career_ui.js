@@ -263,6 +263,8 @@ function seasonSummary() {
     <div class="row" style="justify-content:center"><button class="main" data-act="cShare" data-v="season">SAISON ALS BILD TEILEN</button></div>
     <p class="muted" style="text-align:center">${esc(me.n)} beendet die ${s.lg}. Liga auf Platz ${s.pos}. Saisonziel „${esc(s.goal || '')}“ ${s.goalMet ? '<b style="color:var(--green)">erreicht</b>' : '<b style="color:var(--hot)">verfehlt</b>'}. Prämie: ${euro(s.prize)}.</p>
     ${s.board ? `<p class="muted" style="text-align:center;color:${s.board.fired ? 'var(--hot)' : s.board.warn ? 'var(--gold)' : 'var(--green)'}"><b>VORSTAND:</b> ${esc(s.board.txt)}</p>` : ''}
+    ${CAREER.jobOffers ? `<div class="jobs"><h3>ENTLASSEN · DEINE JOBANGEBOTE</h3><p class="muted">Diese Vereine wollen dich als Trainer. Wähle einen aus: Du startest mit ihrem Kader und ihrem Budget in die neue Saison. Deine Erfolge und Rekorde nimmst du mit.</p>
+      <div class="btns menu-list">${CAREER.jobOffers.map(id => `<button data-act="cJob" data-v="${id}">${esc(TEAMS[id].n)} <i>${CAREER.lgOf[id]}. Liga · Stärke ${strength(id).ovr} · ${euro(CAREER.aiMoney[id])}</i></button>`).join('')}</div></div>` : ''}
     ${s.fin ? finTable(s.fin, s.money) : ''}
     <table class="sqt"><tbody>
       <tr><td>Meister 1. Liga</td><td>${esc(TEAMS[s.champ1].n)}</td></tr>
@@ -277,9 +279,7 @@ function seasonSummary() {
     ${s.gone && s.gone.length ? `<p class="muted">Vertrag ausgelaufen, ablösefrei weg: ${s.gone.map(esc).join(', ')}.</p>` : ''}
     ${s.youth && s.youth.length ? `<p class="muted">Aus der Jugend rücken nach: ${s.youth.map(esc).join(', ')}.</p>` : ''}
     ${s.retired.length ? `<p class="muted">Karriereende: ${s.retired.map(esc).join(', ')}. Talente aus der Jugend rücken nach.</p>` : ''}
-    ${CAREER.jobOffers ? `<h3>JOBANGEBOTE</h3><p class="muted">Diese Vereine wollen dich als Trainer. Du startest mit ihrem Kader und ihrem Budget in die neue Saison.</p>
-      <div class="btns menu-list">${CAREER.jobOffers.map(id => `<button data-act="cJob" data-v="${id}">${esc(TEAMS[id].n)} <i>${CAREER.lgOf[id]}. Liga · Stärke ${strength(id).ovr} · ${euro(CAREER.aiMoney[id])}</i></button>`).join('')}</div>`
-    : `<div class="row"><button class="main" data-act="cNext">SAISON ${seasonName(CAREER.year)} STARTEN</button></div>`}</div>`);
+    ${CAREER.jobOffers ? '' : `<div class="row"><button class="main" data-act="cNext">SAISON ${seasonName(CAREER.year)} STARTEN</button></div>`}</div>`);
 }
 Object.assign(ACT, {
   cNew() { SEASON_PICK = false; careerCreate(SEL.a, SEL.len, SEL.half, SEL.diff, SEL.ait === 0, SEL.coach); track('karriere-neu'); careerHub('home'); },

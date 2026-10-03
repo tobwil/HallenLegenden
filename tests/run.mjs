@@ -324,21 +324,35 @@ test('Wirtschaft: Schulden führen zu Transfersperre und Notverkauf', async () =
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
-test('Wirtschaft: Vorstand entlässt nach zweimal deutlich verfehltem Ziel, neuer Job startet sauber', async () => {
+test('Wirtschaft: Entlassung nach zweimal deutlich verfehltem Ziel, neuer Verein per Klick, dort weiterspielen', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 99);
-  const r = await page.evaluate(() => {
-    careerCreate(3, 0, 1, 1); const v = [];
-    for (let s = 0; s < 2; s++) {
-      while (!CAREER.season.done) ACT.cSim();
-      const T = CAREER.season.table[CAREER.team]; T.s = T.u = T.tp = 0; T.n = T.sp;   // eigenen Verein ans Tabellenende
-      v.push(careerEndSeason().board);
-    }
-    const offers = (CAREER.jobOffers || []).slice(), old = CAREER.team;
-    if (offers.length) ACT.cJob(offers[0]);
-    return { warn: v[0].warn && !v[0].fired, fired: v[1].fired, offers: offers.length, team: CAREER.team, old, round: CAREER.season.round, lg: CAREER.season.lg, inTable: CAREER.season.table[CAREER.team] !== undefined };
-  });
-  ok(r.warn && r.fired, 'Warnung/Entlassung fehlt: ' + JSON.stringify(r));
-  ok(r.offers >= 2 && r.team !== r.old && r.round === 0 && r.inTable, 'Jobwechsel: ' + JSON.stringify(r));
+  // zwei Saisons, eigener Verein jeweils am Tabellenende; Saisonabschluss und Weiter über die Knöpfe
+  const board = [];
+  await page.evaluate(() => careerCreate(3, 0, 1, 1));
+  for (let s = 0; s < 2; s++) {
+    await page.evaluate(() => { let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 200) ACT.cSim(); const T = CAREER.season.table[CAREER.team]; T.s = T.u = T.tp = 0; T.n = T.sp; careerHub('home'); });
+    await page.click('#menu button[data-act="cEnd"]');
+    board.push(await page.evaluate(() => CAREER.summary.board));
+    if (s === 0) await page.click('#menu button[data-act="cNext"]');
+  }
+  // Jobangebote stehen oben im Saisonabschluss, ohne Scrollen sichtbar; kein Weiter-Knopf
+  const offers = await page.evaluate(() => { const b = [...menu.querySelectorAll('button[data-act="cJob"]')], r = b[0] && b[0].getBoundingClientRect(); return { n: b.length, ids: b.map(x => +x.dataset.v), visible: !!r && r.bottom <= innerHeight, next: !!menu.querySelector('[data-act="cNext"]') }; });
+  const old = await page.evaluate(() => CAREER.team), pick = offers.ids[0];
+  await page.click(`#menu button[data-act="cJob"][data-v="${pick}"]`);
+  await page.reload(); await page.waitForTimeout(500);
+  const job = await page.evaluate(([old, pick]) => ({ team: CAREER.team, summary: CAREER.summary, round: CAREER.season.round, inTable: !!CAREER.season.table[CAREER.team], lg: CAREER.season.lg === CAREER.lgOf[CAREER.team], starters: CAREER.squads[CAREER.team].filter(p => p.start).length, miss: CAREER.board.miss, oldIsAi: !!CAREER.squads[old] && old !== CAREER.team }), [old, pick]);
+  // mit dem neuen Verein selbst spielen: SELBST SPIELEN -> ANPFIFF -> Abpfiff -> WEITER ZUR KARRIERE
+  await page.evaluate(() => careerHub('home')); await page.click('#menu button[data-act="cPlay"]'); await page.click('#menu button[data-act="pmGo"]');
+  const match = await page.evaluate(() => ({ mine: G.tid[G.human] === CAREER.team, career: G.career }));
+  await page.evaluate(() => { G.paused = true; G.introT = 99; let n = 0; while (G.phase !== 'fulltime' && n++ < 90000) { readInput(1 / 60); step(1 / 60); } G.paused = false; });
+  await page.waitForSelector('#menu button[data-act="afterMatch"]', { timeout: 15000 }); await page.click('#menu button[data-act="afterMatch"]');
+  const rest = await page.evaluate(() => { const r1 = CAREER.season.round; let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 200) ACT.cSim(); ACT.cEnd();
+    return { r1, done: g < 200, histTeam: CAREER.history.slice(-1)[0].team === CAREER.team, histOld: CAREER.history.slice(0, 2).every(h => h.team !== CAREER.team) }; });
+  ok(board[0].warn && !board[0].fired && board[1].fired, 'Warnung/Entlassung fehlt: ' + JSON.stringify(board));
+  ok(offers.n >= 2 && offers.visible && !offers.next && !offers.ids.includes(old), 'Jobangebote: ' + JSON.stringify(offers));
+  ok(job.team === pick && !job.summary && job.round === 0 && job.inTable && job.lg && job.starters === 7 && job.miss === 0 && job.oldIsAi, 'Jobwechsel: ' + JSON.stringify(job));
+  ok(match.mine && match.career && rest.r1 === 1, 'Spiel mit neuem Verein: ' + JSON.stringify({ match, rest }));
+  ok(rest.done && rest.histTeam && rest.histOld, 'Saison/Historie: ' + JSON.stringify(rest));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
