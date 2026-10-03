@@ -31,6 +31,7 @@ function playCupRound(own, force) {
     rows.push([r.a, r.b, r.ga, r.gb, !!r.so, r.win]);
     if (a === me || b === me) {
       const opp = a === me ? b : a, won = r.win === me, sc = a === me ? `${r.ga}:${r.gb}` : `${r.gb}:${r.ga}`;
+      noteOwnMatch(a === me ? r.ga : r.gb, a === me ? r.gb : r.ga, opp, 'Pokal', r.stats, a === me ? r.La : r.Lb, 0);
       if (won) { CAREER.money += CUP_PRIZE[C.round]; finOf().cup += CUP_PRIZE[C.round]; C.myBest = C.round + 1; news(`Pokal ${CUP_ROUNDS[C.round]}: Weiter! ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}. Prämie ${euro(CUP_PRIZE[C.round])}.`); }
       else { C.myOut = true; news(`Pokal-Aus im ${CUP_ROUNDS[C.round].toLowerCase()}: ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}.`); }
       CAREER.cupLast = { round: C.round, opp, sc, won, so: !!r.so };

@@ -324,21 +324,35 @@ test('Wirtschaft: Schulden führen zu Transfersperre und Notverkauf', async () =
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
-test('Wirtschaft: Vorstand entlässt nach zweimal deutlich verfehltem Ziel, neuer Job startet sauber', async () => {
+test('Wirtschaft: Entlassung nach zweimal deutlich verfehltem Ziel, neuer Verein per Klick, dort weiterspielen', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 99);
-  const r = await page.evaluate(() => {
-    careerCreate(3, 0, 1, 1); const v = [];
-    for (let s = 0; s < 2; s++) {
-      while (!CAREER.season.done) ACT.cSim();
-      const T = CAREER.season.table[CAREER.team]; T.s = T.u = T.tp = 0; T.n = T.sp;   // eigenen Verein ans Tabellenende
-      v.push(careerEndSeason().board);
-    }
-    const offers = (CAREER.jobOffers || []).slice(), old = CAREER.team;
-    if (offers.length) ACT.cJob(offers[0]);
-    return { warn: v[0].warn && !v[0].fired, fired: v[1].fired, offers: offers.length, team: CAREER.team, old, round: CAREER.season.round, lg: CAREER.season.lg, inTable: CAREER.season.table[CAREER.team] !== undefined };
-  });
-  ok(r.warn && r.fired, 'Warnung/Entlassung fehlt: ' + JSON.stringify(r));
-  ok(r.offers >= 2 && r.team !== r.old && r.round === 0 && r.inTable, 'Jobwechsel: ' + JSON.stringify(r));
+  // zwei Saisons, eigener Verein jeweils am Tabellenende; Saisonabschluss und Weiter über die Knöpfe
+  const board = [];
+  await page.evaluate(() => careerCreate(3, 0, 1, 1));
+  for (let s = 0; s < 2; s++) {
+    await page.evaluate(() => { let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 200) ACT.cSim(); const T = CAREER.season.table[CAREER.team]; T.s = T.u = T.tp = 0; T.n = T.sp; careerHub('home'); });
+    await page.click('#menu button[data-act="cEnd"]');
+    board.push(await page.evaluate(() => CAREER.summary.board));
+    if (s === 0) await page.click('#menu button[data-act="cNext"]');
+  }
+  // Jobangebote stehen oben im Saisonabschluss, ohne Scrollen sichtbar; kein Weiter-Knopf
+  const offers = await page.evaluate(() => { const b = [...menu.querySelectorAll('button[data-act="cJob"]')], r = b[0] && b[0].getBoundingClientRect(); return { n: b.length, ids: b.map(x => +x.dataset.v), visible: !!r && r.bottom <= innerHeight, next: !!menu.querySelector('[data-act="cNext"]') }; });
+  const old = await page.evaluate(() => CAREER.team), pick = offers.ids[0];
+  await page.click(`#menu button[data-act="cJob"][data-v="${pick}"]`);
+  await page.reload(); await page.waitForTimeout(500);
+  const job = await page.evaluate(([old, pick]) => ({ team: CAREER.team, summary: CAREER.summary, round: CAREER.season.round, inTable: !!CAREER.season.table[CAREER.team], lg: CAREER.season.lg === CAREER.lgOf[CAREER.team], starters: CAREER.squads[CAREER.team].filter(p => p.start).length, miss: CAREER.board.miss, oldIsAi: !!CAREER.squads[old] && old !== CAREER.team }), [old, pick]);
+  // mit dem neuen Verein selbst spielen: SELBST SPIELEN -> ANPFIFF -> Abpfiff -> WEITER ZUR KARRIERE
+  await page.evaluate(() => careerHub('home')); await page.click('#menu button[data-act="cPlay"]'); await page.click('#menu button[data-act="pmGo"]');
+  const match = await page.evaluate(() => ({ mine: G.tid[G.human] === CAREER.team, career: G.career }));
+  await page.evaluate(() => { G.paused = true; G.introT = 99; let n = 0; while (G.phase !== 'fulltime' && n++ < 90000) { readInput(1 / 60); step(1 / 60); } G.paused = false; });
+  await page.waitForSelector('#menu button[data-act="afterMatch"]', { timeout: 15000 }); await page.click('#menu button[data-act="afterMatch"]');
+  const rest = await page.evaluate(() => { const r1 = CAREER.season.round; let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 200) ACT.cSim(); ACT.cEnd();
+    return { r1, done: g < 200, histTeam: CAREER.history.slice(-1)[0].team === CAREER.team, histOld: CAREER.history.slice(0, 2).every(h => h.team !== CAREER.team) }; });
+  ok(board[0].warn && !board[0].fired && board[1].fired, 'Warnung/Entlassung fehlt: ' + JSON.stringify(board));
+  ok(offers.n >= 2 && offers.visible && !offers.next && !offers.ids.includes(old), 'Jobangebote: ' + JSON.stringify(offers));
+  ok(job.team === pick && !job.summary && job.round === 0 && job.inTable && job.lg && job.starters === 7 && job.miss === 0 && job.oldIsAi, 'Jobwechsel: ' + JSON.stringify(job));
+  ok(match.mine && match.career && rest.r1 === 1, 'Spiel mit neuem Verein: ' + JSON.stringify({ match, rest }));
+  ok(rest.done && rest.histTeam && rest.histOld, 'Saison/Historie: ' + JSON.stringify(rest));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
@@ -365,7 +379,7 @@ test('Handy-Hochformat: keine Karriere-Ansicht ragt über den Fensterrand', asyn
     const out = [], check = name => { const panel = menu.querySelector('.panel'); if (!panel) return; const pr = panel.getBoundingClientRect();
       menu.querySelectorAll('.panel *').forEach(el => { const r = el.getBoundingClientRect(); if (r.width && r.right > pr.right + 1 && !el.closest('.ctabs') && !el.closest('.bracket')) out.push(`${name}: ${el.tagName.toLowerCase()} +${Math.round(r.right - pr.right)}px`); }); };
     careerHub(); check('Saisonabschluss'); ACT.cNext(); for (let i = 0; i < 5; i++) ACT.cSim();
-    for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'euro', 'stats', 'hist']) { ACT.cTab(t); check(t); }
+    for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'euro', 'stats', 'trophy', 'hist']) { ACT.cTab(t); check(t); }
     ACT.cPick(CAREER.squads[CAREER.team][0].pid); check('Spieler');
     return [...new Set(out)].slice(0, 5);
   });
@@ -488,6 +502,51 @@ test('Breite Handys: Spielfeld füllt den Bildschirm, Desktop und Hochformat ble
   ok(intro.ok && intro.radar, 'Intro/HUD: ' + JSON.stringify(intro)); ok(tall.W === 640, 'Hochformat: ' + JSON.stringify(tall)); ok(back === wide.W, 'zurückgedreht: ' + back);
   ok(desk === 640, 'Desktop 16:10: ' + desk);
   ok(!errors.length && !d.errors.length, errors.concat(d.errors).join('; ')); await ctx.close(); await d.ctx.close();
+});
+
+test('Erfolge: Titel, Rekorde und Ehrenhalle aus echten Spielen, Saisonbilanz und Karriere als Bild', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 31);
+  const r = await page.evaluate(async () => {
+    careerCreate(3, 1, 1, 1);
+    // jedes eigene Spiel mitschreiben und die Rekorde danach nachrechnen
+    const log = [], orig = window.noteOwnMatch; window.noteOwnMatch = function (my, th, opp, comp, stats, L) { log.push({ my, th, pg: Math.max(0, ...(L || []).filter(p => p.role !== 'TW').map(p => (stats[p.pid] || {}).g || 0)) }); return orig.apply(this, arguments); };
+    let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 100) ACT.cSim();
+    window.noteOwnMatch = orig;
+    const me = CAREER.team, R = CAREER.rec, T = CAREER.season.table[me];
+    const mx = f => Math.max(0, ...log.map(f)), exact = { win: mx(m => m.my - m.th), loss: mx(m => m.th - m.my), goals: mx(m => m.my + m.th), pgoals: mx(m => m.pg) };
+    const recOk = R.win.v === exact.win && (exact.loss === 0 || R.loss.v === exact.loss) && R.goals.v === exact.goals && R.pgoals.v === exact.pgoals;
+    ACT.cEnd(); const s = CAREER.summary, pos = s.pos, h = CAREER.history[0];
+    const hallApps = Object.values(CAREER.hall).reduce((a, e) => a + e.apps, 0);
+    // Titel stimmen mit Platz, Pokal und Europapokal überein
+    const expect = [pos === 1 && s.lg === 1 && 'meister', s.cupWinner === me && 'pokal', s.euroWinner === me && 'euro'].filter(Boolean);
+    const titlesOk = expect.every(k => s.titles.includes(k)) && s.titles.length === CAREER.titles.length && h.team === me;
+    // Karte erzeugen (im Testbrowser gibt es kein Teilen-Menü: Vorschau mit Bild und Speichern)
+    const mode = await shareCard('season'); const img = new Image(); img.src = SHARE.url; await img.decode();
+    const preview = !!menu.querySelector('img.sharecard') && !!menu.querySelector('a[download]');
+    ACT.cShareBack(); const backToSummary = !!CAREER.summary && menu.innerText.includes('ABSCHLUSS');
+    ACT.cNext(); ACT.cTab('trophy'); const view = { shelf: menu.querySelectorAll('.tshelf.won').length, rows: menu.querySelectorAll('.stt td.lbl').length, hall: menu.querySelectorAll('table.cards tbody tr').length };
+    const m2 = await shareCard('career');
+    return { recOk, exact, games: log.length, recKeys: Object.keys(R).sort().join(','), streak: R.streak && R.streak.v, played: T.sp, titlesOk, titles: s.titles, hallApps, mode, size: [img.width, img.height], preview, backToSummary, view, m2, text: SHARE.text };
+  });
+  ok(r.recKeys.includes('win') && r.recKeys.includes('pgoals') && r.recKeys.includes('season') && r.recKeys.includes('scorer'), 'Rekorde fehlen: ' + r.recKeys);
+  ok(r.recOk && r.games > r.played, 'Rekorde passen nicht zu den Ergebnissen: ' + JSON.stringify(r.exact)); ok(r.titlesOk, 'Titel: ' + JSON.stringify(r.titles)); ok(r.hallApps >= r.played * 7, 'Ehrenhalle zählt zu wenig Einsätze: ' + r.hallApps);
+  ok(r.mode === 'preview' && r.size[0] === 1080 && r.size[1] === 1350 && r.preview, 'Teilen-Karte: ' + JSON.stringify(r)); ok(r.backToSummary, 'Zurück führt nicht zum Saisonabschluss');
+  ok(r.view.shelf === r.titles.length && r.view.rows === 8 && r.view.hall > 0, 'Tab ERFOLGE: ' + JSON.stringify(r.view)); ok(r.text.includes('hallenlegenden.de'), 'Teilen-Text ohne Link');
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Erfolge: ältere Karriere bekommt Titel aus der Historie nachgetragen', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 8);
+  await page.evaluate(() => {
+    careerCreate(0, 0, 1, 1); const me = CAREER.team;
+    // Spielstand wie vor dieser Version: Historie ohne Vereinsnummer, keine Titel, keine Rekorde
+    CAREER.history = [{ year: 2026, lg: 1, pos: 1, champ: me, cup: me, euro: null }, { year: 2027, lg: 1, pos: 3, champ: 1, cup: 2, euro: me }];
+    delete CAREER.titles; delete CAREER.rec; delete CAREER.hall; saveCareer();
+  });
+  await page.reload(); await page.waitForTimeout(600);
+  const r = await page.evaluate(() => { ACT.career && 0; careerHub('trophy'); return { titles: CAREER.titles.map(t => t.type + t.year).join(','), shelf: menu.querySelectorAll('.tshelf.won').length, hall: Object.keys(CAREER.hall).length }; });
+  ok(r.titles === 'meister2026,pokal2026,euro2027' && r.shelf === 3 && r.hall > 0, JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
 test('Pokal: Sieger mit Vereinsnummer 0 (Magdeburg) bleibt Sieger', async () => {

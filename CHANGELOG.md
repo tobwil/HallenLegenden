@@ -2,6 +2,21 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.7: Erfolge und Teilen
+- **Neuer Tab ERFOLGE im Karriere-Modus:**
+  - Trophäenschrank: Deutscher Meister, Pokal, Europapokal, Meister 2. Liga, Aufstieg, jeweils mit Anzahl und Saisons. Noch nicht gewonnene Titel stehen grau im Regal.
+  - Rekorde deiner Karriere: höchster Sieg, höchste Niederlage, torreichstes Spiel, längste Siegesserie, meiste Tore eines Spielers in einem Spiel, Torjäger einer Saison, beste Saison, Zuschauerrekord. Erfasst nach jedem eigenen Spiel in Liga, Pokal und Europapokal.
+  - Ehrenhalle: die Spieler deiner Vereine mit Saisons, Einsätzen, Toren und Titeln. Ab 5 Saisons, 150 Toren oder 3 Titeln gibt es den Titel LEGENDE.
+  - Laufende Karrieren bekommen ihre Titel aus der Historie nachgetragen, Rekorde zählen ab dieser Version.
+- **Als Bild teilen:** Im Saisonabschluss „SAISON ALS BILD TEILEN“, im Tab ERFOLGE „KARRIERE ALS BILD TEILEN“.
+  - Die Pixel-Karte (1080 × 1350) zeigt Wappen, Ergebnis (zum Beispiel DOUBLE!), Punkte, Bilanz, Pokal, Europapokal, Torjäger, Zuschauer und hallenlegenden.de.
+  - Am Handy öffnet sich das Teilen-Menü (WhatsApp und Co.) mit Bild und Text, sonst eine Vorschau zum Speichern und Text kopieren.
+- Der Saisonabschluss zeigt gewonnene Titel als Pokale.
+- **Entlassung:** Die Jobangebote stehen jetzt direkt unter der Vorstandsmeldung in einem auffälligen Kasten („ENTLASSEN · DEINE JOBANGEBOTE“). Vorher standen sie ganz unten im langen Saisonabschluss, ohne Weiter-Knopf war nicht klar, wie es weitergeht.
+- Der Entlassungs-Test klickt jetzt alles über die Oberfläche: Saisonabschluss, Jobangebot (muss ohne Scrollen sichtbar sein), Neuladen, mit dem neuen Verein selbst spielen bis Abpfiff, Saison zu Ende, Historie.
+- Die Historie merkt sich den Verein jeder Saison (wichtig nach einem Trainerwechsel).
+- 2 neue Regressionstests (Rekorde nachgerechnet aus allen eigenen Spielen, Titel, Ehrenhalle, Teilen-Karte; Nachtragen aus alter Historie), insgesamt 32
+
 ## v8.6: Dezente Touch-Steuerung, zwei neue Hallen-Legenden
 - **Touch-Knöpfe durchscheinend:** Im Ruhezustand sieht man durch PASS, WURF und FINTE aufs Spielfeld. Beim Drücken leuchten sie voll auf.
 - **Stick:** Der Ring ist nur noch ganz dezent zu sehen (Hinweis, wo der Daumen hingehört). Bei Berührung erscheint er voll unter dem Daumen.

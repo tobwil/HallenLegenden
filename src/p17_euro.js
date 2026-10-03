@@ -78,6 +78,7 @@ function playEuroRound(own, force) {
     if (a === me || b === me) {
       const opp = a === me ? b : a, sc = a === me ? `${r.ga}:${r.gb}` : `${r.gb}:${r.ga}`, my = a === me ? r.ga : r.gb, th = a === me ? r.gb : r.ga;
       E.last = { opp, sc, so: !!r.so, label: euroLabel(n) };
+      noteOwnMatch(my, th, opp, 'Europapokal', r.stats, a === me ? r.La : r.Lb, 0);
       news(ko ? `Europapokal ${EURO_KO[n.r]}: ${r.win === me ? 'Weiter!' : 'Ausgeschieden.'} ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}.`
         : `Europapokal, Gruppe ${GROUP_N[groupOf(me)]}: ${my > th ? 'Sieg' : my === th ? 'Remis' : 'Niederlage'} ${sc} gegen ${TEAMS[opp].n}.`);
     }
