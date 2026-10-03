@@ -42,7 +42,7 @@ function lookOf(p, kit) {
   return { gk, jer, jerS: shade(jer, 0.7), jerH: mix(jer, '#ffffff', 0.3), trim, sho: gk ? shade(kit.gk, 0.45) : kit.c2,
     sock: lum(kit.c1) > 0.8 ? kit.c2 : kit.c1, shoe: gk ? '#f2f2f2' : (p.num % 3 ? '#f2f2f2' : kit.c2),
     skin: sk[0], skinS: sk[1], hair: p.hair, style: p.style, beard: p.beard, band: p.band, num: p.num,
-    numCol: lum(jer) > 0.6 ? shade(trim, 0.9) : (colDist(trim, jer) > 120 ? trim : '#ffffff'), tall: p.tall, key: `${jer}|${trim}|${p.skin}|${p.hair}|${p.style}|${+p.beard}|${+p.band}|${p.num}|${+gk}|${+p.tall}` };
+    numCol: lum(jer) > 0.6 ? shade(trim, 0.9) : (colDist(trim, jer) > 120 ? trim : '#ffffff'), tall: p.tall, musc: !!p.musc, key: `${jer}|${trim}|${p.skin}|${p.hair}|${p.style}|${+p.beard}|${+p.band}|${p.num}|${+gk}|${+p.tall}|${+!!p.musc}` };
 }
 
 const SPR = new Map();
@@ -57,7 +57,7 @@ function renderSprite(L, pose, fr, flip = false) {
   const base = document.createElement('canvas'); base.width = SW; base.height = SH;
   const g = base.getContext('2d');
   const P = (POSES[pose] || POSES.idle)(fr);
-  const t = L.tall ? -1 : 0;
+  const t = L.tall === 2 ? -3 : L.tall ? -1 : 0, mu = L.musc ? 1 : 0;   // sehr groß: längere Beine und Rumpf; muskulös: breitere Schultern, kräftigere Arme
   const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(flip ? AX - x - w : AX + x, AY + y, w, h); };
   const brush = (x1, y1, x2, y2, w, c) => { const n = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1), 1); for (let i = 0; i <= n; i++) { const k = i / n; R(Math.round(lerp(x1, x2, k) - (w >> 1)), Math.round(lerp(y1, y2, k) - (w >> 1)), w, w, c); } };
   // Gliedmaße aus Segmenten; vordere bekommen eine eigene Kontur, damit sie sich vom Körper absetzen
@@ -78,7 +78,7 @@ function renderSprite(L, pose, fr, flip = false) {
     const sh = [hx + (back ? -3 : 3), shY + 2], ex = A.e[0] + bx, ey = A.e[1] + by + t, hx2 = A.h[0] + bx, hy = A.h[1] + by + t;
     const skin = back ? L.skinS : L.skin, jer = back ? L.jerS : L.jer;
     const sx2 = lerp(sh[0], ex, 0.45), sy2 = lerp(sh[1], ey, 0.45);
-    limb(L.gk ? [[sh[0], sh[1], ex, ey, 3, jer], [ex, ey, hx2, hy, 3, jer]] : [[sh[0], sh[1], ex, ey, 3, skin], [sh[0], sh[1], sx2, sy2, 4, jer], [ex, ey, hx2, hy, 2, skin]], !back);
+    limb(L.gk ? [[sh[0], sh[1], ex, ey, 3, jer], [ex, ey, hx2, hy, 3, jer]] : [[sh[0], sh[1], ex, ey, 3 + mu, skin], [sh[0], sh[1], sx2, sy2, 4 + mu, jer], [ex, ey, hx2, hy, 2 + mu, skin]], !back);
     R(hx2 - 1, hy - 1, 3, 3, L.gk ? '#ececec' : skin); R(hx2 - 1, hy + 1, 3, 1, L.gk ? '#bdbdbd' : L.skinS);
     if (!L.gk && !back && L.band) R(Math.round(lerp(ex, hx2, 0.7)) - 1, Math.round(lerp(ey, hy, 0.7)), 3, 1, L.trim);
   };
@@ -90,10 +90,10 @@ function renderSprite(L, pose, fr, flip = false) {
   // Rumpf als Trapez: breite Schultern, schmale Taille
   const tH = hipY - 1 - shY;
   for (let r = 0; r < tH; r++) {
-    const k = r / Math.max(1, tH - 1), l = Math.round(lerp(-6, -4, k)), rr = Math.round(lerp(5, 4, k)), y = shY + r;
+    const k = r / Math.max(1, tH - 1), l = Math.round(lerp(-6 - mu, -4, k)), rr = Math.round(lerp(5 + mu, 4, k)), y = shY + r;
     R(hx + l, y, rr - l + 1, 1, L.jer); R(hx + l, y, 3, 1, L.jerS); R(hx + rr, y, 1, 1, r < tH * 0.6 ? L.jerH : L.jer);
   }
-  R(hx - 6, shY, 12, 1, L.trim); R(hx - 1, shY, 4, 2, L.skinS); R(hx, shY + 2, 2, 1, L.trim);
+  R(hx - 6 - mu, shY, 12 + 2 * mu, 1, L.trim); R(hx - 1, shY, 4, 2, L.skinS); R(hx, shY + 2, 2, 1, L.trim);
   R(hx - 4, hipY - 2, 9, 1, shade(L.jer, 0.8));
   const dx0 = AX + hx - Math.floor(digitsW(L.num) / 2) + 1;
   drawDigits(g, L.num, flip ? 2 * AX - dx0 - digitsW(L.num) : dx0, AY + shY + 4, L.numCol);
@@ -148,10 +148,11 @@ function portrait(p, kit) {
   for (let y = 0; y < 40; y++) R(0, y, 40, 1, mix(shade(L.jer, 0.35), shade(L.jer, 0.75), y / 40));
   for (let i = 0; i < 40; i += 4) R(i, 0, 1, 40, 'rgba(255,255,255,0.05)');
   // Schultern & Trikot
+  if (L.musc) { R(1, 30, 38, 10, L.jer); R(1, 30, 7, 10, L.jerS); R(32, 31, 5, 9, L.jerH); R(0, 33, 3, 7, L.skinS); R(37, 33, 3, 7, L.skin); }   // muskulös: breite Schultern, Oberarme
   R(4, 31, 32, 9, L.jer); R(4, 31, 6, 9, L.jerS); R(30, 32, 4, 8, L.jerH); R(15, 30, 10, 2, L.trim); R(17, 32, 6, 2, L.skinS);
   drawDigits(g, L.num, 20 - Math.floor(digitsW(L.num) / 2), 34, L.numCol);
   // Hals & Kopf
-  R(16, 25, 8, 7, L.skinS);
+  R(16, 25, 8, 7, L.skinS); if (L.musc) { R(14, 25, 12, 6, L.skinS); R(10, 28, 6, 3, L.skinS); R(24, 28, 6, 3, L.skinS); }   // kräftiger Nacken
   R(11, 9, 18, 19, L.skin); R(11, 9, 3, 19, L.skinS); R(13, 26, 14, 2, L.skinS); R(9, 15, 2, 5, L.skinS); R(29, 15, 2, 5, L.skinS);
   R(14, 15, 4, 2, '#fff'); R(22, 15, 4, 2, '#fff'); R(16, 15, 2, 2, '#1a1010'); R(24, 15, 2, 2, '#1a1010');
   R(14, 13, 4, 1, shade(L.hair, 0.7)); R(22, 13, 4, 1, shade(L.hair, 0.7));

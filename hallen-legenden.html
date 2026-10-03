@@ -243,16 +243,27 @@ body.touch .menu-list button i{font-size:17px}
 #pad{display:none;position:fixed;inset:0;z-index:4;pointer-events:none;touch-action:none}
 body.touch.ingame #pad{display:block}
 #zone{position:absolute;inset:0;pointer-events:auto;touch-action:none}
+/* Touch-Steuerung: im Ruhezustand durchscheinend, damit man das Feld sieht; beim Drücken voll. --tbs = Knopfgröße (Optionen) */
+#pad{--tbs:1}
 #stick{position:absolute;left:calc(max(16px,env(safe-area-inset-left,0px)) + 70px);top:calc(100% - 86px - env(safe-area-inset-bottom,0px));width:120px;height:120px;margin:-60px 0 0 -60px;
-  border-radius:50%;border:3px solid rgba(243,234,214,.35);background:rgba(255,255,255,.04);pointer-events:none;transition:opacity .15s;opacity:.55}
+  border-radius:50%;border:3px solid rgba(243,234,214,.35);background:rgba(255,255,255,.04);pointer-events:none;transition:opacity .15s;opacity:.28}
 #stick.act{opacity:.9;border-color:rgba(243,234,214,.8);transition:none}
 #knob{position:absolute;width:50px;height:50px;border-radius:50%;background:var(--gold);left:35px;top:35px;box-shadow:3px 3px 0 #000}
-.tb{position:absolute;border-radius:50%;pointer-events:auto;font-family:var(--pix);text-align:center;padding:0;min-height:0!important;display:flex;align-items:center;justify-content:center;line-height:1.4;opacity:.85;box-shadow:3px 3px 0 #000}
-.tb-b{width:90px;height:90px;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(78px + env(safe-area-inset-bottom,0px));font-size:11px!important;background:var(--hot)}
-.tb-a{width:90px;height:90px;right:calc(max(14px,env(safe-area-inset-right,0px)) + 98px);bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:11px!important}
-.tb-c{width:58px;height:58px;right:calc(max(14px,env(safe-area-inset-right,0px)) + 112px);bottom:calc(116px + env(safe-area-inset-bottom,0px));font-size:8px!important}
-.tb.on{background:var(--gold);color:#1a1205}
-.tb.kempa{background:#ff8bd1;color:#1a1205}
+.tb{position:absolute;border-radius:50%;pointer-events:auto;font-family:var(--pix);text-align:center;padding:0;min-height:0!important;display:flex;align-items:center;justify-content:center;line-height:1.4;
+  background:rgba(20,17,29,.32);border:2px solid rgba(243,234,214,.6);color:var(--ink);text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;box-shadow:none;transition:background .12s}
+.tb-b{width:calc(90px * var(--tbs));height:calc(90px * var(--tbs));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(78px * var(--tbs) + env(safe-area-inset-bottom,0px));font-size:11px!important;background:rgba(255,79,58,.38);border-color:rgba(255,140,120,.8)}
+.tb-a{width:calc(90px * var(--tbs));height:calc(90px * var(--tbs));right:calc(max(14px,env(safe-area-inset-right,0px)) + 98px * var(--tbs));bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:11px!important}
+.tb-c{width:calc(58px * var(--tbs));height:calc(58px * var(--tbs));right:calc(max(14px,env(safe-area-inset-right,0px)) + 112px * var(--tbs));bottom:calc(116px * var(--tbs) + env(safe-area-inset-bottom,0px));font-size:8px!important}
+.tb:hover,.tb:focus-visible{background:rgba(20,17,29,.32);color:var(--ink)}
+.tb-b:hover,.tb-b:focus-visible{background:rgba(255,79,58,.38)}
+.tb.on,.tb.on:hover{background:var(--gold);color:#1a1205;text-shadow:none;border-color:var(--gold);box-shadow:3px 3px 0 #000;transition:none}
+.tb.kempa,.tb.kempa:hover{background:#ff8bd1;color:#1a1205;text-shadow:none;border-color:#ff8bd1}
+/* Tipp beim ersten Spiel auf dem Handy */
+#ttip{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:6;width:min(560px,calc(100% - 140px));background:rgba(13,11,20,.94);border:3px solid var(--gold);box-shadow:5px 5px 0 #000;
+  padding:10px 14px;display:grid;gap:6px;font-size:18px;line-height:1.15;pointer-events:auto}
+#ttip b{font-family:var(--pix);font-weight:normal;font-size:10px;color:var(--gold)}
+#ttip ul{margin:0;padding-left:18px;color:var(--ink)}
+#ttip button{justify-self:end;min-height:36px;font-size:10px}
 #tbPause{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));width:46px;height:46px;min-height:0;padding:0;text-align:center;font-family:var(--pix);font-size:12px;opacity:.8;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){.logo,.logo::after,.press{animation:none}}
 </style>
@@ -410,13 +421,19 @@ const SKIN = [['#f3c9a2', '#d9a47c'], ['#e6b085', '#c98d62'], ['#c98c5c', '#a96d
 const HAIR = ['#2a1a10', '#4a2e18', '#7a4a20', '#c9a050', '#e3c27a', '#1a1a1a', '#8a3a18', '#b8b0a0'];
 const ROSTER_KEY = 'hl3_kader';
 let ROSTER_EDIT = store.get(ROSTER_KEY, {});
-// Hallen-Legenden aus dem echten Leben: feste Spieler auf dem Star-Platz ihres Vereins, mit den Werten des Stars, den sie ersetzen.
-// Aussehen: skin = Index in SKIN, style = Frisur (1 kurz, 6 lange offene Haare), beard = Vollbart. age: Alter beim Karrierestart (beste Jahre)
+// Hallen-Legenden aus dem echten Leben: feste Spieler mit den Werten des Spielers, den sie ersetzen (Teamstärke bleibt gleich).
+// slot: Platz in der Startsieben (ohne Angabe: der Star-Platz). Aussehen: skin = Index in SKIN, style = Frisur (0 kurz mit Pony, 1 kurz,
+// 6 lange offene Haare), beard = Vollbart, tall: 2 = sehr groß, musc = muskulös. trait: Eigenschaft auf der Spielerkarte.
+// Nur für neue Karrieren: age = Alter, potPlus = Potenzial über dem aktuellen Wert.
 const LEGENDS = {
   KIE: { name: 'Weidenhammer', skin: 1, hair: '#4a2e18', style: 1, beard: true, band: false, age: 27 },
   COB: { name: 'Hebbe', skin: 1, hair: '#7e3f1e', style: 6, beard: false, band: false, age: 27 },
+  BER: { slot: 6, name: 'Richardson', skin: 1, hair: '#1a1a1a', style: 1, beard: false, band: false, musc: true, trait: 'Supertalent', age: 19, potPlus: 11 },
+  ERL: { slot: 6, name: 'Schörner', skin: 1, hair: '#4a2e18', style: 0, beard: false, band: false, tall: 2, trait: 'Kreis-Turm', age: 25 },
 };
-const LEGEND_KEYS = ['name', 'skin', 'hair', 'style', 'beard', 'band'];
+const LEGEND_KEYS = ['name', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'musc', 'trait'];
+const LEGENDS_VER = 2;   // bei neuen Legenden erhöhen: laufende Karrieren rüsten sie dann beim Laden nach
+const legendSlot = (L, ro) => L.slot ?? ro.findIndex((p, i) => i > 0 && p.star && p.role !== 'TW');
 function roster(tid, plain) {
   const t = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#kader')), used = new Set(), nums = new Set(), legend = !plain && LEGENDS[TEAM_BASE[tid][0]];
   const starIdx = 1 + ((r() * 6) | 0), gkStar = r() < 0.35;
@@ -429,7 +446,7 @@ function roster(tid, plain) {
     const p = { name: n, num, role, star, trait: star ? TRAITS[role][(r() * 2) | 0] : '',
       att: Math.min(97, t.att + v() + b), pas: Math.min(97, t.att + v() + b), def: Math.min(97, t.def + v() + (role === 'KM' ? 3 : 0)), gk: Math.min(97, t.gk + v() + b), spd: Math.min(97, t.spd + v() + (role === 'LA' || role === 'RA' ? 5 : 0)), sta: Math.min(97, t.r + v() - (role === 'TW' ? 0 : 2)),
       skin: (r() * SKIN.length) | 0, hair: HAIR[(r() * HAIR.length) | 0], style: (r() * 6) | 0, beard: r() < 0.35, band: r() < 0.2, tall: role === 'KM' || role === 'RL' || role === 'RR' };
-    if (legend && i === starIdx) Object.assign(p, legend);
+    if (legend && i === (legend.slot ?? starIdx)) { const { slot, ...look } = legend; Object.assign(p, look); }
     const ed = ROSTER_EDIT[tid] && ROSTER_EDIT[tid][i];
     if (ed) { if (ed.name) p.name = ed.name; if (ed.num) p.num = ed.num; }
     return p;
@@ -699,7 +716,7 @@ function lookOf(p, kit) {
   return { gk, jer, jerS: shade(jer, 0.7), jerH: mix(jer, '#ffffff', 0.3), trim, sho: gk ? shade(kit.gk, 0.45) : kit.c2,
     sock: lum(kit.c1) > 0.8 ? kit.c2 : kit.c1, shoe: gk ? '#f2f2f2' : (p.num % 3 ? '#f2f2f2' : kit.c2),
     skin: sk[0], skinS: sk[1], hair: p.hair, style: p.style, beard: p.beard, band: p.band, num: p.num,
-    numCol: lum(jer) > 0.6 ? shade(trim, 0.9) : (colDist(trim, jer) > 120 ? trim : '#ffffff'), tall: p.tall, key: `${jer}|${trim}|${p.skin}|${p.hair}|${p.style}|${+p.beard}|${+p.band}|${p.num}|${+gk}|${+p.tall}` };
+    numCol: lum(jer) > 0.6 ? shade(trim, 0.9) : (colDist(trim, jer) > 120 ? trim : '#ffffff'), tall: p.tall, musc: !!p.musc, key: `${jer}|${trim}|${p.skin}|${p.hair}|${p.style}|${+p.beard}|${+p.band}|${p.num}|${+gk}|${+p.tall}|${+!!p.musc}` };
 }
 
 const SPR = new Map();
@@ -714,7 +731,7 @@ function renderSprite(L, pose, fr, flip = false) {
   const base = document.createElement('canvas'); base.width = SW; base.height = SH;
   const g = base.getContext('2d');
   const P = (POSES[pose] || POSES.idle)(fr);
-  const t = L.tall ? -1 : 0;
+  const t = L.tall === 2 ? -3 : L.tall ? -1 : 0, mu = L.musc ? 1 : 0;   // sehr groß: längere Beine und Rumpf; muskulös: breitere Schultern, kräftigere Arme
   const R = (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(flip ? AX - x - w : AX + x, AY + y, w, h); };
   const brush = (x1, y1, x2, y2, w, c) => { const n = Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1), 1); for (let i = 0; i <= n; i++) { const k = i / n; R(Math.round(lerp(x1, x2, k) - (w >> 1)), Math.round(lerp(y1, y2, k) - (w >> 1)), w, w, c); } };
   // Gliedmaße aus Segmenten; vordere bekommen eine eigene Kontur, damit sie sich vom Körper absetzen
@@ -735,7 +752,7 @@ function renderSprite(L, pose, fr, flip = false) {
     const sh = [hx + (back ? -3 : 3), shY + 2], ex = A.e[0] + bx, ey = A.e[1] + by + t, hx2 = A.h[0] + bx, hy = A.h[1] + by + t;
     const skin = back ? L.skinS : L.skin, jer = back ? L.jerS : L.jer;
     const sx2 = lerp(sh[0], ex, 0.45), sy2 = lerp(sh[1], ey, 0.45);
-    limb(L.gk ? [[sh[0], sh[1], ex, ey, 3, jer], [ex, ey, hx2, hy, 3, jer]] : [[sh[0], sh[1], ex, ey, 3, skin], [sh[0], sh[1], sx2, sy2, 4, jer], [ex, ey, hx2, hy, 2, skin]], !back);
+    limb(L.gk ? [[sh[0], sh[1], ex, ey, 3, jer], [ex, ey, hx2, hy, 3, jer]] : [[sh[0], sh[1], ex, ey, 3 + mu, skin], [sh[0], sh[1], sx2, sy2, 4 + mu, jer], [ex, ey, hx2, hy, 2 + mu, skin]], !back);
     R(hx2 - 1, hy - 1, 3, 3, L.gk ? '#ececec' : skin); R(hx2 - 1, hy + 1, 3, 1, L.gk ? '#bdbdbd' : L.skinS);
     if (!L.gk && !back && L.band) R(Math.round(lerp(ex, hx2, 0.7)) - 1, Math.round(lerp(ey, hy, 0.7)), 3, 1, L.trim);
   };
@@ -747,10 +764,10 @@ function renderSprite(L, pose, fr, flip = false) {
   // Rumpf als Trapez: breite Schultern, schmale Taille
   const tH = hipY - 1 - shY;
   for (let r = 0; r < tH; r++) {
-    const k = r / Math.max(1, tH - 1), l = Math.round(lerp(-6, -4, k)), rr = Math.round(lerp(5, 4, k)), y = shY + r;
+    const k = r / Math.max(1, tH - 1), l = Math.round(lerp(-6 - mu, -4, k)), rr = Math.round(lerp(5 + mu, 4, k)), y = shY + r;
     R(hx + l, y, rr - l + 1, 1, L.jer); R(hx + l, y, 3, 1, L.jerS); R(hx + rr, y, 1, 1, r < tH * 0.6 ? L.jerH : L.jer);
   }
-  R(hx - 6, shY, 12, 1, L.trim); R(hx - 1, shY, 4, 2, L.skinS); R(hx, shY + 2, 2, 1, L.trim);
+  R(hx - 6 - mu, shY, 12 + 2 * mu, 1, L.trim); R(hx - 1, shY, 4, 2, L.skinS); R(hx, shY + 2, 2, 1, L.trim);
   R(hx - 4, hipY - 2, 9, 1, shade(L.jer, 0.8));
   const dx0 = AX + hx - Math.floor(digitsW(L.num) / 2) + 1;
   drawDigits(g, L.num, flip ? 2 * AX - dx0 - digitsW(L.num) : dx0, AY + shY + 4, L.numCol);
@@ -805,10 +822,11 @@ function portrait(p, kit) {
   for (let y = 0; y < 40; y++) R(0, y, 40, 1, mix(shade(L.jer, 0.35), shade(L.jer, 0.75), y / 40));
   for (let i = 0; i < 40; i += 4) R(i, 0, 1, 40, 'rgba(255,255,255,0.05)');
   // Schultern & Trikot
+  if (L.musc) { R(1, 30, 38, 10, L.jer); R(1, 30, 7, 10, L.jerS); R(32, 31, 5, 9, L.jerH); R(0, 33, 3, 7, L.skinS); R(37, 33, 3, 7, L.skin); }   // muskulös: breite Schultern, Oberarme
   R(4, 31, 32, 9, L.jer); R(4, 31, 6, 9, L.jerS); R(30, 32, 4, 8, L.jerH); R(15, 30, 10, 2, L.trim); R(17, 32, 6, 2, L.skinS);
   drawDigits(g, L.num, 20 - Math.floor(digitsW(L.num) / 2), 34, L.numCol);
   // Hals & Kopf
-  R(16, 25, 8, 7, L.skinS);
+  R(16, 25, 8, 7, L.skinS); if (L.musc) { R(14, 25, 12, 6, L.skinS); R(10, 28, 6, 3, L.skinS); R(24, 28, 6, 3, L.skinS); }   // kräftiger Nacken
   R(11, 9, 18, 19, L.skin); R(11, 9, 3, 19, L.skinS); R(13, 26, 14, 2, L.skinS); R(9, 15, 2, 5, L.skinS); R(29, 15, 2, 5, L.skinS);
   R(14, 15, 4, 2, '#fff'); R(22, 15, 4, 2, '#fff'); R(16, 15, 2, 2, '#1a1010'); R(24, 15, 2, 2, '#1a1010');
   R(14, 13, 4, 1, shade(L.hair, 0.7)); R(22, 13, 4, 1, shade(L.hair, 0.7));
@@ -1237,11 +1255,11 @@ function readInput(dt) {
 function clearEdges() { IN.pa = IN.pb = IN.pc = IN.ra = IN.rb = IN.rc = IN.any = false; }
 
 // ================= Spielerdaten, Bank & Wechsel =================
-const DATA_KEYS = ['name', 'num', 'role', 'star', 'trait', 'att', 'pas', 'df', 'gk', 'sp', 'sta', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'pid', 'fitMul', 'energy', 'goals', 'shots', 'saves', 'stealsN', 'fouls', 'look', 'mins', 'injured'];
+const DATA_KEYS = ['name', 'num', 'role', 'star', 'trait', 'att', 'pas', 'df', 'gk', 'sp', 'sta', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'musc', 'pid', 'fitMul', 'energy', 'goals', 'shots', 'saves', 'stealsN', 'fouls', 'look', 'mins', 'injured'];
 function matchData(r, boost) {
   const f = r.form !== undefined ? r.form - Math.max(0, 75 - (r.fit ?? 100)) * 0.2 : 0;   // Form & Fitness aus der Karriere
   const fitMul = r.fit !== undefined ? r.fit / 100 : 1;
-  return { name: r.name, num: r.num, role: r.role, star: r.star, trait: r.trait, skin: r.skin, hair: r.hair, style: r.style, beard: r.beard, band: r.band, tall: r.tall, pid: r.pid,
+  return { name: r.name, num: r.num, role: r.role, star: r.star, trait: r.trait, skin: r.skin, hair: r.hair, style: r.style, beard: r.beard, band: r.band, tall: r.tall, musc: r.musc, pid: r.pid,
     att: r.att + boost + f, pas: r.pas + boost + f, df: r.def + boost + f, gk: r.gk + boost + f, sp: r.spd + boost * 0.5 + f * 0.5, sta: r.sta ?? 80,
     fitMul, energy: fitMul, goals: 0, shots: 0, saves: 0, stealsN: 0, fouls: 0, mins: 0, injured: false, look: null };
 }
@@ -2149,7 +2167,7 @@ function hud() {
       const gx = goalX(c.team), ty = 10 + clamp(c.aim || 0, -1, 1) * 1.25, tz = 0.25 + c.charge * 1.5;
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
-      text('D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
+      text(TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
@@ -2218,7 +2236,7 @@ function drawCut() {
 }
 function ticker() {
   let tick = G.ticker.t > 0 ? G.ticker.txt : '';
-  if (!tick && G.phase === 'kickoff' && G.half === 1 && G.score[0] + G.score[1] === 0) tick = 'S PASS  A KEMPA  LEERTASTE WURF  D FINTE/KLAU  W SPRINT  T TIMEOUT';
+  if (!tick && G.phase === 'kickoff' && G.half === 1 && G.score[0] + G.score[1] === 0) tick = TOUCHDEV ? 'MITSPIELER ANTIPPEN = PASS  TOR ANTIPPEN = WURF  PASS LANG = KEMPA' : 'S PASS  A KEMPA  LEERTASTE WURF  D FINTE/KLAU  W SPRINT  T TIMEOUT';
   if (!tick) return;
   rect(0, H - 18, W, 18, 'rgba(8,7,14,0.88)'); rect(0, H - 18, 6, 18, '#ff4f3a'); rect(0, H - 19, W, 1, '#ffc83a');
   ctx.font = `8px ${FONT}`; while (ctx.measureText(tick).width > W - 24 && tick.length > 4) tick = tick.slice(0, -2) + '…';
@@ -2228,7 +2246,7 @@ function replayHud() {
   rect(0, 0, W, 24, '#000'); rect(0, H - 24, W, 24, '#000');
   if (Math.floor(G.t * 2) % 2) rect(12, 8, 8, 8, '#e2372f');
   text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', hudR() - 12, 8, '#9b90ad', 8, 'right', null);
-  text('TASTE = WEITER', W - 12, H - 16, '#9b90ad', 8, 'right', null);
+  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = WEITER`, W - 12, H - 16, '#9b90ad', 8, 'right', null);
   const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
   const yy = (G.t * 90) % H; rect(0, yy, W, 2, 'rgba(255,255,255,0.07)');
   for (let i = 0; i < 30; i++) rect(Math.random() * W, 24 + Math.random() * (H - 48), 1, 1, 'rgba(255,255,255,0.25)');
@@ -2237,7 +2255,7 @@ function introHud() {
   const t = G.introT, T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]];
   rect(0, 0, W, 20, '#000'); rect(0, H - 20, W, 20, '#000');
   text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), hudR() - 14, 6, '#9b90ad', 8, 'right', null);
-  text('TASTE = ÜBERSPRINGEN', W / 2, H - 14, '#6e6680', 8, 'center', null);
+  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = ÜBERSPRINGEN`, W / 2, H - 14, '#6e6680', 8, 'center', null);
   if (t < 3.6) {
     const e = ease(t / 0.6), o = clamp((t - 3.1) / 0.5, 0, 1);
     ctx.globalAlpha = 1 - o;
@@ -2284,7 +2302,7 @@ function halftimeHud() {
   const best = t => G.players.filter(p => p.team === t).sort((a, b) => b.goals - a.goals)[0];
   const b0 = best(0), b1 = best(1);
   text(`TOP: ${b0.name} ${b0.goals}`, x + 14, y + 200, '#ffc83a', 8, 'left', null, 160); text(`${b1.name} ${b1.goals}`, x + 346, y + 200, '#ffc83a', 8, 'right', null, 160);
-  text('TASTE = 2. HALBZEIT', W / 2, y + 218, '#6e6680', 8, 'center', null);
+  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = 2. HALBZEIT`, W / 2, y + 218, '#6e6680', 8, 'center', null);
 }
 // ================= Menüs, Editor, Spielende, Speichern =================
 const menu = document.getElementById('menu');
@@ -2428,7 +2446,7 @@ const ACT = {
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
       <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück</span>
-      <b>TOUCH</b><span>Stick links zum Laufen, rechts PASS, WURF (halten), FINTE/KLAU, SPRINT. SPRINT + PASS = Kempa. II oben rechts = Pause</span></div>
+      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
   },
@@ -2438,6 +2456,7 @@ const ACT = {
     showMenu(`<div class="panel narrow"><h2>OPTIONEN</h2>
       <div class="ed" style="grid-template-columns:auto 1fr 40px">${sl('master', 'GESAMT')}${sl('music', 'MUSIK')}${sl('sfx', 'EFFEKTE')}${sl('crowd', 'PUBLIKUM')}</div>
       <div class="row"><span class="tag" style="min-width:150px">SPIELTEMPO</span>${[1, 0.85, 0.7].map(v => `<button class="small ${SETTINGS.speed === v ? 'on' : ''}" data-act="speed" data-v="${v}">${Math.round(v * 100)} %</button>`).join('')}</div>
+      ${TOUCHDEV ? `<div class="row"><span class="tag" style="min-width:150px">TOUCH-KNÖPFE</span>${[['s', 'KLEIN'], ['m', 'NORMAL'], ['l', 'GROSS']].map(([k, n]) => `<button class="small ${(SETTINGS.btn || 'm') === k ? 'on' : ''}" data-act="btnSize" data-v="${k}">${n}</button>`).join('')}</div>` : ''}
       <div class="row"><span class="tag" style="min-width:150px">TON</span><button class="small ${AU.on ? 'on' : ''}" data-act="sound">${AU.on ? 'AN' : 'AUS'}</button></div>
       <div class="row"><span class="tag" style="min-width:150px">HALLENSPRECHER</span><button class="small ${AU.vol.speaker ? 'on' : ''}" data-act="speaker">${AU.vol.speaker ? 'AN' : 'AUS'}</button><button class="small" data-act="sndTest">PROBE</button></div>
       <p class="muted">Der Hallensprecher nutzt die Sprachausgabe deines Browsers. Je nach Gerät klingt die Stimme anders oder fehlt ganz.</p>
@@ -2445,6 +2464,7 @@ const ACT = {
     ['master', 'music', 'sfx', 'crowd'].forEach(k => { const el = menu.querySelector('#vol_' + k); el.oninput = () => { AU.setVol(k, el.value / 100); menu.querySelector('#vv_' + k).textContent = el.value; }; });
   },
   speed(v) { SETTINGS.speed = +v; store.set('hl4_settings', SETTINGS); ACT.options(); },
+  btnSize(v) { SETTINGS.btn = v; store.set('hl4_settings', SETTINGS); applyBtnSize(); ACT.options(); },
   speaker() { AU.vol.speakerChosen = true; AU.setVol('speaker', !AU.vol.speaker); ACT.options(); },
   sndTest() { AU.init(); AU.whistle(1); setTimeout(() => { AU.cheer(0.7); AU.horn(); }, 400); setTimeout(() => AU.say('Tor für die Heimmannschaft! Torschütze mit der Nummer 7!'), 900); },
   pause() {
@@ -2639,7 +2659,7 @@ function fixNumbers(sq) {
 }
 function makeSquad(tid) {
   const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#bank'));
-  const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; if (p.age) q.age = p.age; /* Hallen-Legenden: festes Alter, gleicher Zufallsverlauf */ q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); return finalize(q, true); });
+  const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; if (p.age) q.age = p.age; /* Hallen-Legenden: festes Alter, gleicher Zufallsverlauf */ q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); if (p.potPlus) q.pot = Math.min(99, ovr(q) + p.potPlus); delete q.potPlus; return finalize(q, true); });
   const names = new Set(sq.map(p => p.name));
   for (const role of ROLES) { const q = genPlayer(role, T.r - 7 - r() * 5, r, 18, 32); while (names.has(q.name)) q.name = SUR[(r() * SUR.length) | 0]; names.add(q.name); sq.push(finalize(q)); }
   fixNumbers(sq); return sq;
@@ -2672,7 +2692,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
-    aiTransfers, aiMoney: {}, offers: [], legends: 1, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
+    aiTransfers, aiMoney: {}, offers: [], legends: LEGENDS_VER, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
   TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 2 ? 12000 : 25000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
@@ -3027,14 +3047,14 @@ if (CAREER) {
   if (!CAREER.aiMoney) { CAREER.aiMoney = {}; TEAMS.forEach(t => CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 20000) + 50000); }
   TEAMS.forEach(t => { if (CAREER.squads[t.id]) return; CAREER.squads[t.id] = makeSquad(t.id); CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 25000) + 50000; });   // später hinzugekommene Vereine (international)
   if (!CAREER.goal) CAREER.goal = { txt: 'Obere Tabellenhälfte', pos: 9, rank: 9 };
-  // Hallen-Legenden nachrüsten: der Star, den sie ersetzen, bekommt Namen und Aussehen (falls er noch im Verein ist)
-  if (!CAREER.legends) {
+  // Hallen-Legenden nachrüsten: der Spieler auf ihrem Platz bekommt Namen und Aussehen (falls er noch im Verein ist und es sie noch nicht gibt)
+  if ((CAREER.legends || 0) < LEGENDS_VER) {
     for (const [k, L] of Object.entries(LEGENDS)) {
-      const tid = TEAM_BASE.findIndex(b => b[0] === k), orig = roster(tid, true).find((p, i) => i > 0 && p.star), sq = CAREER.squads[tid];
-      const p = orig && !sq.some(x => x.name === L.name) && sq.find(x => x.name === orig.name && x.role === orig.role);
-      if (p) LEGEND_KEYS.forEach(key => p[key] = L[key]);
+      const tid = TEAM_BASE.findIndex(b => b[0] === k), plain = roster(tid, true), orig = plain[legendSlot(L, plain)], sq = CAREER.squads[tid];
+      const p = orig && !TEAMS.some(t => CAREER.squads[t.id].some(x => x.name === L.name)) && sq.find(x => x.name === orig.name && x.role === orig.role);
+      if (p) LEGEND_KEYS.forEach(key => { if (L[key] !== undefined) p[key] = L[key]; });
     }
-    CAREER.legends = 1; saveCareer();
+    CAREER.legends = LEGENDS_VER; saveCareer();
   }
 }
 
@@ -3736,6 +3756,22 @@ function tapAt(cx0, cy0) {
   });
 })();
 // Knopfbeschriftung je nach Spielsituation
+// Knopfgröße aus den Optionen (klein, normal, groß)
+const BTN_SCALE = { s: 0.82, m: 1, l: 1.18 };
+function applyBtnSize() { document.getElementById('pad').style.setProperty('--tbs', BTN_SCALE[SETTINGS.btn] || 1); }
+applyBtnSize();
+// Tipp in den ersten beiden Spielen auf dem Handy: Antippen geht oft schneller als die Knöpfe
+let tipG = null;
+function touchTip() {
+  if (!TOUCHDEV || !G || G.demo || G === tipG || G.phase !== 'kickoff' || !menu.hidden) return;
+  tipG = G; const n = store.get('hl4_touchtip', 0); if (n >= 2) return; store.set('hl4_touchtip', n + 1);
+  const el = document.createElement('div'); el.id = 'ttip'; el.setAttribute('role', 'dialog');
+  el.innerHTML = '<b>TIPP: EINFACH ANTIPPEN</b><ul><li>Mitspieler antippen = Pass zu ihm</li><li>Tor antippen = Wurf in diese Ecke</li><li>In der Abwehr: Spieler antippen = zu ihm wechseln</li><li>PASS lang drücken = Kempa · Stick weit ziehen = Sprint</li></ul><button>VERSTANDEN</button>';
+  G.paused = true;
+  const close = () => { el.remove(); if (G && menu.hidden) G.paused = false; };
+  el.querySelector('button').addEventListener('click', close); el.addEventListener('pointerdown', e => e.stopPropagation());
+  document.body.appendChild(el);
+}
 const TBL = { a: document.querySelector('.tb-a'), b: document.querySelector('.tb-b'), c: document.querySelector('.tb-c') }; let tbMode = '';
 function updateTouchLabels() {
   if (!TOUCHDEV || !G || G.demo) return;
@@ -3763,7 +3799,7 @@ cv.addEventListener('pointerdown', () => { if (G && !G.demo && ['intro', 'replay
 let lastT = performance.now();
 function frame(now) {
   const dt = Math.max(0, Math.min(1 / 30, (now - lastT) / 1000)); lastT = now;
-  readInput(dt); menuPad(); updateTouchLabels();
+  readInput(dt); menuPad(); updateTouchLabels(); touchTip();
   document.body.classList.toggle('ingame', !!(G && !G.demo));
   if (G && !G.paused) {
     const sm = Math.min(G.slow || 1, G.slowT > 0 ? 0.4 : 1); G.slow = 1; G.slowT = Math.max(0, G.slowT - dt);

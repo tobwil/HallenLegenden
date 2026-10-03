@@ -47,7 +47,7 @@ function fixNumbers(sq) {
 }
 function makeSquad(tid) {
   const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#bank'));
-  const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; if (p.age) q.age = p.age; /* Hallen-Legenden: festes Alter, gleicher Zufallsverlauf */ q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); return finalize(q, true); });
+  const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; if (p.age) q.age = p.age; /* Hallen-Legenden: festes Alter, gleicher Zufallsverlauf */ q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); if (p.potPlus) q.pot = Math.min(99, ovr(q) + p.potPlus); delete q.potPlus; return finalize(q, true); });
   const names = new Set(sq.map(p => p.name));
   for (const role of ROLES) { const q = genPlayer(role, T.r - 7 - r() * 5, r, 18, 32); while (names.has(q.name)) q.name = SUR[(r() * SUR.length) | 0]; names.add(q.name); sq.push(finalize(q)); }
   fixNumbers(sq); return sq;
@@ -80,7 +80,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
-    aiTransfers, aiMoney: {}, offers: [], legends: 1, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
+    aiTransfers, aiMoney: {}, offers: [], legends: LEGENDS_VER, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
   TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 2 ? 12000 : 25000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
@@ -435,14 +435,14 @@ if (CAREER) {
   if (!CAREER.aiMoney) { CAREER.aiMoney = {}; TEAMS.forEach(t => CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 20000) + 50000); }
   TEAMS.forEach(t => { if (CAREER.squads[t.id]) return; CAREER.squads[t.id] = makeSquad(t.id); CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 25000) + 50000; });   // später hinzugekommene Vereine (international)
   if (!CAREER.goal) CAREER.goal = { txt: 'Obere Tabellenhälfte', pos: 9, rank: 9 };
-  // Hallen-Legenden nachrüsten: der Star, den sie ersetzen, bekommt Namen und Aussehen (falls er noch im Verein ist)
-  if (!CAREER.legends) {
+  // Hallen-Legenden nachrüsten: der Spieler auf ihrem Platz bekommt Namen und Aussehen (falls er noch im Verein ist und es sie noch nicht gibt)
+  if ((CAREER.legends || 0) < LEGENDS_VER) {
     for (const [k, L] of Object.entries(LEGENDS)) {
-      const tid = TEAM_BASE.findIndex(b => b[0] === k), orig = roster(tid, true).find((p, i) => i > 0 && p.star), sq = CAREER.squads[tid];
-      const p = orig && !sq.some(x => x.name === L.name) && sq.find(x => x.name === orig.name && x.role === orig.role);
-      if (p) LEGEND_KEYS.forEach(key => p[key] = L[key]);
+      const tid = TEAM_BASE.findIndex(b => b[0] === k), plain = roster(tid, true), orig = plain[legendSlot(L, plain)], sq = CAREER.squads[tid];
+      const p = orig && !TEAMS.some(t => CAREER.squads[t.id].some(x => x.name === L.name)) && sq.find(x => x.name === orig.name && x.role === orig.role);
+      if (p) LEGEND_KEYS.forEach(key => { if (L[key] !== undefined) p[key] = L[key]; });
     }
-    CAREER.legends = 1; saveCareer();
+    CAREER.legends = LEGENDS_VER; saveCareer();
   }
 }
 

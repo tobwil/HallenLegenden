@@ -243,16 +243,27 @@ body.touch .menu-list button i{font-size:17px}
 #pad{display:none;position:fixed;inset:0;z-index:4;pointer-events:none;touch-action:none}
 body.touch.ingame #pad{display:block}
 #zone{position:absolute;inset:0;pointer-events:auto;touch-action:none}
+/* Touch-Steuerung: im Ruhezustand durchscheinend, damit man das Feld sieht; beim Drücken voll. --tbs = Knopfgröße (Optionen) */
+#pad{--tbs:1}
 #stick{position:absolute;left:calc(max(16px,env(safe-area-inset-left,0px)) + 70px);top:calc(100% - 86px - env(safe-area-inset-bottom,0px));width:120px;height:120px;margin:-60px 0 0 -60px;
-  border-radius:50%;border:3px solid rgba(243,234,214,.35);background:rgba(255,255,255,.04);pointer-events:none;transition:opacity .15s;opacity:.55}
+  border-radius:50%;border:3px solid rgba(243,234,214,.35);background:rgba(255,255,255,.04);pointer-events:none;transition:opacity .15s;opacity:.28}
 #stick.act{opacity:.9;border-color:rgba(243,234,214,.8);transition:none}
 #knob{position:absolute;width:50px;height:50px;border-radius:50%;background:var(--gold);left:35px;top:35px;box-shadow:3px 3px 0 #000}
-.tb{position:absolute;border-radius:50%;pointer-events:auto;font-family:var(--pix);text-align:center;padding:0;min-height:0!important;display:flex;align-items:center;justify-content:center;line-height:1.4;opacity:.85;box-shadow:3px 3px 0 #000}
-.tb-b{width:90px;height:90px;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(78px + env(safe-area-inset-bottom,0px));font-size:11px!important;background:var(--hot)}
-.tb-a{width:90px;height:90px;right:calc(max(14px,env(safe-area-inset-right,0px)) + 98px);bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:11px!important}
-.tb-c{width:58px;height:58px;right:calc(max(14px,env(safe-area-inset-right,0px)) + 112px);bottom:calc(116px + env(safe-area-inset-bottom,0px));font-size:8px!important}
-.tb.on{background:var(--gold);color:#1a1205}
-.tb.kempa{background:#ff8bd1;color:#1a1205}
+.tb{position:absolute;border-radius:50%;pointer-events:auto;font-family:var(--pix);text-align:center;padding:0;min-height:0!important;display:flex;align-items:center;justify-content:center;line-height:1.4;
+  background:rgba(20,17,29,.32);border:2px solid rgba(243,234,214,.6);color:var(--ink);text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;box-shadow:none;transition:background .12s}
+.tb-b{width:calc(90px * var(--tbs));height:calc(90px * var(--tbs));right:max(14px,env(safe-area-inset-right,0px));bottom:calc(78px * var(--tbs) + env(safe-area-inset-bottom,0px));font-size:11px!important;background:rgba(255,79,58,.38);border-color:rgba(255,140,120,.8)}
+.tb-a{width:calc(90px * var(--tbs));height:calc(90px * var(--tbs));right:calc(max(14px,env(safe-area-inset-right,0px)) + 98px * var(--tbs));bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:11px!important}
+.tb-c{width:calc(58px * var(--tbs));height:calc(58px * var(--tbs));right:calc(max(14px,env(safe-area-inset-right,0px)) + 112px * var(--tbs));bottom:calc(116px * var(--tbs) + env(safe-area-inset-bottom,0px));font-size:8px!important}
+.tb:hover,.tb:focus-visible{background:rgba(20,17,29,.32);color:var(--ink)}
+.tb-b:hover,.tb-b:focus-visible{background:rgba(255,79,58,.38)}
+.tb.on,.tb.on:hover{background:var(--gold);color:#1a1205;text-shadow:none;border-color:var(--gold);box-shadow:3px 3px 0 #000;transition:none}
+.tb.kempa,.tb.kempa:hover{background:#ff8bd1;color:#1a1205;text-shadow:none;border-color:#ff8bd1}
+/* Tipp beim ersten Spiel auf dem Handy */
+#ttip{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:6;width:min(560px,calc(100% - 140px));background:rgba(13,11,20,.94);border:3px solid var(--gold);box-shadow:5px 5px 0 #000;
+  padding:10px 14px;display:grid;gap:6px;font-size:18px;line-height:1.15;pointer-events:auto}
+#ttip b{font-family:var(--pix);font-weight:normal;font-size:10px;color:var(--gold)}
+#ttip ul{margin:0;padding-left:18px;color:var(--ink)}
+#ttip button{justify-self:end;min-height:36px;font-size:10px}
 #tbPause{position:absolute;top:calc(8px + env(safe-area-inset-top,0px));right:max(8px,env(safe-area-inset-right,0px));width:46px;height:46px;min-height:0;padding:0;text-align:center;font-family:var(--pix);font-size:12px;opacity:.8;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){.logo,.logo::after,.press{animation:none}}
 </style>

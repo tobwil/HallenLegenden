@@ -69,6 +69,22 @@ function tapAt(cx0, cy0) {
   });
 })();
 // Knopfbeschriftung je nach Spielsituation
+// Knopfgröße aus den Optionen (klein, normal, groß)
+const BTN_SCALE = { s: 0.82, m: 1, l: 1.18 };
+function applyBtnSize() { document.getElementById('pad').style.setProperty('--tbs', BTN_SCALE[SETTINGS.btn] || 1); }
+applyBtnSize();
+// Tipp in den ersten beiden Spielen auf dem Handy: Antippen geht oft schneller als die Knöpfe
+let tipG = null;
+function touchTip() {
+  if (!TOUCHDEV || !G || G.demo || G === tipG || G.phase !== 'kickoff' || !menu.hidden) return;
+  tipG = G; const n = store.get('hl4_touchtip', 0); if (n >= 2) return; store.set('hl4_touchtip', n + 1);
+  const el = document.createElement('div'); el.id = 'ttip'; el.setAttribute('role', 'dialog');
+  el.innerHTML = '<b>TIPP: EINFACH ANTIPPEN</b><ul><li>Mitspieler antippen = Pass zu ihm</li><li>Tor antippen = Wurf in diese Ecke</li><li>In der Abwehr: Spieler antippen = zu ihm wechseln</li><li>PASS lang drücken = Kempa · Stick weit ziehen = Sprint</li></ul><button>VERSTANDEN</button>';
+  G.paused = true;
+  const close = () => { el.remove(); if (G && menu.hidden) G.paused = false; };
+  el.querySelector('button').addEventListener('click', close); el.addEventListener('pointerdown', e => e.stopPropagation());
+  document.body.appendChild(el);
+}
 const TBL = { a: document.querySelector('.tb-a'), b: document.querySelector('.tb-b'), c: document.querySelector('.tb-c') }; let tbMode = '';
 function updateTouchLabels() {
   if (!TOUCHDEV || !G || G.demo) return;
@@ -96,7 +112,7 @@ cv.addEventListener('pointerdown', () => { if (G && !G.demo && ['intro', 'replay
 let lastT = performance.now();
 function frame(now) {
   const dt = Math.max(0, Math.min(1 / 30, (now - lastT) / 1000)); lastT = now;
-  readInput(dt); menuPad(); updateTouchLabels();
+  readInput(dt); menuPad(); updateTouchLabels(); touchTip();
   document.body.classList.toggle('ingame', !!(G && !G.demo));
   if (G && !G.paused) {
     const sm = Math.min(G.slow || 1, G.slowT > 0 ? 0.4 : 1); G.slow = 1; G.slowT = Math.max(0, G.slowT - dt);
