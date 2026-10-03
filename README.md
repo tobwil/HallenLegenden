@@ -33,7 +33,7 @@ Retro-Handball im Pixel-Look, inspiriert von *Legend Bowl*. Ein komplettes Brows
 
 **▶ Spielen: [hallenlegenden.de](https://hallenlegenden.de/)** · Wünsche und Ideen: [Wunsch-Formular](https://hallenlegenden.de/#wunsch)
 
-Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerung (Querformat empfohlen). Offline geht es auch: `game/index.html` herunterladen und im Browser öffnen.
+Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerung (Querformat empfohlen, das Spielfeld nutzt auch breite Handys bis an den Rand). Offline geht es auch: `game/index.html` herunterladen und im Browser öffnen.
 
 > Inoffizielles Fan-Projekt. Vereins- und Spielernamen sind Fantasienamen. Es gibt keine Logos und keine Verbindung zu einer Liga oder einem Verein. Im Editor lassen sich alle Namen und Farben lokal im eigenen Browser ändern.
 
@@ -59,7 +59,7 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
 - **Schnelles Spiel** mit Trikotwahl (Heim, Auswärts, Alternativ) und Warnung bei ähnlichen Farben
 - **Karriere** über beliebig viele Saisons:
   - 6, 17 oder 34 Spieltage, Auf- und Abstieg zwischen beiden Ligen
-  - 14er-Kader mit Werten für Wurf, Pass, Abwehr, Tempo, Torwart und Ausdauer, dazu Alter, Potenzial, Form und Fitness
+  - 14er-Kader mit Werten für Wurf, Pass, Abwehr, Tempo, Torwart und Ausdauer, dazu Alter, Potenzial, Form und Fitness. Kader und Transferliste zeigen das Potenzial jedes Spielers mit Trend (↗ wächst noch, ↘ baut ab)
   - Training mit sechs Schwerpunkten, Spielerentwicklung und Karriereende, Jugendspieler rücken nach
   - Transfermarkt, Gehälter, Verträge mit Laufzeit und Verlängerung, Angebote anderer Vereine. Neuzugänge sind ein Drittel der Saison gesperrt, ein Sofortverkauf bringt 55 % des Marktwerts
   - Finanzen: Zuschauereinnahmen bei Heimspielen (Hallengröße, Tabellenplatz, Form, Gegner, Pokal), Sponsoren, TV-Geld nach Platz. Alles ist auf eine Saison geeicht, die Saisonlänge verändert die Bilanz nicht. Die CPU-Vereine wirtschaften nach denselben Regeln
@@ -100,8 +100,8 @@ In der Abwehr und bei freiem Ball steuerst du ohne Wechseltaste automatisch den 
 
 **Touch (Handy):**
 - Stick erscheint dort, wo der Daumen links aufsetzt. Voll ausgelenkt sprintet der Spieler
-- Mitspieler antippen spielt den Pass, ins Tor tippen wirft
-- Knöpfe je nach Lage: PASS/WURF/FINTE oder WECHSEL/BLOCK/KLAU. Langer Druck auf PASS spielt Kempa
+- Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. Ein Tipp in den ersten beiden Spielen erklärt das
+- Knöpfe je nach Lage: PASS/WURF/FINTE oder WECHSEL/BLOCK/KLAU. Langer Druck auf PASS spielt Kempa. Im Ruhezustand sind die Knöpfe durchscheinend, damit man das Feld darunter sieht; die Größe (klein, normal, groß) steht unter Optionen
 - Pause (II) oben rechts, Zurück-Leiste in allen Menüs
 
 ### Projektstruktur
@@ -139,13 +139,13 @@ Das erzeugt `game/index.html` und `hallen-legenden.html`. Die Landingpage `index
 
 #### Tests
 
-Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere, Editor, Menüfenster und die Handy-Steuerung. Nach `sh src/build.sh` und vor jedem Merge:
+Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere mit Pokal und Europapokal, Finanzen, Potenzial, Editor, Menüfenster, Handy-Steuerung und Darstellung auf breiten Bildschirmen. Nach `sh src/build.sh` und vor jedem Merge:
 
 ```sh
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle Tests, etwa 35 Sekunden
+npm test                             # alle 30 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 ```
@@ -178,7 +178,7 @@ Retro handball in pixel style, inspired by *Legend Bowl*. A complete browser gam
 
 **▶ Play: [hallenlegenden.de](https://hallenlegenden.de/)** · Ideas and requests: [feature request form](https://hallenlegenden.de/#wunsch) (German)
 
-Runs on desktop with keyboard or gamepad and on phones with touch controls (landscape recommended). Works offline too: download `game/index.html` and open it in your browser.
+Runs on desktop with keyboard or gamepad and on phones with touch controls (landscape recommended; the pitch fills wide phone screens edge to edge). Works offline too: download `game/index.html` and open it in your browser.
 
 The game itself is in **German** (menus, commentary, newspaper). The controls below are all you need to get started.
 
@@ -206,7 +206,7 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
 - **Quick match** with kit choice (home, away, alternate) and a warning for similar colours
 - **Career** over as many seasons as you like:
   - 6, 17 or 34 matchdays, promotion and relegation between both leagues
-  - 14-player squad with ratings for shooting, passing, defence, pace, goalkeeping and stamina, plus age, potential, form and fitness
+  - 14-player squad with ratings for shooting, passing, defence, pace, goalkeeping and stamina, plus age, potential, form and fitness. Squad and transfer list show every player's potential with a trend (↗ still improving, ↘ declining)
   - Training with six focus areas, player development and retirement, youth players move up
   - Transfer market, salaries, contracts with length and extensions, offers from other clubs. New signings are locked for a third of the season, a quick sale brings 55 % of the market value
   - Finances: gate receipts for home games (arena size, table position, form, opponent, cup), sponsors, TV money by position. Everything is calibrated per season, so the season length does not change the balance. CPU clubs follow the same rules
@@ -247,8 +247,8 @@ In defence and on loose balls you automatically control the player closest to th
 
 **Touch (phone):**
 - The stick appears wherever your left thumb touches down. Full deflection makes the player sprint
-- Tap a teammate to pass, tap the goal to shoot
-- Buttons change with the situation: PASS/WURF/FINTE (pass/shoot/feint) or WECHSEL/BLOCK/KLAU (switch/block/steal). Long-press PASS for a Kempa
+- Tapping: a teammate = pass to him, the goal = shot into that corner, in defence a player = switch to him. A tip explains this in your first two matches
+- Buttons change with the situation: PASS/WURF/FINTE (pass/shoot/feint) or WECHSEL/BLOCK/KLAU (switch/block/steal). Long-press PASS for a Kempa. At rest the buttons are see-through so the pitch stays visible; their size (small, normal, large) is in the options
 - Pause (II) top right, back bar in all menus
 
 ### Project structure
@@ -286,13 +286,13 @@ This generates `game/index.html` and `hallen-legenden.html`. The landing page `i
 
 #### Tests
 
-Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career, editor, menu windows and touch controls, among others. After `sh src/build.sh` and before every merge:
+Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career with cup and European cup, finances, potential, editor, menu windows, touch controls and wide-screen layout, among others. After `sh src/build.sh` and before every merge:
 
 ```sh
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all tests, about 35 seconds
+npm test                             # all 30 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 ```

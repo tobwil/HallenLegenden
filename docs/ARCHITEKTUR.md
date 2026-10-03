@@ -28,7 +28,7 @@ Das Spiel ist reines HTML, CSS und JavaScript ohne Framework und ohne Bundler. D
 ## Koordinaten
 
 - **Spielfeld:** 40 × 20 m. Welt-x läuft von 0 bis 40 (Torlinien), Welt-y von 0 bis 20 (hintere bis vordere Seitenlinie), z ist die Höhe.
-- **Bildschirm:** `sx(x, y)` und `sy(y, z)` projizieren auf die 640 × 360 Pixel große Leinwand. Die horizontale Skalierung nimmt nach hinten ab (`kOf`).
+- **Bildschirm:** `sx(x, y)` und `sy(y, z)` projizieren auf die Leinwand. Sie ist 360 Pixel hoch und je nach Seitenverhältnis 640 bis 800 Pixel breit (`W`, gesetzt von `fitView()` in `p01_core.js`): Breite Handys zeigen mehr Halle statt schwarzer Ränder. Alles im HUD rechnet relativ zu `W`. Die horizontale Skalierung nimmt nach hinten ab (`kOf`).
 - **Tore:** bei x = 0 und x = 40, von y = 8,5 bis 11,5, 2 m hoch. Der Torraum ist der Abstand ≤ 6 m zur Torstrecke (`goalDist`).
 
 ## Spielablauf
