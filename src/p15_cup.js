@@ -28,7 +28,7 @@ function playCupRound(own, force) {
       if (r.ga === r.gb) { r.so = true; r.win = Math.random() < 0.5 + (strength(a).ovr - strength(b).ovr) * 0.03 ? a : b; } else r.win = r.ga > r.gb ? a : b;
     }
     applyPlayers(r, false);
-    rows.push([r.a, r.b, r.ga, r.gb, !!r.so, r.win]);
+    rows.push([r.a, r.b, r.ga, r.gb, !!r.so, r.win]); noteResult(r.a, r.b, r.ga, r.gb, 'Pokal');
     if (a === me || b === me) {
       const opp = a === me ? b : a, won = r.win === me, sc = a === me ? `${r.ga}:${r.gb}` : `${r.gb}:${r.ga}`;
       noteOwnMatch(a === me ? r.ga : r.gb, a === me ? r.gb : r.ga, opp, 'Pokal', r.stats, a === me ? r.La : r.Lb, 0);

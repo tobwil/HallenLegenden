@@ -147,9 +147,15 @@ function simMatch(a, b, neutral) {   // neutral: kein Heimvorteil (Final Four)
   return { a, b, ga, gb, stats, La: A.L, Lb: B.L };
 }
 // Ergebnis auf Tabelle, Spieler (Tore, Form, Fitness) anwenden
+// Form (letzte 5 Spiele aller Wettbewerbe) und letztes direktes Duell, für den Vergleich vor dem Spiel
+function noteResult(a, b, ga, gb, comp) {
+  const F = CAREER.formAll ??= {};
+  for (const [t, x, y] of [[a, ga, gb], [b, gb, ga]]) F[t] = (F[t] || []).concat(x > y ? 'S' : x === y ? 'U' : 'N').slice(-5);
+  const M = CAREER.season.meet ??= {}; M[a < b ? a + '-' + b : b + '-' + a] = { a, b, ga, gb, comp, year: CAREER.year };
+}
 function applyResult(res) {
   const S = CAREER.season, { a, b, ga, gb } = res;
-  recordIn(S.table, a, b, ga, gb); S.last.push([a, b, ga, gb]);
+  recordIn(S.table, a, b, ga, gb); S.last.push([a, b, ga, gb]); noteResult(a, b, ga, gb, 'Liga');
   applyPlayers(res, true);
 }
 function applyPlayers(res, league) {

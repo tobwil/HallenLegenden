@@ -549,6 +549,35 @@ test('Erfolge: ältere Karriere bekommt Titel aus der Historie nachgetragen', as
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Vor dem Spiel: Sterne, Form, Bilanz, Topwerfer, Hinspiel und SIMULIEREN', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 23);
+  const r = await page.evaluate(() => {
+    const read = () => [...menu.querySelectorAll('.duel .tcard')].map(c => ({ stars: [...c.querySelectorAll('.pvst b')].map(b => b.querySelectorAll('path[fill="var(--gold)"]').length),
+      form: [...c.querySelectorAll('.pvform i')].map(i => i.textContent), rec: c.querySelector('.pvrec').textContent, top: c.querySelector('.pvtop').textContent, spr: !!c.querySelector('img.pvspr[src^="data:image"]') }));
+    // Freundschaftsspiel: Sterne und Topwerfer, keine Form, kein SIMULIEREN
+    ACT.kick(); const quick = { sides: read(), sim: !!menu.querySelector('[data-act="pmSim"]'), vs: menu.querySelector('.vs').innerText.trim() };
+    // Karriere: bis in die Rückrunde simulieren, dann das nächste Ligaspiel ansehen
+    careerCreate(3, 2, 1, 1); let g = 0; while ((CAREER.season.round < 18 || cupDue() || euroDue()) && g++ < 80) ACT.cSim();
+    careerHub('home'); ACT.cPlay(); const S = CAREER.season, me = CAREER.team, opp = PM.a === me ? PM.b : PM.a, key = Math.min(me, opp) + '-' + Math.max(me, opp), m = S.meet[key];
+    const sides = read(), prev = (menu.querySelector('.pvprev') || {}).innerText || '', mine = sides[PM.a === me ? 0 : 1], T = S.table[me];
+    const exp = m && (m.a === PM.a ? `${m.ga}:${m.gb}` : `${m.gb}:${m.ga}`), form = CAREER.formAll[me];
+    const meTop = Object.values(S.scorers).filter(x => x.tid === me).sort((a, b) => b.n - a.n)[0];
+    const r = { quick, sides, prev, exp, comp: m && m.comp, rec: mine.rec, recExp: `${T.s}-${T.u}-${T.n}`, formOk: mine.form.join('') === form.slice(-5).join(''), top: mine.top, topExp: meTop && meTop.name.toUpperCase(), round: S.round, pre: SCREEN };
+    // SIMULIEREN in der Vorschau spielt genau dieses Spiel und führt zurück in die Karriere
+    menu.querySelector('[data-act="pmSim"]').click();
+    Object.assign(r, { after: CAREER.season.round, screen: SCREEN, hub: !!menu.querySelector('[data-act="cPlay"], [data-act="cEnd"]'), played: CAREER.season.last.some(x => (x[0] === me && x[1] === opp) || (x[0] === opp && x[1] === me)) });
+    return r;
+  });
+  const starsOk = s => s.stars.length === 3 && s.stars.every(n => n >= 1 && n <= 5);
+  ok(r.quick.sides.length === 2 && r.quick.sides.every(s => starsOk(s) && s.form.length === 0 && s.spr && /LIGA/.test(s.rec) && /WURF \d+/.test(s.top)) && !r.quick.sim && r.quick.vs === 'VS', 'Freundschaftsspiel: ' + JSON.stringify(r.quick));
+  ok(r.pre === 'pre' && r.sides.every(s => starsOk(s) && s.form.length === 5 && s.spr), 'Vorschau Karriere: ' + JSON.stringify(r.sides));
+  ok(r.rec.startsWith('PLATZ ') && r.rec.endsWith(r.recExp) && r.formOk, 'Bilanz/Form: ' + JSON.stringify(r));
+  ok(r.topExp && r.top.includes(r.topExp) && /TORE?$/.test(r.top), 'Topwerfer: ' + r.top + ' / ' + r.topExp);
+  ok(r.comp === 'Liga' && r.prev.includes('HINSPIEL') && r.prev.includes(r.exp), 'Hinspiel: ' + JSON.stringify({ prev: r.prev, exp: r.exp, comp: r.comp }));
+  ok(r.screen !== 'pre' && r.hub && r.after === r.round + 1 && r.played, 'SIMULIEREN aus der Vorschau: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Pokal: Sieger mit Vereinsnummer 0 (Magdeburg) bleibt Sieger', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 7);
   const r = await page.evaluate(() => {
