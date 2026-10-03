@@ -126,6 +126,14 @@ table.fin{max-width:520px}
 .sbar{display:block;height:6px;background:var(--gold);opacity:.8}
 .stt tr.me .sbar{background:var(--hot)}
 @media (max-width:760px){.stat2{grid-template-columns:1fr}}
+/* Europapokal */
+.egroups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.egroup{display:flex;flex-direction:column;gap:4px;min-width:0}
+.egroup tr.zone-a td:first-child{box-shadow:inset 3px 0 0 var(--green)}
+.eres{margin:0;font-size:15px;color:var(--mute);line-height:1.35}
+.eres .me{color:var(--gold)}
+.bracket.ebr{grid-template-columns:repeat(3,minmax(92px,1fr)) minmax(80px,.8fr)}
+@media (max-width:600px){.egroups{grid-template-columns:1fr}}
 /* Pokal-Turnierbaum */
 .bracket{display:grid;grid-template-columns:repeat(5,minmax(92px,1fr)) minmax(80px,.8fr);gap:12px;overflow-x:auto;padding-bottom:4px}
 .bcol{display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -346,6 +354,15 @@ const TEAM_BASE = [
   ['LUD', 'Ludwigshafen Rheinpiraten', '#1d1d1b', '#ffcc00', 2, 71], ['DOR', 'Dormagen Rheinwerker', '#0055a5', '#e2001a', 2, 72],
   ['ESS', 'Essen Zechenkumpel', '#00589c', '#ffffff', 2, 71], ['FER', 'Ferndorf Siegerländer', '#a3001e', '#141414', 2, 69],
   ['EMS', 'Emsdetten Emsflitzer', '#ffd400', '#0a3a7a', 2, 70], ['HMM', 'Hamm Westfalenhammer', '#e30613', '#f4f4f4', 2, 71],
+  // Internationale Vereine (Liga 3 = Europapokal, keine Ligazugehörigkeit). Fantasienamen aus Stadt und Spitzname
+  ['BAR', 'Barcelona Katalanenstiere', '#004d98', '#a50044', 3, 93], ['VES', 'Veszprém Bakonylöwen', '#d0021b', '#ffffff', 3, 92],
+  ['PAR', 'Paris Seinelöwen', '#0b1f4b', '#e30613', 3, 91], ['AAL', 'Aalborg Limfjordwikinger', '#ffffff', '#d40029', 3, 90],
+  ['KIC', 'Kielce Kreuzritter', '#ffd400', '#1a3c8f', 3, 89], ['SZE', 'Szeged Theißfischer', '#1e5aa8', '#ffffff', 3, 88],
+  ['NAN', 'Nantes Loirekanoniere', '#7a2b8f', '#ffffff', 3, 87], ['PLK', 'Płock Weichselwölfe', '#00539f', '#ffffff', 3, 86],
+  ['LIS', 'Lissabon Tejolöwen', '#00843d', '#ffffff', 3, 86], ['POR', 'Porto Douro-Drachen', '#003da5', '#ffffff', 3, 85],
+  ['MON', 'Montpellier Okzitanier', '#f39200', '#0a2d6e', 3, 85], ['ODE', 'Odense Fünenfalken', '#141414', '#e30613', 3, 84],
+  ['ZAG', 'Zagreb Savestürmer', '#002f6c', '#d52b1e', 3, 83], ['BUC', 'Bukarest Karpatenadler', '#c8102e', '#f4f4f4', 3, 83],
+  ['KRI', 'Kristianstad Schonenelche', '#ffffff', '#0a3d91', 3, 82], ['ELV', 'Elverum Glommatrolle', '#d71920', '#141414', 3, 81],
 ];
 const TEAM_KEY = 'hl2_vereine';
 let TEAM_EDIT = store.get(TEAM_KEY, {});
@@ -815,13 +832,15 @@ function areaPts(gx, r, step = 0.03) {
   for (let a = 0; a <= Math.PI / 2; a += step / r) pts.push([mx(r * Math.cos(a)), GY2 + r * Math.sin(a)]);
   return pts.filter(p => p[1] >= -0.01 && p[1] <= CH + 0.01);
 }
-function buildArena(homeKit, awayKit, lg) {
+// ev: Final Four o. ä. (neutrale Halle: eigener Boden, ausverkauft, Fans beider Teams je zur Hälfte, eigene Banden)
+function buildArena(homeKit, awayKit, lg, ev) {
+  ARENA.ads = ev ? [ev.title, ev.trophy, 'FINAL FOUR', 'HARZ & HAFT', ev.title, 'KEMPA KAFFEE'] : null;
   const c = FLOOR.getContext('2d'), r = seeded(77 + lg);
   // Hallenboden außen
   c.fillStyle = '#1b2233'; c.fillRect(0, 0, FLOOR.width, FLOOR.height);
   for (let y = 0; y < FLOOR.height; y += 3) { c.fillStyle = 'rgba(255,255,255,0.025)'; c.fillRect(0, y, FLOOR.width, 1); }
   // Spielfläche: Blau mit Dielen-Struktur
-  const court = lg === 2 ? '#2d5c8f' : '#2a58a8', area = lg === 2 ? '#d07a2e' : '#e0842e';
+  const court = ev ? '#3a2a66' : lg === 2 ? '#2d5c8f' : '#2a58a8', area = ev ? '#c9a227' : lg === 2 ? '#d07a2e' : '#e0842e';
   c.fillStyle = court; c.fillRect(ftx(0), fty(0), CW * PX, CH * DY);
   for (let y = fty(0); y < fty(CH); y++) { c.fillStyle = (y % 4 < 2) ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.035)'; c.fillRect(ftx(0), y, CW * PX, 1); }
   for (let i = 0; i < 2600; i++) { c.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)'; c.fillRect((ftx(r() * CW)) | 0, (fty(r() * CH)) | 0, 2 + ((r() * 4) | 0), 1); }
@@ -854,11 +873,11 @@ function buildArena(homeKit, awayKit, lg) {
   // Werbung auf dem Boden neben den Toren
   c.save(); c.globalAlpha = 0.22; c.fillStyle = '#ffffff'; c.font = `8px ${FONT}`; c.textAlign = 'center';
   c.fillText('HARZ & HAFT', ftx(13), fty(17.6)); c.fillText('HARZ & HAFT', ftx(27), fty(2.8)); c.restore();
-  buildStands(homeKit, awayKit);
+  buildStands(homeKit, awayKit, !!ev);
   buildFront(homeKit);
 }
 function fanColors(kit) { return [kit.c1, kit.c1, kit.c1, kit.c2, kit.c2, '#d8d2c0', '#5d5a6a', '#2a2a30']; }
-function buildStands(homeKit, awayKit) {
+function buildStands(homeKit, awayKit, neutral) {
   const r0 = seeded(1234);
   const home = fanColors(homeKit), away = fanColors(awayKit);
   ARENA.fans = [];
@@ -870,8 +889,8 @@ function buildStands(homeKit, awayKit) {
       g.fillStyle = row % 2 ? '#1a1626' : '#1e1a2c'; g.fillRect(0, y0 + 2, cnv.width, 8);
       g.fillStyle = '#2a2438'; g.fillRect(0, y0 + 9, cnv.width, 1);
       for (let x = (row % 2) * 3; x < cnv.width; x += 6) {
-        const gast = x > 1040 && x < 1260;                          // Gästeblock
-        if (r() < 0.07 && !gast) continue;
+        const gast = neutral ? x >= cnv.width / 2 : x > 1040 && x < 1260;   // Gästeblock (neutral: halbe Halle)
+        if (r() < (neutral ? 0 : 0.07) && !gast) continue;                  // neutral: ausverkauft
         const pal = gast ? away : home, col = pal[(r() * pal.length) | 0];
         const skin = SKIN[(r() * SKIN.length) | 0][0], hair = HAIR[(r() * HAIR.length) | 0];
         const act = r(), up = f === 0 ? 0 : f === 1 ? (act < 0.5 ? 1 : 0) : (act < 0.8 ? 2 : 1);
@@ -886,9 +905,9 @@ function buildStands(homeKit, awayKit) {
     }
     // Fahnen-Doppelhalter
     const rr = seeded(55);
-    for (let i = 0; i < 9; i++) { const x = (rr() * cnv.width) | 0, y = (rr() * 70) | 0, gast = x > 1040 && x < 1260, k = gast ? awayKit : homeKit; g.fillStyle = k.c1; g.fillRect(x, y, 20, 10); g.fillStyle = k.c2; g.fillRect(x, y + 4, 20, 2); g.fillStyle = OUTLINE; g.fillRect(x, y - 1, 20, 1); }
+    for (let i = 0; i < 9; i++) { const x = (rr() * cnv.width) | 0, y = (rr() * 70) | 0, gast = neutral ? x >= cnv.width / 2 : x > 1040 && x < 1260, k = gast ? awayKit : homeKit; g.fillStyle = k.c1; g.fillRect(x, y, 20, 10); g.fillStyle = k.c2; g.fillRect(x, y + 4, 20, 2); g.fillStyle = OUTLINE; g.fillRect(x, y - 1, 20, 1); }
   });
-  ARENA.flags = Array.from({ length: 6 }, (_, i) => ({ x: 120 + i * 210 + r0() * 60, y: 18 + r0() * 50, k: i === 5 ? awayKit : homeKit, ph: r0() * 6 }));
+  ARENA.flags = Array.from({ length: 6 }, (_, i) => ({ x: 120 + i * 210 + r0() * 60, y: 18 + r0() * 50, k: neutral ? (i >= 3 ? awayKit : homeKit) : i === 5 ? awayKit : homeKit, ph: r0() * 6 }));
 }
 function buildFront(kit) {
   const g = FRONT.getContext('2d'), r = seeded(5);
@@ -946,7 +965,7 @@ function drawLED(t) {
     const par = (CAMX - 20) * PX * 0.82;
     let x = -((par + t * 18) % 1400) - 200, i = 0;
     while (x < W) {
-      const txt = ADS[i % ADS.length], w = ctx.measureText(txt).width + 30;
+      const ads = ARENA.ads || ADS, txt = ads[i % ads.length], w = ctx.measureText(txt).width + 30;
       ctx.fillStyle = i % 3 === 0 ? '#11214a' : i % 3 === 1 ? '#3a0f24' : '#0f2e22'; ctx.fillRect(Math.round(x), y0, w, h);
       ctx.fillStyle = i % 3 === 0 ? '#7cf2ff' : i % 3 === 1 ? '#ffc83a' : '#9cff57'; ctx.fillText(txt, Math.round(x + 15), y0 + 3);
       x += w; i++;
@@ -1009,7 +1028,7 @@ function newMatch(ta, tb, o = {}) {
   const kits = o.kits || makeKits(ta, tb, o.kitA, o.kitB);
   G = {
     tid: [ta, tb], kits, human: o.human ?? -1, diff: o.diff ?? 1, halfLen: o.halfLen ?? 180, lg: TEAMS[ta].lg,
-    career: !!o.career, cup: !!o.cup, demo: !!o.demo, label: o.label || '', lineupPids: o.lineups ? o.lineups.map(l => l.map(r => r.pid)) : null,
+    career: !!o.career, cup: !!o.cup, euro: o.euro || null, event: o.event || null, demo: !!o.demo, label: o.label || '', lineupPids: o.lineups ? o.lineups.map(l => l.map(r => r.pid)) : null,
     score: [0, 0], half: 1, clock: 0, swap: false, phase: o.demo ? 'kickoff' : 'intro', phaseT: 0, t: 0, introT: 0,
     players: [], ctrl: null, poss: -1, possT: 0, starter: 0, pending: null, passiveWarn: false,
     banner: null, cut: null, ticker: { txt: '', t: 0 }, shake: 0, flash: 0, slow: 1, slowT: 0, excite: 0, wave: 0,
@@ -1034,10 +1053,10 @@ function newMatch(ta, tb, o = {}) {
   }
   G.goalie = [G.players[0], G.players[7]];
   G.ball = { x: 20, y: 10, z: 1, vx: 0, vy: 0, vz: 0, owner: null, state: 'held', passTo: null, shot: null, last: null, nc: null, ncT: 0, tried: new Set(), px: 20, lob: false, trail: [] };
-  buildArena(kits[0], kits[1], G.lg);
-  setupKickoff(0, true);
+  buildArena(kits[0], kits[1], G.lg, G.event);
+  setupKickoff(0, true);   // setzt die Phase auf 'kickoff' …
   if (G.demo) G.phase = 'play';
-  else { AU.jingle('intro'); AU.say(`Herzlich willkommen zum Spiel ${TEAMS[ta].n} gegen ${TEAMS[tb].n}!`); }
+  else { G.phase = 'intro'; /* … deshalb das TV-Intro (Aufstellungen, Event-Titel) danach wieder setzen */ AU.jingle('intro'); AU.say(`Herzlich willkommen zum Spiel ${TEAMS[ta].n} gegen ${TEAMS[tb].n}!`); }
 }
 const kit = t => G.kits[t];
 const mates = p => G.players.filter(q => q.team === p.team && q !== p && !q.out);
@@ -1740,7 +1759,15 @@ function endHalf() {
   AU.whistle(G.half === 1 ? 2 : 3, true);
   if (G.half === 1) { G.phase = 'halftime'; G.phaseT = 0; say('Halbzeit! Durchatmen in der Kabine.'); if (!G.demo) { AU.jingle('half'); AU.say(`Halbzeit. Es steht ${G.score[0]} zu ${G.score[1]}.`); } }
   else if (G.cup && G.score[0] === G.score[1]) startShootout();
-  else { G.phase = 'fulltime'; G.phaseT = 0; if (!G.demo) { AU.cheer(0.8); AU.say(`Abpfiff! Endstand ${G.score[0]} zu ${G.score[1]}.`); } G.excite = 2; G.parts.push(...confetti(20, ['#ffc83a', '#ffffff', kit(G.score[0] >= G.score[1] ? 0 : 1).c1])); }
+  else { G.phase = 'fulltime'; G.phaseT = 0; if (!G.demo) { AU.cheer(0.8); AU.say(`Abpfiff! Endstand ${G.score[0]} zu ${G.score[1]}.`); } G.excite = 2; G.parts.push(...confetti(20, ['#ffc83a', '#ffffff', kit(G.score[0] >= G.score[1] ? 0 : 1).c1])); trophyMoment(); }
+}
+// Finale eines Events: Pokalübergabe mit Konfetti in den Farben des Siegers
+function trophyMoment() {
+  if (!G.event || !G.event.final || G.demo) return;
+  const w = G.soWinner !== undefined ? G.soWinner : G.score[0] > G.score[1] ? 0 : G.score[1] > G.score[0] ? 1 : -1; if (w < 0) return;
+  G.trophyWinner = w; G.excite = 4; G.wave = 8; AU.cheer(1); AU.jingle('goal');
+  for (const gx of [8, 20, 32]) G.parts.push(...confetti(gx, [kit(w).c1, kit(w).c2, '#ffc83a', '#ffffff']));
+  banner(`${TEAMS[G.tid[w]].short.toUpperCase()} HOLT DEN ${G.event.trophy}!`, '#ffc83a', G.event.title, 5, true);
 }
 function step(dt) {
   G.t += dt; G.shake = Math.max(0, G.shake - dt); G.excite = Math.max(0, G.excite - dt); G.flash = Math.max(0, G.flash - dt); G.wave = Math.max(0, G.wave - dt);
@@ -1866,7 +1893,7 @@ function soResolve(hit) {
     G.soWinner = s0 > s1 ? 0 : 1; G.shootout = false; G.soScore = [s0, s1];
     AU.whistle(3, true); AU.cheer(1);
     banner('ENTSCHIEDEN!', '#ffc83a', `${TEAMS[G.tid[G.soWinner]].short} gewinnt ${s0}:${s1} vom Punkt`, 3, true);
-    G.phase = 'fulltime'; G.phaseT = 0; return;
+    G.phase = 'fulltime'; G.phaseT = 0; trophyMoment(); return;
   }
   G.so.turn = 1 - t; G.pending = { k: 'so', t: 1.5 }; G.phase = 'whistle'; G.phaseT = 0;
 }
@@ -2135,7 +2162,7 @@ function drawBanner() {
   const bn = G.banner; if (!bn) return;
   const e = ease(bn.t / 0.25), out = clamp((bn.t - bn.dur + 0.25) / 0.25, 0, 1);
   if (bn.big) {
-    const size = bn.txt.length > 9 ? 28 : 40, y = 116;
+    const size = bn.txt.length > 9 ? Math.min(28, Math.floor((W - 40) / bn.txt.length)) : 40, y = 116;   // lange Texte passen sich der Breite an
     const sc = easeBack(bn.t / 0.35);
     rect(0, y - 14, W * e, size + 36 + (bn.sub ? 14 : 0), 'rgba(8,7,14,0.7)');
     for (let i = 0; i < 6; i++) rect(((G.t * 300 + i * 110) % (W + 80)) - 80, y - 14, 40, 3, bn.col);
@@ -2189,7 +2216,7 @@ function replayHud() {
 function introHud() {
   const t = G.introT, T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]];
   rect(0, 0, W, 20, '#000'); rect(0, H - 20, W, 20, '#000');
-  text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || (G.lg === 2 ? '2. LIGA' : '1. LIGA'), W - 14, 6, '#9b90ad', 8, 'right', null);
+  text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), W - 14, 6, '#9b90ad', 8, 'right', null);
   text('TASTE = ÜBERSPRINGEN', W / 2, H - 14, '#6e6680', 8, 'center', null);
   if (t < 3.6) {
     const e = ease(t / 0.6), o = clamp((t - 3.1) / 0.5, 0, 1);
@@ -2198,6 +2225,7 @@ function introHud() {
     bigText(T0.n.toUpperCase(), W / 2 - (1 - e) * 300, 134, clamp(Math.floor((W - 60) / T0.n.length), 8, 16), lum(tcol(0)) > 0.7 ? '#16161a' : '#ffffff', 2);
     bigText(T1.n.toUpperCase(), W / 2 + (1 - e) * 300, 180, clamp(Math.floor((W - 60) / T1.n.length), 8, 16), lum(tcol(1)) > 0.7 ? '#16161a' : '#ffffff', 2);
     if (t > 0.6) { rect(W / 2 - 22, 152, 44, 26, OUTLINE); bigText('VS', W / 2, 157, 16, '#ffc83a', 2); }
+    if (G.event) { const e2 = ease(t / 0.8); ctx.globalAlpha = (1 - o) * e2; bigText(G.event.title, W / 2, 56, 24, '#ffc83a', 3); text(G.event.stage, W / 2, 92, '#f3ead6', 8, 'center', null); ctx.globalAlpha = 1 - o; }
     ctx.globalAlpha = 1;
     return;
   }
@@ -2316,7 +2344,9 @@ function tcard(id, label, cls, active) {
 function optRow(label, list, key) {
   return `<div class="row"><span class="tag" style="min-width:120px">${label}</span>${list.map((o, i) => `<button class="small ${SEL[key] === i ? 'on' : ''}" data-act="opt" data-v="${key}:${i}">${o.n}</button>`).join('')}</div>`;
 }
-function leagueTabs(act = 'lg') { return `<div class="row">${[1, 2].map(l => `<button class="small ${SEL.lg === l ? 'on' : ''}" data-act="${act}" data-v="${l}">${l}. LIGA</button>`).join('')}</div>`; }
+const lgName = l => l === 3 ? 'EUROPA' : `${l}. LIGA`;
+// Karriere: nur deutsche Ligen wählbar; Schnelles Spiel zusätzlich die internationalen Vereine
+function leagueTabs(act = 'lg') { return `<div class="row">${(SEASON_PICK ? [1, 2] : [1, 2, 3]).map(l => `<button class="small ${SEL.lg === l ? 'on' : ''}" data-act="${act}" data-v="${l}">${lgName(l)}</button>`).join('')}</div>`; }
 function teamGrid(selA, selB) {
   return `<div class="grid">${LEAGUE(SEL.lg).map(T => `<button class="tbtn ${T.id === selA ? 'sel-a' : ''} ${T.id === selB ? 'sel-b' : ''}" data-act="team" data-v="${T.id}" title="${esc(T.n)}"><img src="${icon(T)}" alt="">${T.k}</button>`).join('')}</div>`;
 }
@@ -2432,7 +2462,7 @@ const ACT = {
     const row = (p, id, lbl) => `<span class="tag">${p.role}</span><input id="${id}N" value="${esc(p.name)}" maxlength="16" aria-label="Name ${lbl}"><input id="${id}Z" value="${p.num}" inputmode="numeric" maxlength="2" aria-label="Nummer ${lbl}">`;
     showMenu(`<div class="panel"><h2>EDITOR</h2>
       <p class="muted">Vereins- und Spielernamen sind Platzhalter. Hier kannst du alles umbenennen und die Farben anpassen. Gespeichert wird nur in diesem Browser.</p>
-      <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg}. Liga · ${esc(X.n)}</option>`).join('')}</select>
+      <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg === 3 ? 'International' : X.lg + '. Liga'} · ${esc(X.n)}</option>`).join('')}</select>
       <h3>VEREIN</h3>
       <div class="ed"><span class="tag">NAME</span><input id="edTn" value="${esc(T.n)}" maxlength="30" aria-label="Vereinsname"><input id="edTk" value="${esc(T.k)}" maxlength="3" aria-label="Kürzel"></div>
       <div class="row"><span class="tag" style="min-width:120px">HEIMTRIKOT</span><input type="color" id="edH1" value="${T.home.c1}" aria-label="Heim Trikotfarbe"><input type="color" id="edH2" value="${T.home.c2}" aria-label="Heim Zweitfarbe"><img src="${kitIcon(T.home)}" width="32" height="32" alt="" style="image-rendering:pixelated">
@@ -2483,7 +2513,7 @@ function endMatch() {
   const best = potm();
   const scorers = allMatchPlayers().filter(p => p.goals).sort((a, b) => b.goals - a.goals).slice(0, 5).map(p => `${esc(p.name)} (${TEAMS[G.tid[p.team]].k}) ${p.goals}`).join(' · ') || 'keine';
   showMenu(`<div class="panel"><div class="row spread"><h2>ABPFIFF${res ? ' · ' + res : ''}</h2><span class="tag">${esc(G.label)}</span></div>
-    <p class="res">${T0.k} ${G.score[0]} : ${G.score[1]} ${T1.k}</p>${G.soScore ? `<p class="muted" style="text-align:center">n. 7-Meter-Werfen ${G.soScore[0]}:${G.soScore[1]} · ${esc(TEAMS[G.tid[G.soWinner]].n)} weiter</p>` : ''}
+    <p class="res">${T0.k} ${G.score[0]} : ${G.score[1]} ${T1.k}</p>${G.trophyWinner !== undefined ? `<p class="res" style="font-size:clamp(12px,2vw,18px)">🏆 ${esc(TEAMS[G.tid[G.trophyWinner]].n.toUpperCase())} GEWINNT DEN ${esc(G.event.trophy)}</p>` : ''}${G.soScore ? `<p class="muted" style="text-align:center">n. 7-Meter-Werfen ${G.soScore[0]}:${G.soScore[1]} · ${esc(TEAMS[G.tid[G.soWinner]].n)} weiter</p>` : ''}
     <div class="potm"><canvas id="potmC" width="40" height="40"></canvas><div><h3>SPIELER DES SPIELS</h3><p style="margin:4px 0;font-family:var(--pix);font-size:12px">#${best.num} ${esc(best.name.toUpperCase())}</p>
       <p class="muted">${esc(TEAMS[G.tid[best.team]].n)} · ${best.role === 'TW' ? `${best.saves} Paraden` : `${best.goals} Tore aus ${best.shots} Würfen`}${best.stealsN ? ` · ${best.stealsN} Ballgewinne` : ''}</p></div></div>
     <div class="tblwrap"><table><thead><tr><th>${T0.k}</th><th style="text-align:center">STATISTIK</th><th>${T1.k}</th></tr></thead><tbody>
@@ -2515,7 +2545,7 @@ function prematch(a, b, o, back) {
 // ================= Spielstand speichern & laden =================
 function saveMatch() {
   if (!G || G.demo || ['intro', 'fulltime'].includes(G.phase)) return false;
-  const d = { v: 2, tid: G.tid, kits: G.kits, human: G.human, diff: G.diff, halfLen: G.halfLen, career: !!G.career, ck: CAREER ? careerStamp() : '', lineups: G.lineupPids || null, label: G.label,
+  const d = { v: 2, tid: G.tid, kits: G.kits, human: G.human, diff: G.diff, halfLen: G.halfLen, career: !!G.career, ck: CAREER ? careerStamp() : '', lineups: G.lineupPids || null, label: G.label, cup: !!G.cup, euro: G.euro, event: G.event,
     score: G.score, half: G.phase === 'halftime' ? 2 : G.half, clock: G.phase === 'halftime' ? 0 : G.clock, swap: G.phase === 'halftime' ? !G.swap : G.swap,
     tact: G.tact, timeouts: G.timeouts, stats: G.stats, log: G.log, poss: G.poss, starter: G.starter,
     ps: G.players.map(p => ({ x: p.x, y: p.y, out: p.out, goals: p.goals, shots: p.shots, saves: p.saves, stealsN: p.stealsN, fouls: p.fouls, st: p.st })),
@@ -2530,7 +2560,7 @@ function loadMatch() {
   const d = store.get(SAVE_KEY, null); if (!d) return ACT.main();
   AU.stopMusic();
   const career = !!(d.career && CAREER && d.ck === careerStamp() && d.lineups);
-  newMatch(d.tid[0], d.tid[1], { human: d.human, halfLen: d.halfLen, diff: d.diff, career, label: d.label, kits: d.kits, lineups: career ? d.lineups.map((ids, t) => ids.map(id => findCareerPlayer(d.tid[t], id))) : null });
+  newMatch(d.tid[0], d.tid[1], { human: d.human, halfLen: d.halfLen, diff: d.diff, career, label: d.label, kits: d.kits, cup: !!d.cup, euro: d.euro, event: d.event, lineups: career ? d.lineups.map((ids, t) => ids.map(id => findCareerPlayer(d.tid[t], id))) : null });
   Object.assign(G, { score: d.score, half: d.half, clock: d.clock, swap: d.swap, tact: d.tact, timeouts: d.timeouts, stats: d.stats, log: d.log, starter: d.starter });
   d.ps.forEach((s, i) => Object.assign(G.players[i], s));
   hideMenu(); AU.ambience(true);
@@ -2618,7 +2648,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
     aiTransfers, aiMoney: {}, offers: [], board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
-  TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 1 ? 25000 : 12000)) + 50000; });
+  TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 2 ? 12000 : 25000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
   saveCareer();
@@ -2649,7 +2679,7 @@ function newSeason() {
   CAREER.goal = lg === 1 ? (rank <= 2 ? { txt: 'Meisterschaft', pos: 1 } : rank <= 5 ? { txt: 'Platz 1 bis 4', pos: 4 } : rank <= 11 ? { txt: 'Obere Tabellenhälfte', pos: 9 } : { txt: 'Klassenerhalt', pos: 16 })
     : (rank <= 3 ? { txt: 'Aufstieg', pos: 2 } : rank <= 8 ? { txt: 'Platz 1 bis 6', pos: 6 } : { txt: 'Gesichertes Mittelfeld', pos: 12 });
   CAREER.goal.rank = rank; CAREER.lastMatch = null; CAREER.streak = 0;
-  newCup();
+  newCup(); newEuro();
   CAREER.form5 = []; CAREER.summary = null;
   refreshMarket(true);
 }
@@ -2662,7 +2692,7 @@ function recordIn(table, a, b, ga, gb) {
   if (ga > gb) { A.s++; B.n++; } else if (gb > ga) { B.s++; A.n++; } else { A.u++; B.u++; }
 }
 // Simuliertes Spiel: Stärke aus den aufgestellten Spielern inkl. Form & Fitness
-function simMatch(a, b) {
+function simMatch(a, b, neutral) {   // neutral: kein Heimvorteil (Final Four)
   const A = strength(a), B = strength(b);
   // Schwierigkeit wirkt auch in der Simulation: Amateur hilft dir, Legende macht es schwerer
   const bonus = [2.5, 0, -2.5][CAREER.diff] || 0;
@@ -2671,7 +2701,7 @@ function simMatch(a, b) {
   // Skaliert auf die gewählte Halbzeitlänge (gespielt: ~5 Tore pro Team bei 2 Min, ~8 bei 3 Min, ~13 bei 5 Min statt 27 über 60 echte Minuten)
   const sc = (HALVES[CAREER.half] || HALVES[1]).s * 0.046 / 27;
   const g = (X, Y, h) => Math.max(Math.round(15 * sc), Math.round(sc * (27 + (X.att - Y.def) * 0.18 + (80 - Y.gk) * 0.08 + h) + gauss() * 3.8 * Math.sqrt(sc)));
-  const ga = g(A, B, 1), gb = g(B, A, 0), stats = {};
+  const ga = g(A, B, neutral ? 0 : 1), gb = g(B, A, 0), stats = {};
   const share = (S, goals) => {
     const f = S.L.filter(p => p.role !== 'TW'), w = f.map(p => ({ LA: 0.8, RA: 0.8, RL: 1.2, RR: 1.2, RM: 1, KM: 0.9 }[p.role]) * Math.pow(p.att / 80, 1.5));
     const tot = w.reduce((s, v) => s + v, 0);
@@ -2735,6 +2765,7 @@ function playRound(own) {
   for (const t of TEAMS) for (const p of CAREER.squads[t.id]) if (p.inj) { p.inj--; if (!p.inj && t.id === me) news(`${p.name} ist wieder fit.`); }
   ensureStarters(me);
   if (CAREER.cup) autoCup();
+  if (CAREER.euro) autoEuro();
   if (S.round >= S.fixtures.length) { S.done = true; news('Letzter Spieltag gespielt. Zeit für den Saisonabschluss!'); }
   if (S.round % 2 === 0) refreshMarket(false);
   CAREER.offers = CAREER.offers.filter(o => o.exp > S.round && findCareerPlayer(me, o.pid));
@@ -2746,11 +2777,12 @@ function playRound(own) {
 const salaryFor = p => Math.max(1500, Math.round(pValue(p) * 0.0035 / 500) * 500);
 const wageBill = () => Math.round(CAREER.squads[CAREER.team].reduce((s, p) => s + (p.sal || salaryFor(p)), 0) / 1000) * 1000;
 function ownFixture() { const S = CAREER.season; return S.done ? null : S.fixtures[S.round].find(f => f.includes(CAREER.team)); }
-function careerSimOwn() { if (ownCupTie()) return cupSimOwn(); const fx = ownFixture(); if (!fx) return; coachPrep(); playRound(simMatch(fx[0], fx[1])); }
+function careerSimOwn() { if (ownCupTie()) return cupSimOwn(); if (ownEuroTie()) return euroSimOwn(); const fx = ownFixture(); if (!fx) return; coachPrep(); playRound(simMatch(fx[0], fx[1])); }
 function careerAfterPlayed(g) {
   const stats = {}, all = allMatchPlayers(), played = [[], []];
   all.forEach(p => { if (!p.pid) return; stats[p.pid] = { g: p.goals, sv: p.saves, min: p.mins, inj: p.injured }; if (p.mins > 0.5 || g.lineupPids[p.team].includes(p.pid)) played[p.team].push(p.pid); });
   const La = played[0].map(id => findCareerPlayer(g.tid[0], id)).filter(Boolean), Lb = played[1].map(id => findCareerPlayer(g.tid[1], id)).filter(Boolean);
+  if (g.euro) return playEuroRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb, so: g.soWinner !== undefined, win: g.soWinner !== undefined ? g.tid[g.soWinner] : undefined });
   if (g.cup) return playCupRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb, so: g.soWinner !== undefined, win: g.soWinner !== undefined ? g.tid[g.soWinner] : g.tid[g.score[0] > g.score[1] ? 0 : 1] });
   playRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb });
 }
@@ -2822,11 +2854,14 @@ function simWholeLeague(ids) {
   return standingsOf(table);
 }
 function careerEndSeason() {
-  while (CAREER.cup && !CAREER.cup.winner) playCupRound(null, true);   // offene Pokalrunden zu Ende simulieren
+  while (CAREER.cup && CAREER.cup.winner === null) playCupRound(null, true);   // offene Pokalrunden zu Ende simulieren
+  for (let i = 0; i < 12 && CAREER.euro && CAREER.euro.winner === null; i++) playEuroRound(null, true);   // ebenso den Europapokal
   const S = CAREER.season, lg = S.lg, me = CAREER.team, r = Math.random;
   const st = standingsOf(S.table), other = simWholeLeague(leagueIds(lg === 1 ? 2 : 1));
   const l1 = lg === 1 ? st : other, l2 = lg === 2 ? st : other;
   const down = l1.slice(-2).map(x => x.i), up = l2.slice(0, 2).map(x => x.i);
+  const euroW = CAREER.euro ? CAREER.euro.winner : null, euroMy = euroMyBest();
+  euroQualify(l1);
   const pos = st.findIndex(x => x.i === me) + 1;
   const prize = leaguePrize(pos, lg);
   CAREER.money += prize; finOf().prize += prize;
@@ -2874,8 +2909,10 @@ function careerEndSeason() {
   var sum = { year: CAREER.year, lg, pos, prize, top, champ: st[0].i, champ1: l1[0].i, champ2: l2[0].i, up, down, move, dev: dev.sort((a, b) => b.d - a.d), retired, gone, youth, cupWinner: CAREER.cup ? CAREER.cup.winner : null, cupMy: CAREER.cup ? CAREER.cup.myBest : 0, final: st.slice(0, 18).map(x => [x.i, x.pk, x.d]) };
   const goalMet = pos <= CAREER.goal.pos;
   sum.goal = CAREER.goal.txt; sum.goalMet = goalMet; sum.board = verdict; sum.fin = finSeason; sum.money = CAREER.money;
-  CAREER.history.push({ year: CAREER.year, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null });
+  CAREER.history.push({ year: CAREER.year, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null, euro: euroW, euroMy });
+  sum.euroWinner = euroW; sum.euroMy = euroMy;
   for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += leaguePrize(k + 1, l); });
+  leagueIds(3).forEach(id => { CAREER.aiMoney[id] += leaguePrize(5, 1); });   // internationale Vereine: Prämien aus ihrer Heimatliga
   if (CAREER.aiTransfers) aiTransferRound(4);
   CAREER.year++;
   CAREER.board.warned = false; TEAMS.forEach(t => CAREER.squads[t.id].forEach(p => delete p.lock));
@@ -2963,6 +3000,7 @@ if (CAREER) {
   CAREER.aiTransfers ??= false; CAREER.coach ??= { lineup: false, training: false };
   TEAMS.forEach(t => (CAREER.squads[t.id] || []).forEach(p => { p.sta ??= 75; p.inj ??= 0; p.vt ??= 1 + ((Math.random() * 3) | 0); p.sal ??= salaryFor(p); })); CAREER.offers ??= []; CAREER.streak ??= 0; CAREER.lastMatch ??= null; CAREER.issue ??= 1;
   if (!CAREER.aiMoney) { CAREER.aiMoney = {}; TEAMS.forEach(t => CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 20000) + 50000); }
+  TEAMS.forEach(t => { if (CAREER.squads[t.id]) return; CAREER.squads[t.id] = makeSquad(t.id); CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 25000) + 50000; });   // später hinzugekommene Vereine (international)
   if (!CAREER.goal) CAREER.goal = { txt: 'Obere Tabellenhälfte', pos: 9, rank: 9 };
 }
 
@@ -3003,21 +3041,24 @@ function newCup() {
   let field = l1.concat(l2.slice(0, 14));
   if (!field.includes(CAREER.team)) { field = field.slice(0, 31); field.push(CAREER.team); }
   const len = CAREER.season.fixtures.length, sched = [];
-  [0.15, 0.35, 0.55, 0.75, 0.9].forEach((f, i) => sched.push(Math.min(len, Math.max(i ? sched[i - 1] + 1 : 1, Math.round(len * f)))));
+  [0.15, 0.35, 0.55, 0.8].forEach((f, i) => sched.push(Math.min(len, Math.max(i ? sched[i - 1] + 1 : 1, Math.round(len * f)))));
+  sched.push(sched[CUP_F4]);   // Final Four: Halbfinale und Finale am selben Termin
   CAREER.cup = { round: 0, sched, ties: cupDraw(field), results: [], winner: null, myOut: false, myBest: 0 };
 }
 function cupDraw(ids) { const a = ids.slice().sort(() => Math.random() - 0.5), t = []; for (let i = 0; i < a.length; i += 2) t.push([a[i], a[i + 1]]); return t; }
-const cupDue = () => { const C = CAREER.cup; return !!(C && !C.winner && CAREER.season.round >= C.sched[C.round]); };
+const cupDue = () => { const C = CAREER.cup; return !!(C && C.winner === null && CAREER.season.round >= C.sched[C.round]); };   // winner kann Verein 0 sein
+const CUP_F4 = 3;   // ab dem Halbfinale: Final Four an einem Termin in neutraler Halle
+const cupEvent = round => round >= CUP_F4 ? { title: 'FINAL FOUR', stage: round === CUP_F4 ? 'POKAL · HALBFINALE' : 'POKAL · FINALE', trophy: 'POKAL', final: round === CUP_F4 + 1 } : null;
 function ownCupTie() { return cupDue() ? CAREER.cup.ties.find(t => t.includes(CAREER.team)) || null : null; }
 function autoCup() { while (cupDue() && !ownCupTie()) playCupRound(null); }
 // Eine Pokalrunde: dein Ergebnis (gespielt/simuliert) + alle anderen Partien, Unentschieden per 7-Meter-Werfen
 function playCupRound(own, force) {
   const C = CAREER.cup, me = CAREER.team, rows = [];
   for (const [a, b] of C.ties) {
-    cupGate(a, b, C.round);   // Zuschauereinnahmen für den Gastgeber
+    if (C.round < CUP_F4) cupGate(a, b, C.round);   // Zuschauereinnahmen für den Gastgeber (Final Four: neutrale Halle)
     let r = own && own.a === a && own.b === b ? own : null;
     if (!r) {
-      const m = simMatch(a, b); r = { a, b, ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb };
+      const m = simMatch(a, b, C.round >= CUP_F4); r = { a, b, ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb };
       if (r.ga === r.gb) { r.so = true; r.win = Math.random() < 0.5 + (strength(a).ovr - strength(b).ovr) * 0.03 ? a : b; } else r.win = r.ga > r.gb ? a : b;
     }
     applyPlayers(r, false);
@@ -3036,7 +3077,7 @@ function playCupRound(own, force) {
   else { C.ties = []; for (let i = 0; i < alive.length; i += 2) C.ties.push([alive[i], alive[i + 1]]); }   // fester Turnierbaum: Sieger benachbarter Partien treffen aufeinander
   saveCareer();
 }
-function cupSimOwn() { const t = ownCupTie(); if (!t) return; coachPrep(); const m = simMatch(t[0], t[1]); const r = { a: t[0], b: t[1], ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb }; if (r.ga === r.gb) { r.so = true; r.win = Math.random() < 0.5 ? r.a : r.b; } else r.win = r.ga > r.gb ? r.a : r.b; playCupRound(r); }
+function cupSimOwn() { const t = ownCupTie(); if (!t) return; coachPrep(); const m = simMatch(t[0], t[1], CAREER.cup.round >= CUP_F4); const r = { a: t[0], b: t[1], ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb }; if (r.ga === r.gb) { r.so = true; r.win = Math.random() < 0.5 ? r.a : r.b; } else r.win = r.ga > r.gb ? r.a : r.b; playCupRound(r); }
 // ================= Verträge =================
 function extendDemand(p) {
   const me = TEAMS[CAREER.team], lvl = avg(lineup(CAREER.team).map(ovr));
@@ -3059,8 +3100,8 @@ if (CAREER && CAREER.cup === undefined) { newCup(); saveCareer(); }
 const REF_LEN = 17;
 const seasonScale = () => REF_LEN / Math.max(1, CAREER.season.fixtures.length);
 const hallCap = tid => clamp(Math.round((1000 + (TEAMS[tid].r - 65) * 330) / 100) * 100, 1300, 9800);
-const ticketNet = (lg, cup) => (lg === 1 ? 7 : 6) * (cup ? 1.2 : 1);                     // Erlös pro Zuschauer nach Kosten
-const sponsorOf = tid => CAREER.lgOf[tid] === 1 ? 5000 + (TEAMS[tid].r - 75) * 250 : 12000 + (TEAMS[tid].r - 70) * 300;
+const ticketNet = (lg, cup) => (lg === 2 ? 6 : 7) * (cup ? 1.2 : 1);                     // Erlös pro Zuschauer nach Kosten
+const sponsorOf = tid => CAREER.lgOf[tid] !== 2 ? 5000 + (TEAMS[tid].r - 75) * 250 : 12000 + (TEAMS[tid].r - 70) * 300;   // 1. Liga und international gleich
 const leaguePrize = (pos, lg) => Math.round((19 - pos) * (lg === 1 ? 15000 : 6000) / 5000) * 5000;   // TV-Geld und Prämie nach Platz
 // Zuschauereinnahmen über die tatsächliche Zahl der Heimspiele hochrechnen (2 oder 3 Heimspiele bei 6 Spieltagen zählen gleich viel)
 function homeScale(tid) { const S = CAREER.season, H = S.homes ??= {}; H[tid] ??= S.fixtures.filter(rd => rd.some(([a]) => a === tid)).length; return REF_LEN / 2 / Math.max(1, H[tid]); }
@@ -3069,7 +3110,7 @@ const wagesPerRound = () => Math.round(wageBill() * seasonScale() / 1000) * 1000
 // Zuschauer: Kapazität × Auslastung. Auslastung steigt mit Tabellenplatz, Siegesserie, starkem Gegner und im Pokal
 function attendance(home, away, cupRound) {
   const S = CAREER.season, lg = CAREER.lgOf[home], cap = hallCap(home);
-  let rate = lg === 1 ? 0.62 : 0.5;
+  let rate = lg === 2 ? 0.5 : 0.62;
   if (S.table[home]) { const st = standingsOf(S.table), f = st.length > 1 ? st.findIndex(r => r.i === home) / (st.length - 1) : 0.5; if (S.round) rate += 0.3 * (0.5 - f); }
   rate += (TEAMS[away].r - 78) * 0.008;
   if (home === CAREER.team) rate += clamp((CAREER.streak || 0) * 0.02, -0.08, 0.08);
@@ -3140,7 +3181,7 @@ function boardVerdict(pos, goal, lg) {
 // Jobangebote nach einer Entlassung: drei schwächere Vereine, eher aus der 2. Liga
 function jobOffers() {
   const me = CAREER.team, r = TEAMS[me].r;
-  const pool = TEAMS.filter(t => t.id !== me && t.r <= r - 2).sort((a, b) => (CAREER.lgOf[b.id] - CAREER.lgOf[a.id]) || (b.r - a.r));
+  const pool = TEAMS.filter(t => t.id !== me && t.r <= r - 2 && CAREER.lgOf[t.id] !== 3).sort((a, b) => (CAREER.lgOf[b.id] - CAREER.lgOf[a.id]) || (b.r - a.r));
   const lg2 = pool.filter(t => CAREER.lgOf[t.id] === 2), lg1 = pool.filter(t => CAREER.lgOf[t.id] === 1);
   const picks = [...lg1.slice(-1), ...lg2.slice(0, 6).sort(() => Math.random() - 0.5).slice(0, 2)];
   return (picks.length >= 2 ? picks : TEAMS.filter(t => t.id !== me && CAREER.lgOf[t.id] === 2).slice(0, 3)).map(t => t.id);
@@ -3156,13 +3197,131 @@ function takeJob(tid) {
 }
 // alte Spielstände ergänzen
 if (CAREER) { CAREER.board ??= { miss: 0 }; CAREER.debt ??= 0; if (CAREER.season) finOf(); }
+// ================= Europapokal =================
+// 16 Vereine: 3 aus der 1. Liga (Platz 1 und 2, dazu der Pokalsieger bzw. der Dritte) und 13 internationale Vereine.
+// Gruppenphase mit 4 Gruppen à 4 (Hin- und Rückspiel), Viertelfinale (Gruppensieger mit Heimrecht), Final Four in neutraler Halle.
+// Kompakt bei 6 Spieltagen: 8 Vereine, direkt Viertelfinale, dann Final Four.
+const EURO_KO = ['VIERTELFINALE', 'HALBFINALE', 'FINALE'];
+const EURO_PRIZE = { start: 60000, win: 15000, draw: 7500, reach: [40000, 75000, 100000], title: 200000 };   // reach: Viertelfinale, Final Four, Finale erreicht
+const GROUP_N = 'ABCD';
+const euroEvent = r => r >= 1 ? { title: 'FINAL FOUR', stage: r === 1 ? 'EUROPAPOKAL · HALBFINALE' : 'EUROPAPOKAL · FINALE', trophy: 'EUROPAPOKAL', final: r === 2 } : null;
+function euroPay(id, v) { if (!v) return; if (id === CAREER.team) { CAREER.money += v; const F = finOf(); F.euro = (F.euro || 0) + v; } else CAREER.aiMoney[id] += v; }
+// Qualifikation: aus der Vorsaison gespeichert, sonst (erste Saison) die stärksten Erstligisten
+function euroGermans(n) {
+  const strong = leagueIds(1).sort((a, b) => strength(b).ovr - strength(a).ovr);
+  return [...new Set((CAREER.euroQual || []).filter(id => CAREER.lgOf[id] === 1).concat(strong))].slice(0, n);
+}
+function newEuro() {
+  const len = CAREER.season.fixtures.length, compact = len < 10;
+  const ger = euroGermans(compact ? 2 : 3), intl = leagueIds(3).sort((a, b) => strength(b).ovr - strength(a).ovr), nI = compact ? 6 : 13;
+  const rest = intl.slice(nI - 3).sort(() => Math.random() - 0.5);
+  const teams = ger.concat(intl.slice(0, nI - 3), rest.slice(0, 3));
+  const E = CAREER.euro = { compact, teams, groups: null, gfix: [], gres: [], gsched: [], gmd: 0, table: {}, ko: [], ksched: [], kround: 0, winner: null, paid: false };
+  const at = f => Math.max(1, Math.min(len, Math.round(len * f)));
+  if (compact) {
+    const s = teams.slice().sort((a, b) => strength(b).ovr - strength(a).ovr);
+    E.ko[0] = { ties: [[s[0], s[7]], [s[3], s[4]], [s[1], s[6]], [s[2], s[5]]], rows: null };   // Stärkste mit Heimrecht gegen Schwächste
+    E.ksched = [at(0.5), len];
+    return E;
+  }
+  // Lostöpfe nach Stärke, deutsche Vereine kommen in verschiedene Gruppen
+  const s = teams.slice().sort((a, b) => strength(b).ovr - strength(a).ovr), groups = [[], [], [], []];
+  for (let pot = 0; pot < 4; pot++) {
+    const p = s.slice(pot * 4, pot * 4 + 4).sort(() => Math.random() - 0.5);
+    p.forEach((id, i) => groups[i].push(id));
+  }
+  for (let tries = 0; tries < 30; tries++) {   // zwei deutsche Vereine in einer Gruppe: innerhalb des Topfs tauschen
+    const gi = groups.findIndex(g => g.filter(id => ger.includes(id)).length > 1); if (gi < 0) break;
+    const id = groups[gi].filter(x => ger.includes(x))[1], pos = groups[gi].indexOf(id), gj = groups.findIndex(g => !g.some(x => ger.includes(x)));
+    [groups[gi][pos], groups[gj][pos]] = [groups[gj][pos], groups[gi][pos]];
+  }
+  E.groups = groups;
+  teams.forEach(id => E.table[id] = { sp: 0, s: 0, u: 0, n: 0, tp: 0, tm: 0 });
+  const rr = groups.map(g => roundRobin(g));
+  for (let md = 0; md < 6; md++) E.gfix.push(rr.flatMap(rd => md < 3 ? rd[md] : rd[md - 3].map(([a, b]) => [b, a])));
+  const gs = []; [0.1, 0.2, 0.3, 0.45, 0.6, 0.7].forEach((f, i) => gs.push(Math.min(len - 2, Math.max(i ? gs[i - 1] + 1 : 1, at(f)))));
+  E.gsched = gs; E.ksched = [Math.max(gs[5] + 1, at(0.85)), len];
+  return E;
+}
+const groupOf = id => CAREER.euro.groups ? CAREER.euro.groups.findIndex(g => g.includes(id)) : -1;
+function groupTable(gi) { const E = CAREER.euro, t = {}; E.groups[gi].forEach(id => t[id] = E.table[id]); return standingsOf(t); }
+// Was steht als Nächstes an? force: am Saisonende alles Offene ohne Termin ausspielen
+function euroNext(force) {
+  const E = CAREER.euro; if (!E || E.winner !== null) return null;
+  const R = CAREER.season.round;
+  if (!E.compact && E.gmd < 6) return force || R >= E.gsched[E.gmd] ? { type: 'group', md: E.gmd } : null;
+  return force || R >= E.ksched[E.kround === 0 ? 0 : 1] ? { type: 'ko', r: E.kround } : null;
+}
+const euroDue = () => !!euroNext();
+function euroTies(n) { const E = CAREER.euro; return !n ? [] : n.type === 'group' ? E.gfix[n.md] : E.ko[n.r].ties; }
+function ownEuroTie() { return euroTies(euroNext()).find(t => t.includes(CAREER.team)) || null; }
+function autoEuro() { while (euroDue() && !ownEuroTie()) playEuroRound(null); }
+const euroLabel = n => n.type === 'group' ? `EUROPAPOKAL · GRUPPE ${GROUP_N[groupOf(CAREER.team)] || ''} · ${n.md + 1}. SPIELTAG` : `EUROPAPOKAL · ${EURO_KO[n.r]}`;
+// Eine Runde: dein Spiel (gespielt oder simuliert) und alle anderen Partien
+function playEuroRound(own, force) {
+  const E = CAREER.euro, n = euroNext(force), me = CAREER.team; if (!n) return;
+  if (!E.paid) { E.teams.forEach(id => euroPay(id, EURO_PRIZE.start)); E.paid = true; }
+  const ko = n.type === 'ko', neutral = ko && n.r >= 1, rows = [];
+  for (const [a, b] of euroTies(n)) {
+    if (!neutral) { const g = attendance(a, b, 3); if (a === me) { CAREER.money += g.money; const F = finOf(); F.euro = (F.euro || 0) + g.money; F.fans.push(g.n); } else CAREER.aiMoney[a] += g.money; }
+    let r = own && own.a === a && own.b === b ? own : null;
+    if (!r) { const m = simMatch(a, b, neutral); r = { a, b, ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb }; }
+    if (ko && r.win === undefined) { if (r.ga === r.gb) { r.so = true; r.win = Math.random() < 0.5 + (strength(a).ovr - strength(b).ovr) * 0.03 ? a : b; } else r.win = r.ga > r.gb ? a : b; }
+    applyPlayers(r, false);
+    rows.push([a, b, r.ga, r.gb, !!r.so, ko ? r.win : null]);
+    if (!ko) { recordIn(E.table, a, b, r.ga, r.gb); for (const [id, x, y] of [[a, r.ga, r.gb], [b, r.gb, r.ga]]) euroPay(id, x > y ? EURO_PRIZE.win : x === y ? EURO_PRIZE.draw : 0); }
+    if (a === me || b === me) {
+      const opp = a === me ? b : a, sc = a === me ? `${r.ga}:${r.gb}` : `${r.gb}:${r.ga}`, my = a === me ? r.ga : r.gb, th = a === me ? r.gb : r.ga;
+      E.last = { opp, sc, so: !!r.so, label: euroLabel(n) };
+      news(ko ? `Europapokal ${EURO_KO[n.r]}: ${r.win === me ? 'Weiter!' : 'Ausgeschieden.'} ${sc}${r.so ? ' nach 7-Meter-Werfen' : ''} gegen ${TEAMS[opp].n}.`
+        : `Europapokal, Gruppe ${GROUP_N[groupOf(me)]}: ${my > th ? 'Sieg' : my === th ? 'Remis' : 'Niederlage'} ${sc} gegen ${TEAMS[opp].n}.`);
+    }
+  }
+  if (!ko) {
+    E.gres[n.md] = rows; E.gmd++;
+    if (E.gmd === 6) {   // Viertelfinale: Gruppensieger mit Heimrecht, Sieger benachbarter Partien treffen im Halbfinale aufeinander
+      const t = [0, 1, 2, 3].map(groupTable);
+      E.ko[0] = { ties: [[t[0][0].i, t[1][1].i], [t[2][0].i, t[3][1].i], [t[1][0].i, t[0][1].i], [t[3][0].i, t[2][1].i]], rows: null };
+      const q = E.ko[0].ties.flat(); q.forEach(id => euroPay(id, EURO_PRIZE.reach[0]));
+      news(q.includes(me) ? `Europapokal: Viertelfinale erreicht! Gegner: ${TEAMS[E.ko[0].ties.find(x => x.includes(me)).find(x => x !== me)].n}.` : E.teams.includes(me) ? 'Europapokal: Aus in der Gruppenphase.' : `Europapokal: Gruppenphase beendet.`);
+    }
+  } else {
+    E.ko[n.r].rows = rows;
+    const w = rows.map(r => r[5]);
+    if (n.r === 2) { E.winner = w[0]; euroPay(w[0], EURO_PRIZE.title); news(E.winner === me ? `EUROPAPOKALSIEG! ${TEAMS[me].n} gewinnt das Final Four!` : `Europapokalsieger: ${TEAMS[E.winner].n}.`); }
+    else {
+      const ties = []; for (let i = 0; i < w.length; i += 2) ties.push([w[i], w[i + 1]]);
+      E.ko[n.r + 1] = { ties, rows: null }; E.kround++; w.forEach(id => euroPay(id, EURO_PRIZE.reach[n.r + 1]));
+    }
+  }
+  saveCareer();
+}
+function euroSimOwn() {
+  const t = ownEuroTie(), n = euroNext(); if (!t) return; coachPrep();
+  const m = simMatch(t[0], t[1], n.type === 'ko' && n.r >= 1);
+  playEuroRound({ a: t[0], b: t[1], ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb });
+}
+// Wie weit kam dein Verein? (Historie)
+function euroMyBest() {
+  const E = CAREER.euro, me = CAREER.team; if (!E || !E.teams.includes(me)) return '';
+  if (E.winner === me) return 'Sieger';
+  for (let r = 2; r >= 0; r--) if (E.ko[r] && E.ko[r].ties.some(t => t.includes(me))) return ['Viertelfinale', 'Halbfinale', 'Finale'][r];
+  return E.compact ? 'Viertelfinale' : 'Gruppenphase';
+}
+// Startplätze für die nächste Saison: Platz 1 und 2 der 1. Liga, dazu der Pokalsieger (falls Erstligist und nicht schon dabei), sonst der Dritte
+function euroQualify(l1table) {
+  const top = l1table.slice(0, 3).map(x => x.i), cw = CAREER.cup ? CAREER.cup.winner : null;
+  const q = top.slice(0, 2); q.push(cw !== null && CAREER.lgOf[cw] === 1 && !q.includes(cw) ? cw : top[2]);
+  CAREER.euroQual = q;
+  if (q.includes(CAREER.team)) news(`Qualifiziert! ${TEAMS[CAREER.team].n} spielt nächste Saison im Europapokal.`);
+}
 // ================= Karriere-Bildschirme: Zeitung, Kader, Transfers =================
 let CTAB = 'home', CMSG = '', CDEL = false, CSEL = null, CSELL = null;
 const seasonName = y => `${y}/${String(y + 1).slice(2)}`;
 const euroS = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + ' M' : Math.round(v / 1000) + ' T';
 function careerEntry() { SEASON_PICK = false; if (CAREER) careerHub('home'); else careerNewScreen(); }
 function careerNewScreen() {
-  SCREEN = 'cnew'; SEASON_PICK = true; if (TEAMS[SEL.a].lg !== SEL.lg) SEL.a = LEAGUE(SEL.lg)[0].id;
+  SCREEN = 'cnew'; SEASON_PICK = true; if (SEL.lg === 3) SEL.lg = 1; if (TEAMS[SEL.a].lg !== SEL.lg) SEL.a = LEAGUE(SEL.lg)[0].id;
   SEL.ait ??= 0; SEL.coach ??= 0;
   showMenu(`<div class="panel"><div class="row spread"><h2>NEUE KARRIERE</h2>${leagueTabs()}</div>
     <div class="tcard a active"><span class="tag">DEIN VEREIN</span><div class="tname"><img src="${icon(TEAMS[SEL.a])}" alt="">${esc(TEAMS[SEL.a].n)}</div>${bars(TEAMS[SEL.a])}</div>
@@ -3176,7 +3335,7 @@ const formTxt = f => { const v = Math.round(f); return `<span style="color:${v >
 const formTxtPlain = f => { const v = Math.round(f); return (v > 0 ? '+' : '') + v; };
 const fitBar = (v, w = 34) => `<span class="bar" style="display:inline-block;width:${w}px;vertical-align:middle"><i style="width:${v}%;background:${v > 75 ? 'var(--green)' : v > 55 ? 'var(--gold)' : 'var(--hot)'}"></i></span>`;
 function tabs() {
-  const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['stats', 'STATISTIK'], ['hist', 'HISTORIE']];
+  const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['euro', 'EUROPA'], ['stats', 'STATISTIK'], ['hist', 'HISTORIE']];
   return `<div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div>`;
 }
 function leagueTable(hl, rows, compact) {
@@ -3203,6 +3362,13 @@ function paper() {
       <p><b>${esc(O.n)}</b> (${CAREER.lgOf[oppId]}. Liga)<br>Stärke ${so.ovr} (ihr: ${sm.ovr})</p>
       <p>K.-o.-Spiel: Bei Unentschieden entscheidet das 7-Meter-Werfen. Siegprämie ${euro(CUP_PRIZE[C.round])}.</p>
       <div class="row"><button class="main" data-act="cPlay">SELBST SPIELEN</button><button data-act="cSim">SIMULIEREN</button></div></div>`;
+  } else if (ownEuroTie()) {
+    const et = ownEuroTie(), n = euroNext(), oppId = et[0] === CAREER.team ? et[1] : et[0], O = TEAMS[oppId], so = strength(oppId), sm = strength(CAREER.team);
+    next = `<div class="np-box np-next"><h4>EUROPAPOKAL · ${n.type === 'group' ? `GRUPPE ${GROUP_N[groupOf(CAREER.team)]} · ${n.md + 1}. SPIELTAG` : EURO_KO[n.r]}</h4>
+      <div class="np-vs"><img src="${icon(me)}" alt=""><b>${n.type === 'ko' && n.r >= 1 ? 'FINAL FOUR' : et[0] === CAREER.team ? 'HEIM' : 'AUSWÄRTS'}</b><img src="${icon(O)}" alt=""></div>
+      <p><b>${esc(O.n)}</b> (${CAREER.lgOf[oppId] === 3 ? 'international' : CAREER.lgOf[oppId] + '. Liga'})<br>Stärke ${so.ovr} (ihr: ${sm.ovr})</p>
+      <p>${n.type === 'group' ? 'Gruppenspiel: Die ersten zwei kommen ins Viertelfinale.' : n.r >= 1 ? 'Final Four in neutraler Halle. Bei Unentschieden entscheidet das 7-Meter-Werfen.' : 'K.-o.-Spiel, der Gruppensieger hat Heimrecht. Bei Unentschieden 7-Meter-Werfen.'}</p>
+      <div class="row"><button class="main" data-act="cPlay">SELBST SPIELEN</button><button data-act="cSim">SIMULIEREN</button></div></div>`;
   } else if (fx) {
     const oppId = fx[0] === CAREER.team ? fx[1] : fx[0], O = TEAMS[oppId], so = strength(oppId), sm = strength(CAREER.team), op = st.findIndex(r => r.i === oppId) + 1;
     const oTop = CAREER.squads[oppId].slice().sort((a, b) => b.sg - a.sg || ovr(b) - ovr(a))[0], fav = sm.ovr - so.ovr;
@@ -3228,6 +3394,7 @@ function paper() {
           ${sq.some(p => p.inj) ? `<br><b>Verletzt:</b> ${sq.filter(p => p.inj).map(p => `${esc(p.name)} (${p.inj})`).join(', ')}` : ''}
           ${S.round >= S.fixtures.length * 0.6 && sq.some(p => p.vt <= 1) ? `<br><b>Verträge laufen aus:</b> ${sq.filter(p => p.vt <= 1).map(p => esc(p.name)).join(', ')}` : ''}</p>
         ${CAREER.cup ? `<h4>POKAL</h4><p>${CAREER.cup.winner !== null ? `Sieger: ${esc(TEAMS[CAREER.cup.winner].n)}` : CAREER.cup.myOut ? `Ausgeschieden (${esc(CAREER.cupLast ? CAREER.cupLast.sc : '')} gegen ${esc(CAREER.cupLast ? TEAMS[CAREER.cupLast.opp].short : '')}). Nächste Runde: ${CUP_ROUNDS[CAREER.cup.round]}.` : `Noch dabei! Nächste Runde: ${CUP_ROUNDS[CAREER.cup.round]} nach Spieltag ${CAREER.cup.sched[CAREER.cup.round]}.`}</p>` : ''}
+        ${CAREER.euro && CAREER.euro.teams.includes(CAREER.team) ? `<h4>EUROPAPOKAL</h4><p>${esc(euroStatus())}</p>` : ''}
         <h4>CO-TRAINER</h4><p>„${esc(coachTip())}“</p>
         <h4>TRANSFERMARKT</h4><p>${offer ? `<b>Angebot:</b> ${esc(TEAMS[offer.from].short)} bietet ${euro(offer.price)} für ${esc((findCareerPlayer(CAREER.team, offer.pid) || {}).name || '')}.` : tlog ? esc(tlog) : 'Ruhig. Keine Wechsel gemeldet.'}</p></div>
     </div>
@@ -3283,11 +3450,45 @@ function statsView() {
 }
 // Finanzbilanz einer Saison (Saisonabschluss und Statistik)
 function finTable(F, money) {
-  const rows = [['Zuschauer (Liga)', F.gate], ['Sponsoren', F.sponsor], ['Pokal (Zuschauer und Prämien)', F.cup], ['Ligaprämie', F.prize], ['Vorstandsbonus', F.bonus], ['Transfers (Saldo)', F.transfer], ['Gehälter', -F.wages]].filter(r => r[1]);
+  const rows = [['Zuschauer (Liga)', F.gate], ['Sponsoren', F.sponsor], ['Pokal (Zuschauer und Prämien)', F.cup], ['Europapokal (Zuschauer und Prämien)', F.euro || 0], ['Ligaprämie', F.prize], ['Vorstandsbonus', F.bonus], ['Transfers (Saldo)', F.transfer], ['Gehälter', -F.wages]].filter(r => r[1]);
   const sum = rows.reduce((s, r) => s + r[1], 0), fmt = v => `<span style="color:${v < 0 ? 'var(--hot)' : 'inherit'}">${v < 0 ? '−' : '+'}${euro(Math.abs(v))}</span>`;
   const fans = F.fans && F.fans.length ? `Ø ${Math.round(avg(F.fans)).toLocaleString('de-DE')} Zuschauer bei ${F.fans.length} Heimspielen · Halle ${hallCap(CAREER.team).toLocaleString('de-DE')} Plätze` : '';
   return `<h3>FINANZEN DER SAISON</h3><table class="sqt stt fin"><tbody>${rows.map(([l, v]) => `<tr><td class="lbl">${l}</td><td class="num">${fmt(v)}</td></tr>`).join('')}
     <tr><td class="lbl"><b>Saldo</b></td><td class="num"><b>${fmt(sum)}</b></td></tr>${money !== undefined ? `<tr><td class="lbl">Kontostand</td><td class="num">${fmt(money)}</td></tr>` : ''}</tbody></table>${fans ? `<p class="muted" style="margin:0">${fans}</p>` : ''}`;
+}
+// ---------- Europapokal: Gruppen und Turnierbaum ----------
+function euroStatus() {
+  const E = CAREER.euro, me = CAREER.team, n = euroNext();
+  if (E.winner !== null) return E.winner === me ? 'Europapokalsieger!' : `Sieger: ${TEAMS[E.winner].n}.${E.teams.includes(me) ? ` Dein Verein: ${euroMyBest()}.` : ''}`;
+  const inKo = E.ko.some(k => k.ties.some(t => t.includes(me)));
+  const out = E.ko.length ? !E.ko[E.kround].ties.some(t => t.includes(me)) : false;
+  if (out || (!inKo && E.gmd === 6)) return `Ausgeschieden (${euroMyBest()}).`;
+  if (!E.compact && E.gmd < 6) { const t = groupTable(groupOf(me)), k = t.findIndex(r => r.i === me); return `Gruppe ${GROUP_N[groupOf(me)]}: Platz ${k + 1}, ${t[k].pk} Punkte. ${n ? 'Spiel steht jetzt an.' : `Nächstes Spiel nach Spieltag ${E.gsched[E.gmd]}.`}`; }
+  const tie = E.ko[E.kround].ties.find(t => t.includes(me)), opp = tie.find(x => x !== me);
+  return `${EURO_KO[E.kround]} gegen ${TEAMS[opp].short}${n ? ', steht jetzt an.' : `, nach Spieltag ${E.ksched[E.kround === 0 ? 0 : 1]}.`}`;
+}
+function euroView() {
+  const E = CAREER.euro, me = CAREER.team;
+  const rule = 'Startplätze: Platz 1 und 2 der 1. Liga, dazu der Pokalsieger (falls Erstligist, sonst der Dritte).';
+  if (!E) return `<p class="muted">Der Europapokal startet mit der nächsten Saison. ${rule}</p>`;
+  const n = euroNext(), inIt = E.teams.includes(me);
+  const fmt = E.compact ? '8 Vereine: Viertelfinale, dann Final Four in neutraler Halle.' : '16 Vereine in 4 Gruppen mit Hin- und Rückspiel, die ersten zwei kommen ins Viertelfinale, danach Final Four in neutraler Halle.';
+  let html = `<p class="muted">${fmt} ${rule} ${inIt ? `<b style="color:var(--gold)">Dein Verein ist dabei. ${esc(euroStatus())}</b>` : 'Dein Verein ist diese Saison nicht qualifiziert.'}</p>`;
+  const line = (a, b, x, y, so) => `<span class="${a === me || b === me ? 'me' : ''}">${TEAMS[a].k} ${x === undefined ? '–:–' : `${x}:${y}${so ? '*' : ''}`} ${TEAMS[b].k}</span>`;
+  if (!E.compact) {
+    html += `<div class="egroups">${E.groups.map((g, gi) => {
+      const t = groupTable(gi), res = [];
+      for (let md = 0; md < 6; md++) E.gfix[md].filter(([a]) => g.includes(a)).forEach(([a, b]) => { const r = (E.gres[md] || []).find(x => x[0] === a && x[1] === b); res.push(line(a, b, r ? r[2] : undefined, r ? r[3] : undefined)); });
+      return `<div class="egroup"><h3>GRUPPE ${GROUP_N[gi]}</h3><table class="sqt stt"><tbody>${t.map((r, k) => `<tr class="${r.i === me ? 'me' : ''} ${k < 2 ? 'zone-a' : ''}"><td class="num">${k + 1}</td><td class="lbl">${esc(TEAMS[r.i].short)}</td><td class="num">${r.sp}</td><td class="num">${r.d > 0 ? '+' : ''}${r.d}</td><td class="num"><b>${r.pk}</b></td></tr>`).join('')}</tbody></table>
+        <p class="eres">${res.join(' · ')}</p></div>`; }).join('')}</div>`;
+  }
+  // K.-o.-Phase als Baum
+  const cols = [0, 1, 2].map(r => { const k = E.ko[r]; if (!k) return Array.from({ length: 4 >> r }, () => ({})); return k.rows ? k.rows.map(([a, b, x, y, so, w]) => ({ a, b, x, y, so, w })) : k.ties.map(([a, b]) => ({ a, b })); });
+  const lineB = (t, id, sc) => id === undefined ? '<div class="bt tbd"><span>–</span></div>' : `<div class="bt ${t.w === undefined ? '' : t.w === id ? 'win' : 'out'} ${id === me ? 'mine' : ''}"><span>${TEAMS[id].k}</span><b>${sc ?? ''}</b></div>`;
+  const tie = t => `<div class="tie ${t.a === me || t.b === me ? 'myt' : ''}" ${t.a !== undefined ? `title="${esc(TEAMS[t.a].n)} – ${esc(TEAMS[t.b].n)}"` : ''}>${lineB(t, t.a, t.x)}${lineB(t, t.b, t.y)}${t.so ? '<em>n.7m</em>' : ''}</div>`;
+  html += `<h3>K.-O.-PHASE${n && n.type === 'ko' ? ` · ${EURO_KO[n.r]} STEHT AN` : ''}</h3><div class="bracket ebr">${cols.map((c, r) => `<div class="bcol"><h3>${r ? EURO_KO[r] + ' (F4)' : EURO_KO[r]}</h3><div class="bties">${c.map(tie).join('')}</div></div>`).join('')}
+    <div class="bcol champ"><h3>SIEGER</h3><div class="bties"><div class="tie ${E.winner === me ? 'myt' : ''}">${E.winner !== null ? `<div class="bt win ${E.winner === me ? 'mine' : ''}"><span>🏆 ${TEAMS[E.winner].k}</span></div>` : '<div class="bt tbd"><span>?</span></div>'}</div></div></div></div>`;
+  return html;
 }
 // ---------- Pokal als Turnierbaum ----------
 function cupView() {
@@ -3356,11 +3557,12 @@ function careerHub(tab) {
   } else if (CTAB === 'table') {
     body = `<p class="muted">${S.lg === 1 ? 'Grün: Meister · Rot: Abstieg in die 2. Liga' : 'Grün: Aufstieg in die 1. Liga'}</p>${leagueTable(CAREER.team)}`;
   } else if (CTAB === 'cup') body = cupView();
+  else if (CTAB === 'euro') body = euroView();
   else if (CTAB === 'stats') body = statsView();
   else if (CTAB === 'hist') {
     // Handy: Karten statt Spalten (Kopfzeile Saison · Liga · Platz, darunter beschriftete Felder)
-    body = CAREER.history.length ? `<table class="sqt cards hist"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th>POKAL</th><th>TORJÄGER</th></tr></thead><tbody>${
-      CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
+    body = CAREER.history.length ? `<table class="sqt cards hist"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th>POKAL</th><th>EUROPA</th><th>TORJÄGER</th></tr></thead><tbody>${
+      CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="EUROPA" style="${h.euro === CAREER.team ? 'color:var(--gold)' : ''}">${h.euro !== null && h.euro !== undefined ? esc(TEAMS[h.euro].short) : '–'}${h.euroMy && h.euro !== CAREER.team ? ` <span class="muted">(${esc(h.euroMy)})</span>` : ''}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
   }
   showMenu(`<div class="panel wide"><div class="csticky">${head}${tabs()}</div>${CMSG ? `<p style="margin:0;color:var(--hot)">${esc(CMSG)}</p>` : ''}${body}<div class="row"><button data-act="main">HAUPTMENÜ</button></div></div>`);
@@ -3382,6 +3584,7 @@ function seasonSummary() {
       <tr><td>Aufsteiger</td><td>${s.up.map(i => esc(TEAMS[i].n)).join(', ')}</td></tr>
       <tr><td>Absteiger</td><td>${s.down.map(i => esc(TEAMS[i].n)).join(', ')}</td></tr>
       <tr><td>Pokalsieger</td><td>${s.cupWinner !== null && s.cupWinner !== undefined ? esc(TEAMS[s.cupWinner].n) : '–'}${s.cupWinner === CAREER.team ? ' (DEIN VEREIN!)' : ''}</td></tr>
+      <tr><td>Europapokalsieger</td><td>${s.euroWinner !== null && s.euroWinner !== undefined ? esc(TEAMS[s.euroWinner].n) : '–'}${s.euroWinner === CAREER.team ? ' (DEIN VEREIN!)' : s.euroMy ? ` · dein Verein: ${esc(s.euroMy)}` : ''}</td></tr>
       <tr><td>Torschützenkönig</td><td>${s.top ? `${esc(s.top.name)} (${TEAMS[s.top.tid].k}), ${s.top.n} Tore` : '–'}</td></tr>
     </tbody></table>
     <h3>ENTWICKLUNG IM KADER</h3><p class="muted" style="font-size:18px">${s.dev.slice(0, 8).map(d => `${esc(d.name)} <b style="color:${d.d > 0 ? 'var(--green)' : 'var(--hot)'}">${d.d > 0 ? '+' : ''}${d.d}</b> (${d.o})`).join(' · ') || 'Kaum Veränderungen.'}</p>
@@ -3397,11 +3600,11 @@ Object.assign(ACT, {
   cTab(v) { CSEL = null; CSELL = null; CTAB = v; careerHub(); },
   cPick(v) { CSEL = v ? +v : null; CSELL = null; CTAB = 'squad'; careerHub(); },
   cPlay() {
-    const ct = ownCupTie(), fx = ct || ownFixture(); if (!fx) return careerHub();
+    const ct = ownCupTie(), et = !ct && ownEuroTie(), en = et ? euroNext() : null, fx = ct || et || ownFixture(); if (!fx) return careerHub();
     coachPrep();
     const L = [lineup(fx[0]), lineup(fx[1])];
-    prematch(fx[0], fx[1], { human: fx.indexOf(CAREER.team), halfLen: HALVES[CAREER.half].s, diff: CAREER.diff, career: true, cup: !!ct, autoSub: CAREER.coach.lineup || true,
-      lineups: L, benches: [benchOf(fx[0], L[0]), benchOf(fx[1], L[1])], label: ct ? `POKAL · ${CUP_ROUNDS[CAREER.cup.round]}` : `${CAREER.season.lg}. LIGA · ${CAREER.season.round + 1}. SPIELTAG` }, 'career');
+    prematch(fx[0], fx[1], { human: fx.indexOf(CAREER.team), halfLen: HALVES[CAREER.half].s, diff: CAREER.diff, career: true, cup: !!ct || !!(en && en.type === 'ko'), euro: !!et, event: ct ? cupEvent(CAREER.cup.round) : en && en.type === 'ko' ? euroEvent(en.r) : null, autoSub: CAREER.coach.lineup || true,
+      lineups: L, benches: [benchOf(fx[0], L[0]), benchOf(fx[1], L[1])], label: ct ? `POKAL · ${CUP_ROUNDS[CAREER.cup.round]}` : en ? euroLabel(en) : `${CAREER.season.lg}. LIGA · ${CAREER.season.round + 1}. SPIELTAG` }, 'career');
   },
   cExt(v) { const [pid, y] = v.split(':').map(Number); CMSG = extendContract(pid, y); careerHub(); },
   cSim() { careerSimOwn(); track('karriere-simuliert'); careerHub('home'); },
@@ -3531,7 +3734,7 @@ function frame(now) {
 }
 startDemo();
 ACT.title();
-(document.fonts && document.fonts.load ? document.fonts.load('8px "Press Start 2P"') : Promise.resolve()).then(() => { if (G) buildArena(G.kits[0], G.kits[1], G.lg); }).catch(() => { });
+(document.fonts && document.fonts.load ? document.fonts.load('8px "Press Start 2P"') : Promise.resolve()).then(() => { if (G) buildArena(G.kits[0], G.kits[1], G.lg, G.event); }).catch(() => { });
 requestAnimationFrame(frame);
 </script>
 </body></html>

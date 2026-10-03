@@ -76,7 +76,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
     aiTransfers, aiMoney: {}, offers: [], board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
-  TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 1 ? 25000 : 12000)) + 50000; });
+  TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 2 ? 12000 : 25000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
   saveCareer();
@@ -107,7 +107,7 @@ function newSeason() {
   CAREER.goal = lg === 1 ? (rank <= 2 ? { txt: 'Meisterschaft', pos: 1 } : rank <= 5 ? { txt: 'Platz 1 bis 4', pos: 4 } : rank <= 11 ? { txt: 'Obere Tabellenhälfte', pos: 9 } : { txt: 'Klassenerhalt', pos: 16 })
     : (rank <= 3 ? { txt: 'Aufstieg', pos: 2 } : rank <= 8 ? { txt: 'Platz 1 bis 6', pos: 6 } : { txt: 'Gesichertes Mittelfeld', pos: 12 });
   CAREER.goal.rank = rank; CAREER.lastMatch = null; CAREER.streak = 0;
-  newCup();
+  newCup(); newEuro();
   CAREER.form5 = []; CAREER.summary = null;
   refreshMarket(true);
 }
@@ -120,7 +120,7 @@ function recordIn(table, a, b, ga, gb) {
   if (ga > gb) { A.s++; B.n++; } else if (gb > ga) { B.s++; A.n++; } else { A.u++; B.u++; }
 }
 // Simuliertes Spiel: Stärke aus den aufgestellten Spielern inkl. Form & Fitness
-function simMatch(a, b) {
+function simMatch(a, b, neutral) {   // neutral: kein Heimvorteil (Final Four)
   const A = strength(a), B = strength(b);
   // Schwierigkeit wirkt auch in der Simulation: Amateur hilft dir, Legende macht es schwerer
   const bonus = [2.5, 0, -2.5][CAREER.diff] || 0;
@@ -129,7 +129,7 @@ function simMatch(a, b) {
   // Skaliert auf die gewählte Halbzeitlänge (gespielt: ~5 Tore pro Team bei 2 Min, ~8 bei 3 Min, ~13 bei 5 Min statt 27 über 60 echte Minuten)
   const sc = (HALVES[CAREER.half] || HALVES[1]).s * 0.046 / 27;
   const g = (X, Y, h) => Math.max(Math.round(15 * sc), Math.round(sc * (27 + (X.att - Y.def) * 0.18 + (80 - Y.gk) * 0.08 + h) + gauss() * 3.8 * Math.sqrt(sc)));
-  const ga = g(A, B, 1), gb = g(B, A, 0), stats = {};
+  const ga = g(A, B, neutral ? 0 : 1), gb = g(B, A, 0), stats = {};
   const share = (S, goals) => {
     const f = S.L.filter(p => p.role !== 'TW'), w = f.map(p => ({ LA: 0.8, RA: 0.8, RL: 1.2, RR: 1.2, RM: 1, KM: 0.9 }[p.role]) * Math.pow(p.att / 80, 1.5));
     const tot = w.reduce((s, v) => s + v, 0);
@@ -193,6 +193,7 @@ function playRound(own) {
   for (const t of TEAMS) for (const p of CAREER.squads[t.id]) if (p.inj) { p.inj--; if (!p.inj && t.id === me) news(`${p.name} ist wieder fit.`); }
   ensureStarters(me);
   if (CAREER.cup) autoCup();
+  if (CAREER.euro) autoEuro();
   if (S.round >= S.fixtures.length) { S.done = true; news('Letzter Spieltag gespielt. Zeit für den Saisonabschluss!'); }
   if (S.round % 2 === 0) refreshMarket(false);
   CAREER.offers = CAREER.offers.filter(o => o.exp > S.round && findCareerPlayer(me, o.pid));
@@ -204,11 +205,12 @@ function playRound(own) {
 const salaryFor = p => Math.max(1500, Math.round(pValue(p) * 0.0035 / 500) * 500);
 const wageBill = () => Math.round(CAREER.squads[CAREER.team].reduce((s, p) => s + (p.sal || salaryFor(p)), 0) / 1000) * 1000;
 function ownFixture() { const S = CAREER.season; return S.done ? null : S.fixtures[S.round].find(f => f.includes(CAREER.team)); }
-function careerSimOwn() { if (ownCupTie()) return cupSimOwn(); const fx = ownFixture(); if (!fx) return; coachPrep(); playRound(simMatch(fx[0], fx[1])); }
+function careerSimOwn() { if (ownCupTie()) return cupSimOwn(); if (ownEuroTie()) return euroSimOwn(); const fx = ownFixture(); if (!fx) return; coachPrep(); playRound(simMatch(fx[0], fx[1])); }
 function careerAfterPlayed(g) {
   const stats = {}, all = allMatchPlayers(), played = [[], []];
   all.forEach(p => { if (!p.pid) return; stats[p.pid] = { g: p.goals, sv: p.saves, min: p.mins, inj: p.injured }; if (p.mins > 0.5 || g.lineupPids[p.team].includes(p.pid)) played[p.team].push(p.pid); });
   const La = played[0].map(id => findCareerPlayer(g.tid[0], id)).filter(Boolean), Lb = played[1].map(id => findCareerPlayer(g.tid[1], id)).filter(Boolean);
+  if (g.euro) return playEuroRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb, so: g.soWinner !== undefined, win: g.soWinner !== undefined ? g.tid[g.soWinner] : undefined });
   if (g.cup) return playCupRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb, so: g.soWinner !== undefined, win: g.soWinner !== undefined ? g.tid[g.soWinner] : g.tid[g.score[0] > g.score[1] ? 0 : 1] });
   playRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb });
 }
@@ -280,11 +282,14 @@ function simWholeLeague(ids) {
   return standingsOf(table);
 }
 function careerEndSeason() {
-  while (CAREER.cup && !CAREER.cup.winner) playCupRound(null, true);   // offene Pokalrunden zu Ende simulieren
+  while (CAREER.cup && CAREER.cup.winner === null) playCupRound(null, true);   // offene Pokalrunden zu Ende simulieren
+  for (let i = 0; i < 12 && CAREER.euro && CAREER.euro.winner === null; i++) playEuroRound(null, true);   // ebenso den Europapokal
   const S = CAREER.season, lg = S.lg, me = CAREER.team, r = Math.random;
   const st = standingsOf(S.table), other = simWholeLeague(leagueIds(lg === 1 ? 2 : 1));
   const l1 = lg === 1 ? st : other, l2 = lg === 2 ? st : other;
   const down = l1.slice(-2).map(x => x.i), up = l2.slice(0, 2).map(x => x.i);
+  const euroW = CAREER.euro ? CAREER.euro.winner : null, euroMy = euroMyBest();
+  euroQualify(l1);
   const pos = st.findIndex(x => x.i === me) + 1;
   const prize = leaguePrize(pos, lg);
   CAREER.money += prize; finOf().prize += prize;
@@ -332,8 +337,10 @@ function careerEndSeason() {
   var sum = { year: CAREER.year, lg, pos, prize, top, champ: st[0].i, champ1: l1[0].i, champ2: l2[0].i, up, down, move, dev: dev.sort((a, b) => b.d - a.d), retired, gone, youth, cupWinner: CAREER.cup ? CAREER.cup.winner : null, cupMy: CAREER.cup ? CAREER.cup.myBest : 0, final: st.slice(0, 18).map(x => [x.i, x.pk, x.d]) };
   const goalMet = pos <= CAREER.goal.pos;
   sum.goal = CAREER.goal.txt; sum.goalMet = goalMet; sum.board = verdict; sum.fin = finSeason; sum.money = CAREER.money;
-  CAREER.history.push({ year: CAREER.year, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null });
+  CAREER.history.push({ year: CAREER.year, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null, euro: euroW, euroMy });
+  sum.euroWinner = euroW; sum.euroMy = euroMy;
   for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += leaguePrize(k + 1, l); });
+  leagueIds(3).forEach(id => { CAREER.aiMoney[id] += leaguePrize(5, 1); });   // internationale Vereine: Prämien aus ihrer Heimatliga
   if (CAREER.aiTransfers) aiTransferRound(4);
   CAREER.year++;
   CAREER.board.warned = false; TEAMS.forEach(t => CAREER.squads[t.id].forEach(p => delete p.lock));
@@ -421,6 +428,7 @@ if (CAREER) {
   CAREER.aiTransfers ??= false; CAREER.coach ??= { lineup: false, training: false };
   TEAMS.forEach(t => (CAREER.squads[t.id] || []).forEach(p => { p.sta ??= 75; p.inj ??= 0; p.vt ??= 1 + ((Math.random() * 3) | 0); p.sal ??= salaryFor(p); })); CAREER.offers ??= []; CAREER.streak ??= 0; CAREER.lastMatch ??= null; CAREER.issue ??= 1;
   if (!CAREER.aiMoney) { CAREER.aiMoney = {}; TEAMS.forEach(t => CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 20000) + 50000); }
+  TEAMS.forEach(t => { if (CAREER.squads[t.id]) return; CAREER.squads[t.id] = makeSquad(t.id); CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 25000) + 50000; });   // später hinzugekommene Vereine (international)
   if (!CAREER.goal) CAREER.goal = { txt: 'Obere Tabellenhälfte', pos: 9, rank: 9 };
 }
 

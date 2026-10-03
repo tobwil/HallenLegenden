@@ -44,7 +44,7 @@ test('Seite lädt ohne Fehler, Spielschleife läuft (Desktop und Handy)', async 
 
 test('Handy: im Spiel liegt kein Menü-Overlay über dem Feld', async () => {
   const { page, ctx, errors } = await open(MOBILE);
-  await page.evaluate(() => { document.body.classList.add('touch'); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); });
+  await page.evaluate(() => { document.body.classList.add('touch'); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); G.introT = 99; });
   await page.waitForFunction(() => G && G.phase === 'play', null, { timeout: 20000 });
   const r = await page.evaluate(() => ({ hidden: menu.hidden, display: getComputedStyle(menu).display, ingame: document.body.classList.contains('ingame') }));
   ok(r.hidden && r.display === 'none' && r.ingame, JSON.stringify(r)); ok(!errors.length, errors.join('; ')); await ctx.close();
@@ -55,7 +55,7 @@ test('Alle Menüfenster gleich groß, Tabwechsel ändert nichts', async () => {
   const sizes = await page.evaluate(() => {
     const out = {}, size = n => { const b = menu.querySelector('.panel').getBoundingClientRect(); out[n] = Math.round(b.width) + 'x' + Math.round(b.height); };
     ACT.main(); size('main'); ACT.quick(); size('quick'); ACT.help(); size('help'); ACT.options(); size('options'); ACT.editor(0); size('editor');
-    careerCreate(3, 1, 1, 0); for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'stats', 'hist']) { ACT.cTab(t); size('tab-' + t); }
+    careerCreate(3, 1, 1, 0); for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'euro', 'stats', 'hist']) { ACT.cTab(t); size('tab-' + t); }
     return out;
   });
   ok(new Set(Object.values(sizes)).size === 1, JSON.stringify(sizes)); ok(!errors.length, errors.join('; ')); await ctx.close();
@@ -343,11 +343,62 @@ test('Handy-Hochformat: keine Karriere-Ansicht ragt über den Fensterrand', asyn
     const out = [], check = name => { const panel = menu.querySelector('.panel'); if (!panel) return; const pr = panel.getBoundingClientRect();
       menu.querySelectorAll('.panel *').forEach(el => { const r = el.getBoundingClientRect(); if (r.width && r.right > pr.right + 1 && !el.closest('.ctabs') && !el.closest('.bracket')) out.push(`${name}: ${el.tagName.toLowerCase()} +${Math.round(r.right - pr.right)}px`); }); };
     careerHub(); check('Saisonabschluss'); ACT.cNext(); for (let i = 0; i < 5; i++) ACT.cSim();
-    for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'stats', 'hist']) { ACT.cTab(t); check(t); }
+    for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'euro', 'stats', 'hist']) { ACT.cTab(t); check(t); }
     ACT.cPick(CAREER.squads[CAREER.team][0].pid); check('Spieler');
     return [...new Set(out)].slice(0, 5);
   });
   ok(!bad.length, bad.join(', ')); ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+// ---------------------------------------------------------------- Europapokal & Final Four
+test('Europapokal: Gruppen, Viertelfinale und Final Four bei 6, 17 und 34 Spieltagen', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 2024);
+  const r = await page.evaluate(() => [0, 1, 2].map(len => {
+    careerCreate(3, len, 1, 1, true, 3); const E = CAREER.euro, ger = E.teams.filter(id => CAREER.lgOf[id] === 1);
+    const sepGroups = !E.groups || E.groups.every(g => g.filter(id => ger.includes(id)).length <= 1);
+    let guard = 0; while ((!CAREER.season.done || euroDue() || cupDue()) && guard++ < 200) ACT.cSim();
+    const games = E.groups ? Object.values(E.table).reduce((a, t) => a + t.sp, 0) : 0;
+    const sum = careerEndSeason();
+    return { n: E.teams.length, compact: E.compact, sepGroups, games, ko: E.ko.map(k => k.rows ? k.rows.length : 0).join('/'), winner: sum.euroWinner, qual: CAREER.euroQual.length, next: CAREER.euro.teams.length, guard };
+  }));
+  ok(r[0].compact && r[0].n === 8 && r[0].ko === '4/2/1', '6 Spieltage: ' + JSON.stringify(r[0]));
+  for (const x of r.slice(1)) ok(!x.compact && x.n === 16 && x.sepGroups && x.games === 96 && x.ko === '4/2/1', 'Gruppenphase: ' + JSON.stringify(x));
+  ok(r.every(x => x.winner !== null && x.winner !== undefined && x.qual === 3 && x.guard < 200), 'Sieger/Qualifikation: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Europapokal und Pokal: Final Four am selben Termin, neutral, mit Event und Pokalübergabe', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 2024);
+  const r = await page.evaluate(() => {
+    careerCreate(3, 1, 1, 1, true, 3); const cs = CAREER.cup.sched, ks = CAREER.euro.ksched, len = CAREER.season.fixtures.length;
+    // Final-Four-Spiel des Pokals: neutrale Halle (keine Zuschauereinnahmen für den "Gastgeber")
+    while (CAREER.cup.round < CUP_F4 && !CAREER.season.done) ACT.cSim();
+    const ai0 = { ...CAREER.aiMoney }, m0 = CAREER.money, ties = CAREER.cup.ties.map(t => t.slice());
+    playCupRound(null, true);
+    const homeGot = ties.filter(([a]) => a !== CAREER.team).some(([a]) => CAREER.aiMoney[a] - ai0[a] > 0 && CAREER.aiMoney[a] - ai0[a] < 100000 && CAREER.aiMoney[a] - ai0[a] !== CUP_PRIZE[CUP_F4]);
+    // Event im Spiel: Pokalübergabe nach dem Finale
+    hideMenu(); newMatch(1, 2, { human: 0, halfLen: 60, cup: true, event: euroEvent(2) }); G.score = [20, 18]; G.half = 2; G.players.forEach(p => p.mins = 60); endHalf();
+    return { cupF4Same: cs[3] === cs[4], euroF4AtEnd: ks[1] === len, homeGot, intro: !!G.event && G.trophyWinner === 0 };
+  });
+  ok(r.cupF4Same && r.euroF4AtEnd, 'Termine: ' + JSON.stringify(r)); ok(!r.homeGot, 'Final Four zahlt Zuschauergeld an einen Gastgeber');
+  ok(r.intro, 'keine Pokalübergabe im Finale'); ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Pokal: Sieger mit Vereinsnummer 0 (Magdeburg) bleibt Sieger', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 7);
+  const r = await page.evaluate(() => {
+    careerCreate(12, 1, 1, 1); while (!CAREER.season.done || cupDue()) ACT.cSim();
+    CAREER.cup.winner = 0; const round = CAREER.cup.round, n = CAREER.cup.results.length;
+    careerEndSeason(); const h = CAREER.history.slice(-1)[0];
+    return { cup: h.cup, round, n };
+  });
+  ok(r.cup === 0, 'Pokalsieger in der Historie: ' + r.cup + ' statt 0 (Magdeburg)'); ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('TV-Intro mit Aufstellungen läuft vor dem Anwurf', async () => {
+  const { page, ctx, errors } = await open(DESKTOP);
+  const r = await page.evaluate(() => { startMatch(1, 2, { human: 0, halfLen: 120 }); const ph = G.phase; G.paused = true; for (let i = 0; i < 60; i++) step(1 / 60); return { ph, after: G.phase, t: G.introT }; });
+  ok(r.ph === 'intro' && r.after === 'intro', JSON.stringify(r)); ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
 // ---------------------------------------------------------------- Handy-Zoom
@@ -365,7 +416,7 @@ test('Handy: kein Zoom mit zwei Daumen, Menü scrollt mit einem Finger', async (
   for (let i = 1; i < 12; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 420, y: 330 - i * 20 }] }); await page.waitForTimeout(16); }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await page.waitForTimeout(300);
   ok(await page.evaluate(() => menu.scrollTop) > 50, 'Menü scrollt nicht mit einem Finger');
-  await page.evaluate(() => { hideMenu(); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); });
+  await page.evaluate(() => { hideMenu(); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); G.introT = 99; });
   await page.waitForFunction(() => G && G.phase === 'play', null, { timeout: 20000 });
   const pts = k => [{ x: 120 + k * 3, y: 250 - k * 2, id: 1 }, { x: 760 - k * 4, y: 300 - k * 3, id: 2 }];
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: pts(0) });

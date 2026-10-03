@@ -4,8 +4,8 @@
 const REF_LEN = 17;
 const seasonScale = () => REF_LEN / Math.max(1, CAREER.season.fixtures.length);
 const hallCap = tid => clamp(Math.round((1000 + (TEAMS[tid].r - 65) * 330) / 100) * 100, 1300, 9800);
-const ticketNet = (lg, cup) => (lg === 1 ? 7 : 6) * (cup ? 1.2 : 1);                     // Erlös pro Zuschauer nach Kosten
-const sponsorOf = tid => CAREER.lgOf[tid] === 1 ? 5000 + (TEAMS[tid].r - 75) * 250 : 12000 + (TEAMS[tid].r - 70) * 300;
+const ticketNet = (lg, cup) => (lg === 2 ? 6 : 7) * (cup ? 1.2 : 1);                     // Erlös pro Zuschauer nach Kosten
+const sponsorOf = tid => CAREER.lgOf[tid] !== 2 ? 5000 + (TEAMS[tid].r - 75) * 250 : 12000 + (TEAMS[tid].r - 70) * 300;   // 1. Liga und international gleich
 const leaguePrize = (pos, lg) => Math.round((19 - pos) * (lg === 1 ? 15000 : 6000) / 5000) * 5000;   // TV-Geld und Prämie nach Platz
 // Zuschauereinnahmen über die tatsächliche Zahl der Heimspiele hochrechnen (2 oder 3 Heimspiele bei 6 Spieltagen zählen gleich viel)
 function homeScale(tid) { const S = CAREER.season, H = S.homes ??= {}; H[tid] ??= S.fixtures.filter(rd => rd.some(([a]) => a === tid)).length; return REF_LEN / 2 / Math.max(1, H[tid]); }
@@ -14,7 +14,7 @@ const wagesPerRound = () => Math.round(wageBill() * seasonScale() / 1000) * 1000
 // Zuschauer: Kapazität × Auslastung. Auslastung steigt mit Tabellenplatz, Siegesserie, starkem Gegner und im Pokal
 function attendance(home, away, cupRound) {
   const S = CAREER.season, lg = CAREER.lgOf[home], cap = hallCap(home);
-  let rate = lg === 1 ? 0.62 : 0.5;
+  let rate = lg === 2 ? 0.5 : 0.62;
   if (S.table[home]) { const st = standingsOf(S.table), f = st.length > 1 ? st.findIndex(r => r.i === home) / (st.length - 1) : 0.5; if (S.round) rate += 0.3 * (0.5 - f); }
   rate += (TEAMS[away].r - 78) * 0.008;
   if (home === CAREER.team) rate += clamp((CAREER.streak || 0) * 0.02, -0.08, 0.08);
@@ -85,7 +85,7 @@ function boardVerdict(pos, goal, lg) {
 // Jobangebote nach einer Entlassung: drei schwächere Vereine, eher aus der 2. Liga
 function jobOffers() {
   const me = CAREER.team, r = TEAMS[me].r;
-  const pool = TEAMS.filter(t => t.id !== me && t.r <= r - 2).sort((a, b) => (CAREER.lgOf[b.id] - CAREER.lgOf[a.id]) || (b.r - a.r));
+  const pool = TEAMS.filter(t => t.id !== me && t.r <= r - 2 && CAREER.lgOf[t.id] !== 3).sort((a, b) => (CAREER.lgOf[b.id] - CAREER.lgOf[a.id]) || (b.r - a.r));
   const lg2 = pool.filter(t => CAREER.lgOf[t.id] === 2), lg1 = pool.filter(t => CAREER.lgOf[t.id] === 1);
   const picks = [...lg1.slice(-1), ...lg2.slice(0, 6).sort(() => Math.random() - 0.5).slice(0, 2)];
   return (picks.length >= 2 ? picks : TEAMS.filter(t => t.id !== me && CAREER.lgOf[t.id] === 2).slice(0, 3)).map(t => t.id);

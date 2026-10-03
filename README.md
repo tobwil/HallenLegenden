@@ -53,7 +53,7 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
 - Sound vollständig synthetisiert (Web Audio): Hallenakustik, Publikum aus synthetischen Stimmen, Trommeln, Pfiff, Torhupe, Chiptune-Musik. Optional ein Hallensprecher über die Sprachausgabe des Browsers (standardmäßig aus)
 
 #### Ligen und Karriere
-- **36 Vereine** in zwei Ligen, Ligazugehörigkeit nach der Saison 2026/27 (Fantasienamen aus Stadt und Spitzname)
+- **36 Vereine** in zwei Ligen, Ligazugehörigkeit nach der Saison 2026/27, dazu **16 internationale Vereine** (alle mit Fantasienamen aus Stadt und Spitzname). Im Schnellen Spiel unter „EUROPA“ wählbar
 - **Schnelles Spiel** mit Trikotwahl (Heim, Auswärts, Alternativ) und Warnung bei ähnlichen Farben
 - **Karriere** über beliebig viele Saisons:
   - 6, 17 oder 34 Spieltage, Auf- und Abstieg zwischen beiden Ligen
@@ -64,7 +64,8 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
   - CPU-Transfers (abschaltbar), Verletzungen
   - Vorstand mit Saisonziel: Bonus bei Erfolg, Warnung bei deutlichem Verfehlen, Entlassung beim zweiten Mal mit Jobangeboten anderer Vereine. Schulden bedeuten Transfersperre und nach einigen Spieltagen Notverkäufe
   - Co-Trainer für Aufstellung und Training (optional)
-  - Pokal mit 32 Teams und Final Four
+  - Pokal mit 32 Teams, Halbfinale und Finale als Final-Four-Wochenende in neutraler Halle mit eigener Präsentation und Pokalübergabe
+  - Europapokal: Platz 1 und 2 der 1. Liga und der Pokalsieger treffen auf 13 internationale Vereine. Gruppenphase (4 × 4, Hin- und Rückspiel), Viertelfinale, Final Four am Saisonende. Bei 6 Spieltagen kompakt mit 8 Vereinen. Prämien und Zuschauereinnahmen, eigener Tab mit Gruppen und Turnierbaum
   - Jede Partie selbst spielen oder simulieren
   - Zeitung „Handball-Kurier“ mit Schlagzeilen, Tabelle, Torjägern und Meldungen
 - **Editor** für Vereinsnamen, Kürzel, Trikotfarben, Spielernamen und Nummern
@@ -199,7 +200,7 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
 - Fully synthesised sound (Web Audio): arena acoustics, crowd made of synthetic voices, drums, whistle, goal horn, chiptune music. Optional stadium announcer via the browser's speech synthesis (off by default)
 
 #### Leagues and career
-- **36 clubs** in two leagues, league membership based on the 2026/27 season (fictional names made of city and nickname)
+- **36 clubs** in two leagues, league membership based on the 2026/27 season, plus **16 international clubs** (all with fictional names made of city and nickname). Selectable under “EUROPA” in quick match
 - **Quick match** with kit choice (home, away, alternate) and a warning for similar colours
 - **Career** over as many seasons as you like:
   - 6, 17 or 34 matchdays, promotion and relegation between both leagues
@@ -210,7 +211,8 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
   - CPU transfers (can be switched off), injuries
   - Board with a season target: bonus on success, warning when clearly missed, sacked the second time with job offers from other clubs. Debt means a transfer ban and, after a few matchdays, forced sales
   - Assistant coach for line-up and training (optional)
-  - Cup with 32 teams and a Final Four
+  - Cup with 32 teams, semi-final and final as a Final Four weekend in a neutral arena with its own presentation and trophy ceremony
+  - European cup: 1st and 2nd of the 1st league plus the cup winner meet 13 international clubs. Group stage (4 × 4, home and away), quarter-finals, Final Four at the end of the season. Compact with 8 clubs for 6-matchday seasons. Prize money and gate receipts, own tab with groups and bracket
   - Play every match yourself or simulate it
   - "Handball-Kurier" newspaper with headlines, table, top scorers and news
 - **Editor** for club names, abbreviations, kit colours, player names and numbers

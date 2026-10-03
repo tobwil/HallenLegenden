@@ -76,6 +76,15 @@ const TEAM_BASE = [
   ['LUD', 'Ludwigshafen Rheinpiraten', '#1d1d1b', '#ffcc00', 2, 71], ['DOR', 'Dormagen Rheinwerker', '#0055a5', '#e2001a', 2, 72],
   ['ESS', 'Essen Zechenkumpel', '#00589c', '#ffffff', 2, 71], ['FER', 'Ferndorf Siegerländer', '#a3001e', '#141414', 2, 69],
   ['EMS', 'Emsdetten Emsflitzer', '#ffd400', '#0a3a7a', 2, 70], ['HMM', 'Hamm Westfalenhammer', '#e30613', '#f4f4f4', 2, 71],
+  // Internationale Vereine (Liga 3 = Europapokal, keine Ligazugehörigkeit). Fantasienamen aus Stadt und Spitzname
+  ['BAR', 'Barcelona Katalanenstiere', '#004d98', '#a50044', 3, 93], ['VES', 'Veszprém Bakonylöwen', '#d0021b', '#ffffff', 3, 92],
+  ['PAR', 'Paris Seinelöwen', '#0b1f4b', '#e30613', 3, 91], ['AAL', 'Aalborg Limfjordwikinger', '#ffffff', '#d40029', 3, 90],
+  ['KIC', 'Kielce Kreuzritter', '#ffd400', '#1a3c8f', 3, 89], ['SZE', 'Szeged Theißfischer', '#1e5aa8', '#ffffff', 3, 88],
+  ['NAN', 'Nantes Loirekanoniere', '#7a2b8f', '#ffffff', 3, 87], ['PLK', 'Płock Weichselwölfe', '#00539f', '#ffffff', 3, 86],
+  ['LIS', 'Lissabon Tejolöwen', '#00843d', '#ffffff', 3, 86], ['POR', 'Porto Douro-Drachen', '#003da5', '#ffffff', 3, 85],
+  ['MON', 'Montpellier Okzitanier', '#f39200', '#0a2d6e', 3, 85], ['ODE', 'Odense Fünenfalken', '#141414', '#e30613', 3, 84],
+  ['ZAG', 'Zagreb Savestürmer', '#002f6c', '#d52b1e', 3, 83], ['BUC', 'Bukarest Karpatenadler', '#c8102e', '#f4f4f4', 3, 83],
+  ['KRI', 'Kristianstad Schonenelche', '#ffffff', '#0a3d91', 3, 82], ['ELV', 'Elverum Glommatrolle', '#d71920', '#141414', 3, 81],
 ];
 const TEAM_KEY = 'hl2_vereine';
 let TEAM_EDIT = store.get(TEAM_KEY, {});

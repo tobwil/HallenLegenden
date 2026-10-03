@@ -139,7 +139,15 @@ function endHalf() {
   AU.whistle(G.half === 1 ? 2 : 3, true);
   if (G.half === 1) { G.phase = 'halftime'; G.phaseT = 0; say('Halbzeit! Durchatmen in der Kabine.'); if (!G.demo) { AU.jingle('half'); AU.say(`Halbzeit. Es steht ${G.score[0]} zu ${G.score[1]}.`); } }
   else if (G.cup && G.score[0] === G.score[1]) startShootout();
-  else { G.phase = 'fulltime'; G.phaseT = 0; if (!G.demo) { AU.cheer(0.8); AU.say(`Abpfiff! Endstand ${G.score[0]} zu ${G.score[1]}.`); } G.excite = 2; G.parts.push(...confetti(20, ['#ffc83a', '#ffffff', kit(G.score[0] >= G.score[1] ? 0 : 1).c1])); }
+  else { G.phase = 'fulltime'; G.phaseT = 0; if (!G.demo) { AU.cheer(0.8); AU.say(`Abpfiff! Endstand ${G.score[0]} zu ${G.score[1]}.`); } G.excite = 2; G.parts.push(...confetti(20, ['#ffc83a', '#ffffff', kit(G.score[0] >= G.score[1] ? 0 : 1).c1])); trophyMoment(); }
+}
+// Finale eines Events: Pokalübergabe mit Konfetti in den Farben des Siegers
+function trophyMoment() {
+  if (!G.event || !G.event.final || G.demo) return;
+  const w = G.soWinner !== undefined ? G.soWinner : G.score[0] > G.score[1] ? 0 : G.score[1] > G.score[0] ? 1 : -1; if (w < 0) return;
+  G.trophyWinner = w; G.excite = 4; G.wave = 8; AU.cheer(1); AU.jingle('goal');
+  for (const gx of [8, 20, 32]) G.parts.push(...confetti(gx, [kit(w).c1, kit(w).c2, '#ffc83a', '#ffffff']));
+  banner(`${TEAMS[G.tid[w]].short.toUpperCase()} HOLT DEN ${G.event.trophy}!`, '#ffc83a', G.event.title, 5, true);
 }
 function step(dt) {
   G.t += dt; G.shake = Math.max(0, G.shake - dt); G.excite = Math.max(0, G.excite - dt); G.flash = Math.max(0, G.flash - dt); G.wave = Math.max(0, G.wave - dt);
@@ -265,7 +273,7 @@ function soResolve(hit) {
     G.soWinner = s0 > s1 ? 0 : 1; G.shootout = false; G.soScore = [s0, s1];
     AU.whistle(3, true); AU.cheer(1);
     banner('ENTSCHIEDEN!', '#ffc83a', `${TEAMS[G.tid[G.soWinner]].short} gewinnt ${s0}:${s1} vom Punkt`, 3, true);
-    G.phase = 'fulltime'; G.phaseT = 0; return;
+    G.phase = 'fulltime'; G.phaseT = 0; trophyMoment(); return;
   }
   G.so.turn = 1 - t; G.pending = { k: 'so', t: 1.5 }; G.phase = 'whistle'; G.phaseT = 0;
 }
