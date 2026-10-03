@@ -38,7 +38,9 @@ test('Seite lädt ohne Fehler, Spielschleife läuft (Desktop und Handy)', async 
   for (const o of [DESKTOP, MOBILE]) {
     const { page, ctx, errors } = await open(o);
     const t1 = await page.evaluate('G.t'); await page.waitForTimeout(600); const t2 = await page.evaluate('G.t');
-    ok(t2 > t1, `G.t steigt nicht (${t1} -> ${t2})`); ok(!errors.length, errors.join('; ')); await ctx.close();
+    // Pixelschrift mit erweitertem Zeichensatz geladen, sonst zeigt die Leinwand Ć, Š, Ž … falsch (Petrović, Kovač)
+    const fonts = await page.evaluate(() => [...document.fonts].filter(f => f.family.includes('Press Start')).map(f => f.status));
+    ok(t2 > t1, `G.t steigt nicht (${t1} -> ${t2})`); ok(fonts.length === 2 && fonts.every(s => s === 'loaded'), 'Schrift-Zeichensätze: ' + fonts); ok(!errors.length, errors.join('; ')); await ctx.close();
   }
 });
 

@@ -3,6 +3,7 @@
 #   sh promo.sh          alles
 #   sh promo.sh film     Story-Film und Anzug-Clip von der Landingpage
 #   sh promo.sh spiel    Clips aus dem Spiel (Final Four, Aufstellungen, Spielszene, Kempa, Europapokal) und daraus der Teaser
+#   sh promo.sh bilder   Standbilder der Menüs für README und Landingpage nach docs/screenshots/ (Vor dem Spiel, Erfolge, Kader, Teilen, Handy)
 # Braucht: node mit playwright (npm i playwright im Ordner tools/promo), ffmpeg, python3.
 # Optional: CHROMIUM=/pfad/zu/chromium, falls Playwright seinen Browser nicht findet.
 set -e
@@ -15,6 +16,11 @@ SERVER=$!
 trap 'kill $SERVER 2>/dev/null' EXIT
 sleep 1
 TEIL=${1:-alle}
+if [ "$TEIL" = alle ] || [ "$TEIL" = bilder ]; then
+  node bilder.js "$TMP/bilder"
+  for f in "$TMP"/bilder/*.png; do ffmpeg -y -loglevel error -i "$f" -q:v 3 "$ROOT/docs/screenshots/$(basename "$f" .png).jpg"; done
+  [ "$TEIL" = bilder ] && { echo "fertig: $ROOT/docs/screenshots"; exit 0; }
+fi
 node aufnahme.js tafel "$TMP"   # Abschlusstafel, für Story-Film und Teaser
 
 if [ "$TEIL" != spiel ]; then
