@@ -26,7 +26,7 @@ function newMatch(ta, tb, o = {}) {
   const kits = o.kits || makeKits(ta, tb, o.kitA, o.kitB);
   G = {
     tid: [ta, tb], kits, human: o.human ?? -1, diff: o.diff ?? 1, halfLen: o.halfLen ?? 180, lg: TEAMS[ta].lg,
-    career: !!o.career, cup: !!o.cup, demo: !!o.demo, label: o.label || '', lineupPids: o.lineups ? o.lineups.map(l => l.map(r => r.pid)) : null,
+    career: !!o.career, cup: !!o.cup, euro: o.euro || null, event: o.event || null, demo: !!o.demo, label: o.label || '', lineupPids: o.lineups ? o.lineups.map(l => l.map(r => r.pid)) : null,
     score: [0, 0], half: 1, clock: 0, swap: false, phase: o.demo ? 'kickoff' : 'intro', phaseT: 0, t: 0, introT: 0,
     players: [], ctrl: null, poss: -1, possT: 0, starter: 0, pending: null, passiveWarn: false,
     banner: null, cut: null, ticker: { txt: '', t: 0 }, shake: 0, flash: 0, slow: 1, slowT: 0, excite: 0, wave: 0,
@@ -51,10 +51,10 @@ function newMatch(ta, tb, o = {}) {
   }
   G.goalie = [G.players[0], G.players[7]];
   G.ball = { x: 20, y: 10, z: 1, vx: 0, vy: 0, vz: 0, owner: null, state: 'held', passTo: null, shot: null, last: null, nc: null, ncT: 0, tried: new Set(), px: 20, lob: false, trail: [] };
-  buildArena(kits[0], kits[1], G.lg);
-  setupKickoff(0, true);
+  buildArena(kits[0], kits[1], G.lg, G.event);
+  setupKickoff(0, true);   // setzt die Phase auf 'kickoff' …
   if (G.demo) G.phase = 'play';
-  else { AU.jingle('intro'); AU.say(`Herzlich willkommen zum Spiel ${TEAMS[ta].n} gegen ${TEAMS[tb].n}!`); }
+  else { G.phase = 'intro'; /* … deshalb das TV-Intro (Aufstellungen, Event-Titel) danach wieder setzen */ AU.jingle('intro'); AU.say(`Herzlich willkommen zum Spiel ${TEAMS[ta].n} gegen ${TEAMS[tb].n}!`); }
 }
 const kit = t => G.kits[t];
 const mates = p => G.players.filter(q => q.team === p.team && q !== p && !q.out);

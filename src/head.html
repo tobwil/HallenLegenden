@@ -119,6 +119,14 @@ table.fin{max-width:520px}
 .sbar{display:block;height:6px;background:var(--gold);opacity:.8}
 .stt tr.me .sbar{background:var(--hot)}
 @media (max-width:760px){.stat2{grid-template-columns:1fr}}
+/* Europapokal */
+.egroups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.egroup{display:flex;flex-direction:column;gap:4px;min-width:0}
+.egroup tr.zone-a td:first-child{box-shadow:inset 3px 0 0 var(--green)}
+.eres{margin:0;font-size:15px;color:var(--mute);line-height:1.35}
+.eres .me{color:var(--gold)}
+.bracket.ebr{grid-template-columns:repeat(3,minmax(92px,1fr)) minmax(80px,.8fr)}
+@media (max-width:600px){.egroups{grid-template-columns:1fr}}
 /* Pokal-Turnierbaum */
 .bracket{display:grid;grid-template-columns:repeat(5,minmax(92px,1fr)) minmax(80px,.8fr);gap:12px;overflow-x:auto;padding-bottom:4px}
 .bcol{display:flex;flex-direction:column;gap:6px;min-width:0}

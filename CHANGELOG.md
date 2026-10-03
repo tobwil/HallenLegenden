@@ -2,6 +2,27 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.3: Europapokal und Final Four
+- **Final Four:** Halbfinale und Finale des Pokals finden an einem Termin in neutraler Halle statt: lila Boden, goldene Torräume, ausverkaufte Ränge mit den Fans beider Teams je zur Hälfte, eigene Bandenwerbung, großer Event-Titel im Intro. Nach dem Finale gibt es eine Pokalübergabe mit Konfetti, auf dem Abpfiff-Bildschirm einen Pokal-Hinweis. Kein Heimvorteil und keine Zuschauereinnahmen für einen „Gastgeber“.
+- **16 internationale Vereine** mit Fantasienamen (zum Beispiel Barcelona Katalanenstiere, Veszprém Bakonylöwen, Kielce Kreuzritter), im Schnellen Spiel unter „EUROPA“ wählbar. Laufende Karrieren bekommen ihre Kader und Budgets automatisch nachgerüstet.
+- **Europapokal in der Karriere:** Platz 1 und 2 der 1. Liga, dazu der Pokalsieger (falls Erstligist, sonst der Dritte), treffen auf 13 internationale Vereine.
+  - Gruppenphase mit 4 Gruppen à 4 (Lostöpfe nach Stärke, deutsche Vereine in verschiedenen Gruppen), Hin- und Rückspiel
+  - Viertelfinale mit Heimrecht für Gruppensieger, Final Four am Saisonende
+  - Bei 6 Spieltagen kompakt: 8 Vereine, Viertelfinale, Final Four
+  - Termine zwischen den Ligaspieltagen, alle Spiele selbst spielbar oder simuliert. Mehr Spiele bedeuten mehr Belastung für den Kader.
+  - Startprämie, Prämien für Siege und Runden, Zuschauereinnahmen bei Heimspielen (Beträge siehe unten)
+  - Neuer Tab „EUROPA“ mit Gruppentabellen, Ergebnissen und Turnierbaum. Zeitung, Saisonabschluss, Finanzbilanz und Historie zeigen den Europapokal.
+  - Laufende Karrieren starten ab der nächsten Saison im Europapokal.
+- **Fehler behoben:** Das TV-Intro mit den Aufstellungskarten wurde nie angezeigt, weil die Anwurf-Vorbereitung die Intro-Phase sofort überschrieb. Es läuft jetzt wieder vor jedem Spiel und lässt sich mit einer Taste überspringen.
+- **Fehler behoben:** Gewann Magdeburg (Vereinsnummer 0) den Pokal, wurde das Finale am Saisonende erneut ausgespielt. In der Historie stand dann ein falscher Pokalsieger, im ungünstigen Fall drohte eine Endlosschleife.
+- **Fehler behoben (beim Test der Deploy Preview gefunden):** Schied der eigene Verein im Halbfinale eines Final Four aus, blieb das Finale am selben Termin liegen. Im Europapokal wurde es erst beim Saisonabschluss nachgeholt, im Pokal erst mit dem nächsten Ligaspieltag. Bis dahin fehlten Sieger und Zeitungsmeldung. Jetzt wird das Finale sofort simuliert.
+- **Europapokal-Finanzen nachjustiert (beim Test der Deploy Preview gefunden):** Ein Teilnehmer verdiente im Schnitt rund 400.000 € pro Saison, fast das Siebenfache dessen, was eine Ligasaison einem Erstligisten einbringt. Die Budgets der internationalen Vereine verdoppelten sich so binnen drei Saisons. Jetzt: Startprämie 25.000 €, Sieg 10.000 €, Remis 5.000 €, Viertelfinale/Final Four/Finale 20.000/40.000/60.000 €, Titel 120.000 €, beim Gastgeber bleiben 60 % der Zuschauereinnahmen. Im Schnitt sind das etwa 225.000 € pro Teilnehmer, für den Sieger rund 450.000 €. Die Heimatliga-Prämie der internationalen Vereine sinkt auf 25.000 €. Der Budget-Test prüft 1. Liga und internationale Vereine jetzt einzeln.
+- Lange Banner (z. B. bei der Pokalübergabe) passen ihre Schriftgröße der Bildbreite an
+- Die Untertitelzeile unter „FINAL FOUR“ im Intro hat einen dunklen Hintergrund und ist vor dem Publikum lesbar
+- 5 neue Regressionstests (`tests/run.mjs`), insgesamt 26. Der Aktionen-Test stellt den Spieler vor jeder Aktion wieder hin; vorher schlug er ab und zu fehl, wenn der Spieler in den Zwischenframes gefoult worden war und noch lag.
+- **Pressekit:** neue Clips direkt aus dem Spiel: Final Four mit Pokalübergabe, TV-Intro mit Aufstellungskarten, Spielszene mit Tor und Wiederholung, Kempa-Tor, Europapokal-Ansicht, dazu Standbilder (`docs/presse/`). Aufnahme mit `tools/promo/spiel.js`, Bild für Bild und mit festem Zufall reproduzierbar, alles neu mit `sh tools/promo/promo.sh spiel`.
+- **Neuer Teaser** aus echten Spielszenen (27 s, `tools/promo/schnitt.js`), auch oben in der README. Der bisherige Teaser heißt jetzt `hallenlegenden-story` (Story-Film der Landingpage).
+
 ## v8.2: Finanzen im Karrieremodus
 - **Zuschauereinnahmen:** Jedes Heimspiel bringt Geld nach Hallengröße und Auslastung. Die Auslastung steigt mit Tabellenplatz, Siegesserie, starkem Gegner und im Pokal. Pokal-Heimspiele bringen jetzt auch Zuschauergeld. Die Zeitung nennt die Zuschauerzahl. Dazu Sponsoren pro Spieltag und TV-Geld nach Platz. Die Pauschalen für Sieg, Remis und Niederlage entfallen.
 - **Saisonlänge egal:** Gehälter und Einnahmen sind auf eine Saison geeicht. Bei 6 oder 34 Spieltagen wird pro Spieltag umgerechnet, Zuschauergeld über die tatsächliche Zahl der Heimspiele. Spielergehälter werden pro Saison angezeigt.

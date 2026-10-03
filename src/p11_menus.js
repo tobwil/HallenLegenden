@@ -76,7 +76,9 @@ function tcard(id, label, cls, active) {
 function optRow(label, list, key) {
   return `<div class="row"><span class="tag" style="min-width:120px">${label}</span>${list.map((o, i) => `<button class="small ${SEL[key] === i ? 'on' : ''}" data-act="opt" data-v="${key}:${i}">${o.n}</button>`).join('')}</div>`;
 }
-function leagueTabs(act = 'lg') { return `<div class="row">${[1, 2].map(l => `<button class="small ${SEL.lg === l ? 'on' : ''}" data-act="${act}" data-v="${l}">${l}. LIGA</button>`).join('')}</div>`; }
+const lgName = l => l === 3 ? 'EUROPA' : `${l}. LIGA`;
+// Karriere: nur deutsche Ligen wählbar; Schnelles Spiel zusätzlich die internationalen Vereine
+function leagueTabs(act = 'lg') { return `<div class="row">${(SEASON_PICK ? [1, 2] : [1, 2, 3]).map(l => `<button class="small ${SEL.lg === l ? 'on' : ''}" data-act="${act}" data-v="${l}">${lgName(l)}</button>`).join('')}</div>`; }
 function teamGrid(selA, selB) {
   return `<div class="grid">${LEAGUE(SEL.lg).map(T => `<button class="tbtn ${T.id === selA ? 'sel-a' : ''} ${T.id === selB ? 'sel-b' : ''}" data-act="team" data-v="${T.id}" title="${esc(T.n)}"><img src="${icon(T)}" alt="">${T.k}</button>`).join('')}</div>`;
 }
@@ -192,7 +194,7 @@ const ACT = {
     const row = (p, id, lbl) => `<span class="tag">${p.role}</span><input id="${id}N" value="${esc(p.name)}" maxlength="16" aria-label="Name ${lbl}"><input id="${id}Z" value="${p.num}" inputmode="numeric" maxlength="2" aria-label="Nummer ${lbl}">`;
     showMenu(`<div class="panel"><h2>EDITOR</h2>
       <p class="muted">Vereins- und Spielernamen sind Platzhalter. Hier kannst du alles umbenennen und die Farben anpassen. Gespeichert wird nur in diesem Browser.</p>
-      <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg}. Liga · ${esc(X.n)}</option>`).join('')}</select>
+      <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg === 3 ? 'International' : X.lg + '. Liga'} · ${esc(X.n)}</option>`).join('')}</select>
       <h3>VEREIN</h3>
       <div class="ed"><span class="tag">NAME</span><input id="edTn" value="${esc(T.n)}" maxlength="30" aria-label="Vereinsname"><input id="edTk" value="${esc(T.k)}" maxlength="3" aria-label="Kürzel"></div>
       <div class="row"><span class="tag" style="min-width:120px">HEIMTRIKOT</span><input type="color" id="edH1" value="${T.home.c1}" aria-label="Heim Trikotfarbe"><input type="color" id="edH2" value="${T.home.c2}" aria-label="Heim Zweitfarbe"><img src="${kitIcon(T.home)}" width="32" height="32" alt="" style="image-rendering:pixelated">
@@ -243,7 +245,7 @@ function endMatch() {
   const best = potm();
   const scorers = allMatchPlayers().filter(p => p.goals).sort((a, b) => b.goals - a.goals).slice(0, 5).map(p => `${esc(p.name)} (${TEAMS[G.tid[p.team]].k}) ${p.goals}`).join(' · ') || 'keine';
   showMenu(`<div class="panel"><div class="row spread"><h2>ABPFIFF${res ? ' · ' + res : ''}</h2><span class="tag">${esc(G.label)}</span></div>
-    <p class="res">${T0.k} ${G.score[0]} : ${G.score[1]} ${T1.k}</p>${G.soScore ? `<p class="muted" style="text-align:center">n. 7-Meter-Werfen ${G.soScore[0]}:${G.soScore[1]} · ${esc(TEAMS[G.tid[G.soWinner]].n)} weiter</p>` : ''}
+    <p class="res">${T0.k} ${G.score[0]} : ${G.score[1]} ${T1.k}</p>${G.trophyWinner !== undefined ? `<p class="res" style="font-size:clamp(12px,2vw,18px)">🏆 ${esc(TEAMS[G.tid[G.trophyWinner]].n.toUpperCase())} GEWINNT DEN ${esc(G.event.trophy)}</p>` : ''}${G.soScore ? `<p class="muted" style="text-align:center">n. 7-Meter-Werfen ${G.soScore[0]}:${G.soScore[1]} · ${esc(TEAMS[G.tid[G.soWinner]].n)} weiter</p>` : ''}
     <div class="potm"><canvas id="potmC" width="40" height="40"></canvas><div><h3>SPIELER DES SPIELS</h3><p style="margin:4px 0;font-family:var(--pix);font-size:12px">#${best.num} ${esc(best.name.toUpperCase())}</p>
       <p class="muted">${esc(TEAMS[G.tid[best.team]].n)} · ${best.role === 'TW' ? `${best.saves} Paraden` : `${best.goals} Tore aus ${best.shots} Würfen`}${best.stealsN ? ` · ${best.stealsN} Ballgewinne` : ''}</p></div></div>
     <div class="tblwrap"><table><thead><tr><th>${T0.k}</th><th style="text-align:center">STATISTIK</th><th>${T1.k}</th></tr></thead><tbody>
@@ -275,7 +277,7 @@ function prematch(a, b, o, back) {
 // ================= Spielstand speichern & laden =================
 function saveMatch() {
   if (!G || G.demo || ['intro', 'fulltime'].includes(G.phase)) return false;
-  const d = { v: 2, tid: G.tid, kits: G.kits, human: G.human, diff: G.diff, halfLen: G.halfLen, career: !!G.career, ck: CAREER ? careerStamp() : '', lineups: G.lineupPids || null, label: G.label,
+  const d = { v: 2, tid: G.tid, kits: G.kits, human: G.human, diff: G.diff, halfLen: G.halfLen, career: !!G.career, ck: CAREER ? careerStamp() : '', lineups: G.lineupPids || null, label: G.label, cup: !!G.cup, euro: G.euro, event: G.event,
     score: G.score, half: G.phase === 'halftime' ? 2 : G.half, clock: G.phase === 'halftime' ? 0 : G.clock, swap: G.phase === 'halftime' ? !G.swap : G.swap,
     tact: G.tact, timeouts: G.timeouts, stats: G.stats, log: G.log, poss: G.poss, starter: G.starter,
     ps: G.players.map(p => ({ x: p.x, y: p.y, out: p.out, goals: p.goals, shots: p.shots, saves: p.saves, stealsN: p.stealsN, fouls: p.fouls, st: p.st })),
@@ -290,7 +292,7 @@ function loadMatch() {
   const d = store.get(SAVE_KEY, null); if (!d) return ACT.main();
   AU.stopMusic();
   const career = !!(d.career && CAREER && d.ck === careerStamp() && d.lineups);
-  newMatch(d.tid[0], d.tid[1], { human: d.human, halfLen: d.halfLen, diff: d.diff, career, label: d.label, kits: d.kits, lineups: career ? d.lineups.map((ids, t) => ids.map(id => findCareerPlayer(d.tid[t], id))) : null });
+  newMatch(d.tid[0], d.tid[1], { human: d.human, halfLen: d.halfLen, diff: d.diff, career, label: d.label, kits: d.kits, cup: !!d.cup, euro: d.euro, event: d.event, lineups: career ? d.lineups.map((ids, t) => ids.map(id => findCareerPlayer(d.tid[t], id))) : null });
   Object.assign(G, { score: d.score, half: d.half, clock: d.clock, swap: d.swap, tact: d.tact, timeouts: d.timeouts, stats: d.stats, log: d.log, starter: d.starter });
   d.ps.forEach((s, i) => Object.assign(G.players[i], s));
   hideMenu(); AU.ambience(true);

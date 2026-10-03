@@ -135,7 +135,7 @@ function drawBanner() {
   const bn = G.banner; if (!bn) return;
   const e = ease(bn.t / 0.25), out = clamp((bn.t - bn.dur + 0.25) / 0.25, 0, 1);
   if (bn.big) {
-    const size = bn.txt.length > 9 ? 28 : 40, y = 116;
+    const size = bn.txt.length > 9 ? Math.min(28, Math.floor((W - 40) / bn.txt.length)) : 40, y = 116;   // lange Texte passen sich der Breite an
     const sc = easeBack(bn.t / 0.35);
     rect(0, y - 14, W * e, size + 36 + (bn.sub ? 14 : 0), 'rgba(8,7,14,0.7)');
     for (let i = 0; i < 6; i++) rect(((G.t * 300 + i * 110) % (W + 80)) - 80, y - 14, 40, 3, bn.col);
@@ -189,7 +189,7 @@ function replayHud() {
 function introHud() {
   const t = G.introT, T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]];
   rect(0, 0, W, 20, '#000'); rect(0, H - 20, W, 20, '#000');
-  text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || (G.lg === 2 ? '2. LIGA' : '1. LIGA'), W - 14, 6, '#9b90ad', 8, 'right', null);
+  text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), W - 14, 6, '#9b90ad', 8, 'right', null);
   text('TASTE = ÜBERSPRINGEN', W / 2, H - 14, '#6e6680', 8, 'center', null);
   if (t < 3.6) {
     const e = ease(t / 0.6), o = clamp((t - 3.1) / 0.5, 0, 1);
@@ -198,6 +198,7 @@ function introHud() {
     bigText(T0.n.toUpperCase(), W / 2 - (1 - e) * 300, 134, clamp(Math.floor((W - 60) / T0.n.length), 8, 16), lum(tcol(0)) > 0.7 ? '#16161a' : '#ffffff', 2);
     bigText(T1.n.toUpperCase(), W / 2 + (1 - e) * 300, 180, clamp(Math.floor((W - 60) / T1.n.length), 8, 16), lum(tcol(1)) > 0.7 ? '#16161a' : '#ffffff', 2);
     if (t > 0.6) { rect(W / 2 - 22, 152, 44, 26, OUTLINE); bigText('VS', W / 2, 157, 16, '#ffc83a', 2); }
+    if (G.event) { const e2 = ease(t / 0.8); ctx.globalAlpha = (1 - o) * e2; bigText(G.event.title, W / 2, 56, 24, '#ffc83a', 3); rect(W / 2 - G.event.stage.length * 4 - 10, 87, G.event.stage.length * 8 + 20, 17, 'rgba(8,7,14,0.85)'); text(G.event.stage, W / 2, 92, '#f3ead6', 8, 'center', null); ctx.globalAlpha = 1 - o; }
     ctx.globalAlpha = 1;
     return;
   }

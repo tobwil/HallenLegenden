@@ -3,7 +3,7 @@
 [![Jetzt spielen / Play now](https://img.shields.io/badge/%E2%96%B6%20Jetzt%20spielen%20%2F%20Play%20now-hallenlegenden.de-ffc83a?style=for-the-badge&labelColor=07060b)](https://hallenlegenden.de/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3ddc84?style=for-the-badge&labelColor=07060b)](LICENSE)
 
-<p align="center"><a href="https://hallenlegenden.de"><img src="docs/presse/hallenlegenden-teaser.gif" width="640" alt="Pixel-Handballer dribbelt durch die Halle, trifft, jubelt vor dem Fernseher, liest Zeitung, stemmt den Pokal und steht am Ende im Anzug am Spielfeldrand"></a><br><sub>Der Story-Film von <a href="https://hallenlegenden.de">hallenlegenden.de</a> · the story film from the landing page</sub></p>
+<p align="center"><a href="https://hallenlegenden.de"><img src="docs/presse/hallenlegenden-teaser.gif" width="640" alt="Szenen aus dem Spiel: Startbildschirm, Aufstellungskarten, ein Tor, ein Kempa-Tor, der Europapokal-Turnierbaum, das Final Four und die Pokalübergabe"></a><br><sub>Echte Szenen aus dem Spiel · real in-game footage · <a href="docs/presse/">mehr Clips / more clips</a></sub></p>
 
 **[Screenshots](#screenshots) · [Pressekit / press kit](docs/presse/) · [Deutsch](#deutsch) · [English](#english)**
 
@@ -53,7 +53,7 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
 - Sound vollständig synthetisiert (Web Audio): Hallenakustik, Publikum aus synthetischen Stimmen, Trommeln, Pfiff, Torhupe, Chiptune-Musik. Optional ein Hallensprecher über die Sprachausgabe des Browsers (standardmäßig aus)
 
 #### Ligen und Karriere
-- **36 Vereine** in zwei Ligen, Ligazugehörigkeit nach der Saison 2026/27 (Fantasienamen aus Stadt und Spitzname)
+- **36 Vereine** in zwei Ligen, Ligazugehörigkeit nach der Saison 2026/27, dazu **16 internationale Vereine** (alle mit Fantasienamen aus Stadt und Spitzname). Im Schnellen Spiel unter „EUROPA“ wählbar
 - **Schnelles Spiel** mit Trikotwahl (Heim, Auswärts, Alternativ) und Warnung bei ähnlichen Farben
 - **Karriere** über beliebig viele Saisons:
   - 6, 17 oder 34 Spieltage, Auf- und Abstieg zwischen beiden Ligen
@@ -64,7 +64,8 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
   - CPU-Transfers (abschaltbar), Verletzungen
   - Vorstand mit Saisonziel: Bonus bei Erfolg, Warnung bei deutlichem Verfehlen, Entlassung beim zweiten Mal mit Jobangeboten anderer Vereine. Schulden bedeuten Transfersperre und nach einigen Spieltagen Notverkäufe
   - Co-Trainer für Aufstellung und Training (optional)
-  - Pokal mit 32 Teams und Final Four
+  - Pokal mit 32 Teams, Halbfinale und Finale als Final-Four-Wochenende in neutraler Halle mit eigener Präsentation und Pokalübergabe
+  - Europapokal: Platz 1 und 2 der 1. Liga und der Pokalsieger treffen auf 13 internationale Vereine. Gruppenphase (4 × 4, Hin- und Rückspiel), Viertelfinale, Final Four am Saisonende. Bei 6 Spieltagen kompakt mit 8 Vereinen. Prämien und Zuschauereinnahmen, eigener Tab mit Gruppen und Turnierbaum
   - Jede Partie selbst spielen oder simulieren
   - Zeitung „Handball-Kurier“ mit Schlagzeilen, Tabelle, Torjägern und Meldungen
 - **Editor** für Vereinsnamen, Kürzel, Trikotfarben, Spielernamen und Nummern
@@ -111,12 +112,12 @@ impressum.html        Impressum
 datenschutz.html      Datenschutzerklärung
 assets/               Story-Film, Umzugs-Skript, Styles und Kontakt-Skript für Impressum und Datenschutz
 fonts/                Schriften lokal (Press Start 2P, VT323, SIL OFL)
-tools/                Google-Apps-Script für die Wunschliste, tools/promo: Teaser und GIFs neu aufnehmen
+tools/                Google-Apps-Script für die Wunschliste, tools/promo: Teaser, Spielclips und GIFs neu aufnehmen
 netlify.toml          Einstellungen für Netlify (Hosting von hallenlegenden.de)
 hallen-legenden.html  dieselbe Seite ohne <html>-Gerüst (für die Veröffentlichung als Claude-Artifact)
 src/                  Quellcode in Modulen, wird per build.sh zusammengesetzt
 docs/screenshots/     echte Spielaufnahmen für README und Landingpage
-docs/presse/          Pressekit: Teaser-Video, GIFs, Kurzbeschreibung
+docs/presse/          Pressekit: Teaser, Spielclips (Final Four, Aufstellungen, Europapokal), GIFs, Kurzbeschreibung
 docs/LANDINGPAGE.md   Landingpage, Wunsch-Formular und eigene Domain einrichten
 docs/ARCHITEKTUR.md   Aufbau des Codes, Datenmodell, Speicher-Schlüssel
 docs/ENTWICKLUNG.md   Entwicklungsgeschichte: Wünsche, Entscheidungen, Tests
@@ -199,7 +200,7 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
 - Fully synthesised sound (Web Audio): arena acoustics, crowd made of synthetic voices, drums, whistle, goal horn, chiptune music. Optional stadium announcer via the browser's speech synthesis (off by default)
 
 #### Leagues and career
-- **36 clubs** in two leagues, league membership based on the 2026/27 season (fictional names made of city and nickname)
+- **36 clubs** in two leagues, league membership based on the 2026/27 season, plus **16 international clubs** (all with fictional names made of city and nickname). Selectable under “EUROPA” in quick match
 - **Quick match** with kit choice (home, away, alternate) and a warning for similar colours
 - **Career** over as many seasons as you like:
   - 6, 17 or 34 matchdays, promotion and relegation between both leagues
@@ -210,7 +211,8 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
   - CPU transfers (can be switched off), injuries
   - Board with a season target: bonus on success, warning when clearly missed, sacked the second time with job offers from other clubs. Debt means a transfer ban and, after a few matchdays, forced sales
   - Assistant coach for line-up and training (optional)
-  - Cup with 32 teams and a Final Four
+  - Cup with 32 teams, semi-final and final as a Final Four weekend in a neutral arena with its own presentation and trophy ceremony
+  - European cup: 1st and 2nd of the 1st league plus the cup winner meet 13 international clubs. Group stage (4 × 4, home and away), quarter-finals, Final Four at the end of the season. Compact with 8 clubs for 6-matchday seasons. Prize money and gate receipts, own tab with groups and bracket
   - Play every match yourself or simulate it
   - "Handball-Kurier" newspaper with headlines, table, top scorers and news
 - **Editor** for club names, abbreviations, kit colours, player names and numbers
@@ -257,12 +259,12 @@ impressum.html        legal notice (German)
 datenschutz.html      privacy policy (German)
 assets/               story film, move script, styles and contact script for the legal pages
 fonts/                self-hosted fonts (Press Start 2P, VT323, SIL OFL)
-tools/                Google Apps Script for the wish list, tools/promo: re-record teaser and GIFs
+tools/                Google Apps Script for the wish list, tools/promo: re-record teaser, game clips and GIFs
 netlify.toml          Netlify settings (hosting for hallenlegenden.de)
 hallen-legenden.html  same page without the <html> wrapper (for publishing as a Claude Artifact)
 src/                  modular source code, assembled by build.sh
 docs/screenshots/     actual game screenshots used in this README and the landing page
-docs/presse/          press kit: teaser video, GIFs, short description
+docs/presse/          press kit: teaser, game clips (Final Four, line-ups, European cup), GIFs, short description
 docs/LANDINGPAGE.md   landing page, form and custom domain setup (German)
 docs/ARCHITEKTUR.md   code architecture, data model, storage keys (German)
 docs/ENTWICKLUNG.md   development history: requests, decisions, tests (German)

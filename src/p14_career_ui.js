@@ -4,7 +4,7 @@ const seasonName = y => `${y}/${String(y + 1).slice(2)}`;
 const euroS = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + ' M' : Math.round(v / 1000) + ' T';
 function careerEntry() { SEASON_PICK = false; if (CAREER) careerHub('home'); else careerNewScreen(); }
 function careerNewScreen() {
-  SCREEN = 'cnew'; SEASON_PICK = true; if (TEAMS[SEL.a].lg !== SEL.lg) SEL.a = LEAGUE(SEL.lg)[0].id;
+  SCREEN = 'cnew'; SEASON_PICK = true; if (SEL.lg === 3) SEL.lg = 1; if (TEAMS[SEL.a].lg !== SEL.lg) SEL.a = LEAGUE(SEL.lg)[0].id;
   SEL.ait ??= 0; SEL.coach ??= 0;
   showMenu(`<div class="panel"><div class="row spread"><h2>NEUE KARRIERE</h2>${leagueTabs()}</div>
     <div class="tcard a active"><span class="tag">DEIN VEREIN</span><div class="tname"><img src="${icon(TEAMS[SEL.a])}" alt="">${esc(TEAMS[SEL.a].n)}</div>${bars(TEAMS[SEL.a])}</div>
@@ -18,7 +18,7 @@ const formTxt = f => { const v = Math.round(f); return `<span style="color:${v >
 const formTxtPlain = f => { const v = Math.round(f); return (v > 0 ? '+' : '') + v; };
 const fitBar = (v, w = 34) => `<span class="bar" style="display:inline-block;width:${w}px;vertical-align:middle"><i style="width:${v}%;background:${v > 75 ? 'var(--green)' : v > 55 ? 'var(--gold)' : 'var(--hot)'}"></i></span>`;
 function tabs() {
-  const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['stats', 'STATISTIK'], ['hist', 'HISTORIE']];
+  const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['euro', 'EUROPA'], ['stats', 'STATISTIK'], ['hist', 'HISTORIE']];
   return `<div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div>`;
 }
 function leagueTable(hl, rows, compact) {
@@ -45,6 +45,13 @@ function paper() {
       <p><b>${esc(O.n)}</b> (${CAREER.lgOf[oppId]}. Liga)<br>Stärke ${so.ovr} (ihr: ${sm.ovr})</p>
       <p>K.-o.-Spiel: Bei Unentschieden entscheidet das 7-Meter-Werfen. Siegprämie ${euro(CUP_PRIZE[C.round])}.</p>
       <div class="row"><button class="main" data-act="cPlay">SELBST SPIELEN</button><button data-act="cSim">SIMULIEREN</button></div></div>`;
+  } else if (ownEuroTie()) {
+    const et = ownEuroTie(), n = euroNext(), oppId = et[0] === CAREER.team ? et[1] : et[0], O = TEAMS[oppId], so = strength(oppId), sm = strength(CAREER.team);
+    next = `<div class="np-box np-next"><h4>EUROPAPOKAL · ${n.type === 'group' ? `GRUPPE ${GROUP_N[groupOf(CAREER.team)]} · ${n.md + 1}. SPIELTAG` : EURO_KO[n.r]}</h4>
+      <div class="np-vs"><img src="${icon(me)}" alt=""><b>${n.type === 'ko' && n.r >= 1 ? 'FINAL FOUR' : et[0] === CAREER.team ? 'HEIM' : 'AUSWÄRTS'}</b><img src="${icon(O)}" alt=""></div>
+      <p><b>${esc(O.n)}</b> (${CAREER.lgOf[oppId] === 3 ? 'international' : CAREER.lgOf[oppId] + '. Liga'})<br>Stärke ${so.ovr} (ihr: ${sm.ovr})</p>
+      <p>${n.type === 'group' ? 'Gruppenspiel: Die ersten zwei kommen ins Viertelfinale.' : n.r >= 1 ? 'Final Four in neutraler Halle. Bei Unentschieden entscheidet das 7-Meter-Werfen.' : 'K.-o.-Spiel, der Gruppensieger hat Heimrecht. Bei Unentschieden 7-Meter-Werfen.'}</p>
+      <div class="row"><button class="main" data-act="cPlay">SELBST SPIELEN</button><button data-act="cSim">SIMULIEREN</button></div></div>`;
   } else if (fx) {
     const oppId = fx[0] === CAREER.team ? fx[1] : fx[0], O = TEAMS[oppId], so = strength(oppId), sm = strength(CAREER.team), op = st.findIndex(r => r.i === oppId) + 1;
     const oTop = CAREER.squads[oppId].slice().sort((a, b) => b.sg - a.sg || ovr(b) - ovr(a))[0], fav = sm.ovr - so.ovr;
@@ -70,6 +77,7 @@ function paper() {
           ${sq.some(p => p.inj) ? `<br><b>Verletzt:</b> ${sq.filter(p => p.inj).map(p => `${esc(p.name)} (${p.inj})`).join(', ')}` : ''}
           ${S.round >= S.fixtures.length * 0.6 && sq.some(p => p.vt <= 1) ? `<br><b>Verträge laufen aus:</b> ${sq.filter(p => p.vt <= 1).map(p => esc(p.name)).join(', ')}` : ''}</p>
         ${CAREER.cup ? `<h4>POKAL</h4><p>${CAREER.cup.winner !== null ? `Sieger: ${esc(TEAMS[CAREER.cup.winner].n)}` : CAREER.cup.myOut ? `Ausgeschieden (${esc(CAREER.cupLast ? CAREER.cupLast.sc : '')} gegen ${esc(CAREER.cupLast ? TEAMS[CAREER.cupLast.opp].short : '')}). Nächste Runde: ${CUP_ROUNDS[CAREER.cup.round]}.` : `Noch dabei! Nächste Runde: ${CUP_ROUNDS[CAREER.cup.round]} nach Spieltag ${CAREER.cup.sched[CAREER.cup.round]}.`}</p>` : ''}
+        ${CAREER.euro && CAREER.euro.teams.includes(CAREER.team) ? `<h4>EUROPAPOKAL</h4><p>${esc(euroStatus())}</p>` : ''}
         <h4>CO-TRAINER</h4><p>„${esc(coachTip())}“</p>
         <h4>TRANSFERMARKT</h4><p>${offer ? `<b>Angebot:</b> ${esc(TEAMS[offer.from].short)} bietet ${euro(offer.price)} für ${esc((findCareerPlayer(CAREER.team, offer.pid) || {}).name || '')}.` : tlog ? esc(tlog) : 'Ruhig. Keine Wechsel gemeldet.'}</p></div>
     </div>
@@ -125,11 +133,45 @@ function statsView() {
 }
 // Finanzbilanz einer Saison (Saisonabschluss und Statistik)
 function finTable(F, money) {
-  const rows = [['Zuschauer (Liga)', F.gate], ['Sponsoren', F.sponsor], ['Pokal (Zuschauer und Prämien)', F.cup], ['Ligaprämie', F.prize], ['Vorstandsbonus', F.bonus], ['Transfers (Saldo)', F.transfer], ['Gehälter', -F.wages]].filter(r => r[1]);
+  const rows = [['Zuschauer (Liga)', F.gate], ['Sponsoren', F.sponsor], ['Pokal (Zuschauer und Prämien)', F.cup], ['Europapokal (Zuschauer und Prämien)', F.euro || 0], ['Ligaprämie', F.prize], ['Vorstandsbonus', F.bonus], ['Transfers (Saldo)', F.transfer], ['Gehälter', -F.wages]].filter(r => r[1]);
   const sum = rows.reduce((s, r) => s + r[1], 0), fmt = v => `<span style="color:${v < 0 ? 'var(--hot)' : 'inherit'}">${v < 0 ? '−' : '+'}${euro(Math.abs(v))}</span>`;
   const fans = F.fans && F.fans.length ? `Ø ${Math.round(avg(F.fans)).toLocaleString('de-DE')} Zuschauer bei ${F.fans.length} Heimspielen · Halle ${hallCap(CAREER.team).toLocaleString('de-DE')} Plätze` : '';
   return `<h3>FINANZEN DER SAISON</h3><table class="sqt stt fin"><tbody>${rows.map(([l, v]) => `<tr><td class="lbl">${l}</td><td class="num">${fmt(v)}</td></tr>`).join('')}
     <tr><td class="lbl"><b>Saldo</b></td><td class="num"><b>${fmt(sum)}</b></td></tr>${money !== undefined ? `<tr><td class="lbl">Kontostand</td><td class="num">${fmt(money)}</td></tr>` : ''}</tbody></table>${fans ? `<p class="muted" style="margin:0">${fans}</p>` : ''}`;
+}
+// ---------- Europapokal: Gruppen und Turnierbaum ----------
+function euroStatus() {
+  const E = CAREER.euro, me = CAREER.team, n = euroNext();
+  if (E.winner !== null) return E.winner === me ? 'Europapokalsieger!' : `Sieger: ${TEAMS[E.winner].n}.${E.teams.includes(me) ? ` Dein Verein: ${euroMyBest()}.` : ''}`;
+  const inKo = E.ko.some(k => k.ties.some(t => t.includes(me)));
+  const out = E.ko.length ? !E.ko[E.kround].ties.some(t => t.includes(me)) : false;
+  if (out || (!inKo && E.gmd === 6)) return `Ausgeschieden (${euroMyBest()}).`;
+  if (!E.compact && E.gmd < 6) { const t = groupTable(groupOf(me)), k = t.findIndex(r => r.i === me); return `Gruppe ${GROUP_N[groupOf(me)]}: Platz ${k + 1}, ${t[k].pk} Punkte. ${n ? 'Spiel steht jetzt an.' : `Nächstes Spiel nach Spieltag ${E.gsched[E.gmd]}.`}`; }
+  const tie = E.ko[E.kround].ties.find(t => t.includes(me)), opp = tie.find(x => x !== me);
+  return `${EURO_KO[E.kround]} gegen ${TEAMS[opp].short}${n ? ', steht jetzt an.' : `, nach Spieltag ${E.ksched[E.kround === 0 ? 0 : 1]}.`}`;
+}
+function euroView() {
+  const E = CAREER.euro, me = CAREER.team;
+  const rule = 'Startplätze: Platz 1 und 2 der 1. Liga, dazu der Pokalsieger (falls Erstligist, sonst der Dritte).';
+  if (!E) return `<p class="muted">Der Europapokal startet mit der nächsten Saison. ${rule}</p>`;
+  const n = euroNext(), inIt = E.teams.includes(me);
+  const fmt = E.compact ? '8 Vereine: Viertelfinale, dann Final Four in neutraler Halle.' : '16 Vereine in 4 Gruppen mit Hin- und Rückspiel, die ersten zwei kommen ins Viertelfinale, danach Final Four in neutraler Halle.';
+  let html = `<p class="muted">${fmt} ${rule} ${inIt ? `<b style="color:var(--gold)">Dein Verein ist dabei. ${esc(euroStatus())}</b>` : 'Dein Verein ist diese Saison nicht qualifiziert.'}</p>`;
+  const line = (a, b, x, y, so) => `<span class="${a === me || b === me ? 'me' : ''}">${TEAMS[a].k} ${x === undefined ? '–:–' : `${x}:${y}${so ? '*' : ''}`} ${TEAMS[b].k}</span>`;
+  if (!E.compact) {
+    html += `<div class="egroups">${E.groups.map((g, gi) => {
+      const t = groupTable(gi), res = [];
+      for (let md = 0; md < 6; md++) E.gfix[md].filter(([a]) => g.includes(a)).forEach(([a, b]) => { const r = (E.gres[md] || []).find(x => x[0] === a && x[1] === b); res.push(line(a, b, r ? r[2] : undefined, r ? r[3] : undefined)); });
+      return `<div class="egroup"><h3>GRUPPE ${GROUP_N[gi]}</h3><table class="sqt stt"><tbody>${t.map((r, k) => `<tr class="${r.i === me ? 'me' : ''} ${k < 2 ? 'zone-a' : ''}"><td class="num">${k + 1}</td><td class="lbl">${esc(TEAMS[r.i].short)}</td><td class="num">${r.sp}</td><td class="num">${r.d > 0 ? '+' : ''}${r.d}</td><td class="num"><b>${r.pk}</b></td></tr>`).join('')}</tbody></table>
+        <p class="eres">${res.join(' · ')}</p></div>`; }).join('')}</div>`;
+  }
+  // K.-o.-Phase als Baum
+  const cols = [0, 1, 2].map(r => { const k = E.ko[r]; if (!k) return Array.from({ length: 4 >> r }, () => ({})); return k.rows ? k.rows.map(([a, b, x, y, so, w]) => ({ a, b, x, y, so, w })) : k.ties.map(([a, b]) => ({ a, b })); });
+  const lineB = (t, id, sc) => id === undefined ? '<div class="bt tbd"><span>–</span></div>' : `<div class="bt ${t.w === undefined ? '' : t.w === id ? 'win' : 'out'} ${id === me ? 'mine' : ''}"><span>${TEAMS[id].k}</span><b>${sc ?? ''}</b></div>`;
+  const tie = t => `<div class="tie ${t.a === me || t.b === me ? 'myt' : ''}" ${t.a !== undefined ? `title="${esc(TEAMS[t.a].n)} – ${esc(TEAMS[t.b].n)}"` : ''}>${lineB(t, t.a, t.x)}${lineB(t, t.b, t.y)}${t.so ? '<em>n.7m</em>' : ''}</div>`;
+  html += `<h3>K.-O.-PHASE${n && n.type === 'ko' ? ` · ${EURO_KO[n.r]} STEHT AN` : ''}</h3><div class="bracket ebr">${cols.map((c, r) => `<div class="bcol"><h3>${r ? EURO_KO[r] + ' (F4)' : EURO_KO[r]}</h3><div class="bties">${c.map(tie).join('')}</div></div>`).join('')}
+    <div class="bcol champ"><h3>SIEGER</h3><div class="bties"><div class="tie ${E.winner === me ? 'myt' : ''}">${E.winner !== null ? `<div class="bt win ${E.winner === me ? 'mine' : ''}"><span>🏆 ${TEAMS[E.winner].k}</span></div>` : '<div class="bt tbd"><span>?</span></div>'}</div></div></div></div>`;
+  return html;
 }
 // ---------- Pokal als Turnierbaum ----------
 function cupView() {
@@ -198,11 +240,12 @@ function careerHub(tab) {
   } else if (CTAB === 'table') {
     body = `<p class="muted">${S.lg === 1 ? 'Grün: Meister · Rot: Abstieg in die 2. Liga' : 'Grün: Aufstieg in die 1. Liga'}</p>${leagueTable(CAREER.team)}`;
   } else if (CTAB === 'cup') body = cupView();
+  else if (CTAB === 'euro') body = euroView();
   else if (CTAB === 'stats') body = statsView();
   else if (CTAB === 'hist') {
     // Handy: Karten statt Spalten (Kopfzeile Saison · Liga · Platz, darunter beschriftete Felder)
-    body = CAREER.history.length ? `<table class="sqt cards hist"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th>POKAL</th><th>TORJÄGER</th></tr></thead><tbody>${
-      CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
+    body = CAREER.history.length ? `<table class="sqt cards hist"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th>POKAL</th><th>EUROPA</th><th>TORJÄGER</th></tr></thead><tbody>${
+      CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="EUROPA" style="${h.euro === CAREER.team ? 'color:var(--gold)' : ''}">${h.euro !== null && h.euro !== undefined ? esc(TEAMS[h.euro].short) : '–'}${h.euroMy && h.euro !== CAREER.team ? ` <span class="muted">(${esc(h.euroMy)})</span>` : ''}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
   }
   showMenu(`<div class="panel wide"><div class="csticky">${head}${tabs()}</div>${CMSG ? `<p style="margin:0;color:var(--hot)">${esc(CMSG)}</p>` : ''}${body}<div class="row"><button data-act="main">HAUPTMENÜ</button></div></div>`);
@@ -224,6 +267,7 @@ function seasonSummary() {
       <tr><td>Aufsteiger</td><td>${s.up.map(i => esc(TEAMS[i].n)).join(', ')}</td></tr>
       <tr><td>Absteiger</td><td>${s.down.map(i => esc(TEAMS[i].n)).join(', ')}</td></tr>
       <tr><td>Pokalsieger</td><td>${s.cupWinner !== null && s.cupWinner !== undefined ? esc(TEAMS[s.cupWinner].n) : '–'}${s.cupWinner === CAREER.team ? ' (DEIN VEREIN!)' : ''}</td></tr>
+      <tr><td>Europapokalsieger</td><td>${s.euroWinner !== null && s.euroWinner !== undefined ? esc(TEAMS[s.euroWinner].n) : '–'}${s.euroWinner === CAREER.team ? ' (DEIN VEREIN!)' : s.euroMy ? ` · dein Verein: ${esc(s.euroMy)}` : ''}</td></tr>
       <tr><td>Torschützenkönig</td><td>${s.top ? `${esc(s.top.name)} (${TEAMS[s.top.tid].k}), ${s.top.n} Tore` : '–'}</td></tr>
     </tbody></table>
     <h3>ENTWICKLUNG IM KADER</h3><p class="muted" style="font-size:18px">${s.dev.slice(0, 8).map(d => `${esc(d.name)} <b style="color:${d.d > 0 ? 'var(--green)' : 'var(--hot)'}">${d.d > 0 ? '+' : ''}${d.d}</b> (${d.o})`).join(' · ') || 'Kaum Veränderungen.'}</p>
@@ -239,11 +283,11 @@ Object.assign(ACT, {
   cTab(v) { CSEL = null; CSELL = null; CTAB = v; careerHub(); },
   cPick(v) { CSEL = v ? +v : null; CSELL = null; CTAB = 'squad'; careerHub(); },
   cPlay() {
-    const ct = ownCupTie(), fx = ct || ownFixture(); if (!fx) return careerHub();
+    const ct = ownCupTie(), et = !ct && ownEuroTie(), en = et ? euroNext() : null, fx = ct || et || ownFixture(); if (!fx) return careerHub();
     coachPrep();
     const L = [lineup(fx[0]), lineup(fx[1])];
-    prematch(fx[0], fx[1], { human: fx.indexOf(CAREER.team), halfLen: HALVES[CAREER.half].s, diff: CAREER.diff, career: true, cup: !!ct, autoSub: CAREER.coach.lineup || true,
-      lineups: L, benches: [benchOf(fx[0], L[0]), benchOf(fx[1], L[1])], label: ct ? `POKAL · ${CUP_ROUNDS[CAREER.cup.round]}` : `${CAREER.season.lg}. LIGA · ${CAREER.season.round + 1}. SPIELTAG` }, 'career');
+    prematch(fx[0], fx[1], { human: fx.indexOf(CAREER.team), halfLen: HALVES[CAREER.half].s, diff: CAREER.diff, career: true, cup: !!ct || !!(en && en.type === 'ko'), euro: !!et, event: ct ? cupEvent(CAREER.cup.round) : en && en.type === 'ko' ? euroEvent(en.r) : null, autoSub: CAREER.coach.lineup || true,
+      lineups: L, benches: [benchOf(fx[0], L[0]), benchOf(fx[1], L[1])], label: ct ? `POKAL · ${CUP_ROUNDS[CAREER.cup.round]}` : en ? euroLabel(en) : `${CAREER.season.lg}. LIGA · ${CAREER.season.round + 1}. SPIELTAG` }, 'career');
   },
   cExt(v) { const [pid, y] = v.split(':').map(Number); CMSG = extendContract(pid, y); careerHub(); },
   cSim() { careerSimOwn(); track('karriere-simuliert'); careerHub('home'); },

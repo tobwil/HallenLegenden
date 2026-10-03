@@ -13,13 +13,15 @@ function areaPts(gx, r, step = 0.03) {
   for (let a = 0; a <= Math.PI / 2; a += step / r) pts.push([mx(r * Math.cos(a)), GY2 + r * Math.sin(a)]);
   return pts.filter(p => p[1] >= -0.01 && p[1] <= CH + 0.01);
 }
-function buildArena(homeKit, awayKit, lg) {
+// ev: Final Four o. ä. (neutrale Halle: eigener Boden, ausverkauft, Fans beider Teams je zur Hälfte, eigene Banden)
+function buildArena(homeKit, awayKit, lg, ev) {
+  ARENA.ads = ev ? [ev.title, ev.trophy, 'FINAL FOUR', 'HARZ & HAFT', ev.title, 'KEMPA KAFFEE'] : null;
   const c = FLOOR.getContext('2d'), r = seeded(77 + lg);
   // Hallenboden außen
   c.fillStyle = '#1b2233'; c.fillRect(0, 0, FLOOR.width, FLOOR.height);
   for (let y = 0; y < FLOOR.height; y += 3) { c.fillStyle = 'rgba(255,255,255,0.025)'; c.fillRect(0, y, FLOOR.width, 1); }
   // Spielfläche: Blau mit Dielen-Struktur
-  const court = lg === 2 ? '#2d5c8f' : '#2a58a8', area = lg === 2 ? '#d07a2e' : '#e0842e';
+  const court = ev ? '#3a2a66' : lg === 2 ? '#2d5c8f' : '#2a58a8', area = ev ? '#c9a227' : lg === 2 ? '#d07a2e' : '#e0842e';
   c.fillStyle = court; c.fillRect(ftx(0), fty(0), CW * PX, CH * DY);
   for (let y = fty(0); y < fty(CH); y++) { c.fillStyle = (y % 4 < 2) ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.035)'; c.fillRect(ftx(0), y, CW * PX, 1); }
   for (let i = 0; i < 2600; i++) { c.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)'; c.fillRect((ftx(r() * CW)) | 0, (fty(r() * CH)) | 0, 2 + ((r() * 4) | 0), 1); }
@@ -52,11 +54,11 @@ function buildArena(homeKit, awayKit, lg) {
   // Werbung auf dem Boden neben den Toren
   c.save(); c.globalAlpha = 0.22; c.fillStyle = '#ffffff'; c.font = `8px ${FONT}`; c.textAlign = 'center';
   c.fillText('HARZ & HAFT', ftx(13), fty(17.6)); c.fillText('HARZ & HAFT', ftx(27), fty(2.8)); c.restore();
-  buildStands(homeKit, awayKit);
+  buildStands(homeKit, awayKit, !!ev);
   buildFront(homeKit);
 }
 function fanColors(kit) { return [kit.c1, kit.c1, kit.c1, kit.c2, kit.c2, '#d8d2c0', '#5d5a6a', '#2a2a30']; }
-function buildStands(homeKit, awayKit) {
+function buildStands(homeKit, awayKit, neutral) {
   const r0 = seeded(1234);
   const home = fanColors(homeKit), away = fanColors(awayKit);
   ARENA.fans = [];
@@ -68,8 +70,8 @@ function buildStands(homeKit, awayKit) {
       g.fillStyle = row % 2 ? '#1a1626' : '#1e1a2c'; g.fillRect(0, y0 + 2, cnv.width, 8);
       g.fillStyle = '#2a2438'; g.fillRect(0, y0 + 9, cnv.width, 1);
       for (let x = (row % 2) * 3; x < cnv.width; x += 6) {
-        const gast = x > 1040 && x < 1260;                          // Gästeblock
-        if (r() < 0.07 && !gast) continue;
+        const gast = neutral ? x >= cnv.width / 2 : x > 1040 && x < 1260;   // Gästeblock (neutral: halbe Halle)
+        if (r() < (neutral ? 0 : 0.07) && !gast) continue;                  // neutral: ausverkauft
         const pal = gast ? away : home, col = pal[(r() * pal.length) | 0];
         const skin = SKIN[(r() * SKIN.length) | 0][0], hair = HAIR[(r() * HAIR.length) | 0];
         const act = r(), up = f === 0 ? 0 : f === 1 ? (act < 0.5 ? 1 : 0) : (act < 0.8 ? 2 : 1);
@@ -84,9 +86,9 @@ function buildStands(homeKit, awayKit) {
     }
     // Fahnen-Doppelhalter
     const rr = seeded(55);
-    for (let i = 0; i < 9; i++) { const x = (rr() * cnv.width) | 0, y = (rr() * 70) | 0, gast = x > 1040 && x < 1260, k = gast ? awayKit : homeKit; g.fillStyle = k.c1; g.fillRect(x, y, 20, 10); g.fillStyle = k.c2; g.fillRect(x, y + 4, 20, 2); g.fillStyle = OUTLINE; g.fillRect(x, y - 1, 20, 1); }
+    for (let i = 0; i < 9; i++) { const x = (rr() * cnv.width) | 0, y = (rr() * 70) | 0, gast = neutral ? x >= cnv.width / 2 : x > 1040 && x < 1260, k = gast ? awayKit : homeKit; g.fillStyle = k.c1; g.fillRect(x, y, 20, 10); g.fillStyle = k.c2; g.fillRect(x, y + 4, 20, 2); g.fillStyle = OUTLINE; g.fillRect(x, y - 1, 20, 1); }
   });
-  ARENA.flags = Array.from({ length: 6 }, (_, i) => ({ x: 120 + i * 210 + r0() * 60, y: 18 + r0() * 50, k: i === 5 ? awayKit : homeKit, ph: r0() * 6 }));
+  ARENA.flags = Array.from({ length: 6 }, (_, i) => ({ x: 120 + i * 210 + r0() * 60, y: 18 + r0() * 50, k: neutral ? (i >= 3 ? awayKit : homeKit) : i === 5 ? awayKit : homeKit, ph: r0() * 6 }));
 }
 function buildFront(kit) {
   const g = FRONT.getContext('2d'), r = seeded(5);
@@ -144,7 +146,7 @@ function drawLED(t) {
     const par = (CAMX - 20) * PX * 0.82;
     let x = -((par + t * 18) % 1400) - 200, i = 0;
     while (x < W) {
-      const txt = ADS[i % ADS.length], w = ctx.measureText(txt).width + 30;
+      const ads = ARENA.ads || ADS, txt = ads[i % ads.length], w = ctx.measureText(txt).width + 30;
       ctx.fillStyle = i % 3 === 0 ? '#11214a' : i % 3 === 1 ? '#3a0f24' : '#0f2e22'; ctx.fillRect(Math.round(x), y0, w, h);
       ctx.fillStyle = i % 3 === 0 ? '#7cf2ff' : i % 3 === 1 ? '#ffc83a' : '#9cff57'; ctx.fillText(txt, Math.round(x + 15), y0 + 3);
       x += w; i++;

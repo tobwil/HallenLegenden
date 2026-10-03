@@ -107,5 +107,5 @@ function frame(now) {
 }
 startDemo();
 ACT.title();
-(document.fonts && document.fonts.load ? document.fonts.load('8px "Press Start 2P"') : Promise.resolve()).then(() => { if (G) buildArena(G.kits[0], G.kits[1], G.lg); }).catch(() => { });
+(document.fonts && document.fonts.load ? document.fonts.load('8px "Press Start 2P"') : Promise.resolve()).then(() => { if (G) buildArena(G.kits[0], G.kits[1], G.lg, G.event); }).catch(() => { });
 requestAnimationFrame(frame);

@@ -20,6 +20,7 @@ Das Spiel ist reines HTML, CSS und JavaScript ohne Framework und ohne Bundler. D
 | `p11_menus.js` | Menüs, Menünavigation (räumlich, Esc), Editor, Optionen, Vor-dem-Spiel, Spielende, Speichern/Laden |
 | `p13_career.js` | Karriere: Kader, Stärke, Simulation, Spieltag, Training, Transfers, Saisonende, CPU-Transfers, Vorstand, Schlagzeilen, Co-Trainer |
 | `p15_cup.js` | Pokal (Auslosung, Runden, Prämien), Vertragsverlängerung |
+| `p17_euro.js` | Europapokal: Qualifikation, Auslosung (Lostöpfe, deutsche Vereine getrennt), Gruppen, Viertelfinale, Final Four, Termine zwischen den Ligaspieltagen, Prämien |
 | `p16_finance.js` | Finanzen: Zuschauer, Sponsoren, Gehälter pro Saison, KI-Haushalte, Transfersperre für Neuzugänge, Schulden und Notverkauf, Vorstand (Bonus, Warnung, Entlassung, Jobangebote) |
 | `p14_career_ui.js` | Karriere-Bildschirme: Zeitung, Kader, Spieler-Detail, Training, Transfers, Tabelle, Pokal, Statistik, Historie, Saisonabschluss |
 | `p12_main.js` | Touch-Pad (mitwandernder Stick, Antippen, Knöpfe), Gamepad im Menü, Hauptschleife, Start |
