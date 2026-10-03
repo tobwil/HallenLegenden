@@ -2754,10 +2754,13 @@ function ensureStarters(tid) {
     if (pool.length) pool.sort((a, b) => effOvr(b) - effOvr(a))[0].start = true;
   }
 }
+// CPU-Aufstellung: unter 60 Fitness wird ein Spieler zunehmend geschont, sonst spielten Stars dauerhaft erschöpft.
+// Bewusst ohne zusätzliche Erholung: so bleibt die Spielstärke der CPU-Vereine im Saisonmittel fast gleich
+const aiPick = p => effOvr(p) - Math.max(0, 60 - p.fit) * 0.5;
 function lineup(tid) {
   const sq = CAREER.squads[tid], mine = tid === CAREER.team;
   if (mine) ensureStarters(tid);
-  return ROLES.map(role => { const all = sq.filter(p => p.role === role), c = all.some(p => !p.inj) ? all.filter(p => !p.inj) : all; return mine ? (c.find(p => p.start) || c[0]) : c.slice().sort((a, b) => effOvr(b) - effOvr(a))[0]; });
+  return ROLES.map(role => { const all = sq.filter(p => p.role === role), c = all.some(p => !p.inj) ? all.filter(p => !p.inj) : all; return mine ? (c.find(p => p.start) || c[0]) : c.slice().sort((a, b) => aiPick(b) - aiPick(a))[0]; });
 }
 // Ersatzbank fürs Spiel: alle gesunden Kaderspieler, die nicht in der Startsieben stehen
 function benchOf(tid, L) {
