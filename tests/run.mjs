@@ -431,6 +431,40 @@ test('Hallen-Legenden: Weidenhammer (Kiel) und Hebbe (Coburg) im Kader, auch in 
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Karriere: Potenzial in Kader, Transferliste und Spielerprofil', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 21);
+  const r = await page.evaluate(() => {
+    careerCreate(5, 1, 1, 1); const sq = CAREER.squads[CAREER.team];
+    ACT.cTab('squad'); const head = [...menu.querySelectorAll('thead th')].map(t => t.textContent), cells = menu.querySelectorAll('tbody td[data-l="POT"] .pot').length;
+    ACT.cTab('market'); const mcells = menu.querySelectorAll('td[data-l="POT"] .pot').length, mrows = CAREER.market.filter(m => marketPlayer(m)).length;
+    ACT.cTab('squad'); ACT.cPick(sq[0].pid); const det = menu.innerText.includes('Potenzial');
+    // Regeln: nie unter dem aktuellen Wert, ab 30 Jahren gleich dem aktuellen Wert (baut ab)
+    const all = TEAMS.flatMap(t => CAREER.squads[t.id]), rules = all.every(p => potOf(p) >= ovr(p) && (p.age < 30 || (potOf(p) === ovr(p) && potTrend(p) === 'down')));
+    const legends = ['Weidenhammer', 'Hebbe'].map(n => all.find(p => p.name === n)).map(p => p && p.age === 27 && potTrend(p) !== 'down');
+    return { pot: head.includes('POT'), cells, n: sq.length, mcells, mrows, det, rules, legends };
+  });
+  ok(r.pot && r.cells === r.n, 'Kader: ' + JSON.stringify(r)); ok(r.mcells === r.mrows && r.mrows > 0, 'Transferliste: ' + JSON.stringify(r));
+  ok(r.det && r.rules, 'Profil/Regeln: ' + JSON.stringify(r)); ok(r.legends.every(Boolean), 'Legenden mit 27 in Bestform: ' + JSON.stringify(r.legends));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Breite Handys: Spielfeld füllt den Bildschirm, Desktop und Hochformat bleiben 16:9', async () => {
+  const phone = { viewport: { width: 852, height: 393 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 };
+  const { page, ctx, errors } = await open(phone);
+  const fill = () => page.evaluate(() => { const r = document.getElementById('wrap').getBoundingClientRect(); return { W, cv: cv.width, fill: r.width * r.height / (innerWidth * innerHeight) }; });
+  const wide = await fill();
+  const intro = await page.evaluate(() => { startMatch(2, 26, { human: 0, halfLen: 120 }); G.paused = true; G.introT = 5.5; render(); return { ok: G.phase === 'intro', radar: hudR() < W }; });
+  await page.setViewportSize({ width: 393, height: 852 }); await page.waitForTimeout(400);
+  const tall = await fill();
+  await page.setViewportSize({ width: 852, height: 393 }); await page.waitForTimeout(400);
+  const back = await page.evaluate(() => { G.paused = true; G.introT = 99; G.phase = 'play'; for (let i = 0; i < 5; i++) render(); return W; });
+  const d = await open(DESKTOP); const desk = await d.page.evaluate(() => W);
+  ok(wide.W > 700 && wide.W <= 800 && wide.cv === wide.W && wide.fill > 0.97, 'Querformat: ' + JSON.stringify(wide));
+  ok(intro.ok && intro.radar, 'Intro/HUD: ' + JSON.stringify(intro)); ok(tall.W === 640, 'Hochformat: ' + JSON.stringify(tall)); ok(back === wide.W, 'zurückgedreht: ' + back);
+  ok(desk === 640, 'Desktop 16:10: ' + desk);
+  ok(!errors.length && !d.errors.length, errors.concat(d.errors).join('; ')); await ctx.close(); await d.ctx.close();
+});
+
 test('Pokal: Sieger mit Vereinsnummer 0 (Magdeburg) bleibt Sieger', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 7);
   const r = await page.evaluate(() => {

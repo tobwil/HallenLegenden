@@ -2,6 +2,19 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.5: Potenzial und volles Bild auf breiten Handys
+- **Potenzial im Karriere-Modus:**
+  - Kader und Transferliste zeigen für alle Spieler die Spalte POT: cyan mit ↗ = wächst noch, ↘ = baut altersbedingt ab.
+  - Das Spielerprofil nennt Potenzial und Entwicklung, bei jungen Spielern auch, wie viel noch geht.
+  - Regeln wie in der Entwicklung: Bis 29 wächst ein Spieler bis zu seinem Potenzial, ab 30 ist der aktuelle Wert der Höchstwert.
+- **Breite Bildschirme:** Das Spielfeld passt seine Breite an das Seitenverhältnis an (640 bis 800 Pixel bei gleicher Höhe). Auf heutigen Handys im Querformat (etwa 19,5:9) füllt das Spiel jetzt den ganzen Bildschirm statt etwa 72 %, ohne Verzerrung und ohne abgeschnittene Teile. Auch breite Browserfenster am Computer zeigen mehr Halle.
+  - Auf Touch-Geräten fährt die Kamera am Spielfeldende so weit hinaus, dass das Tor vor den Wurf- und Pass-Knöpfen bzw. neben dem Stick liegt.
+  - Mini-Karte und HUD oben rechts weichen dem Pause-Knopf aus, die Aufstellungskarten im Intro stehen mittig.
+  - Auf dem Handy reicht das Spielfeld ohne Rahmen bis an den Rand, Notch und Home-Leiste bleiben frei.
+  - Desktop mit 16:10 oder 16:9 und Hochformat bleiben wie bisher.
+- Weidenhammer und Hebbe starten neue Karrieren mit 27 Jahren, in ihren besten Jahren.
+- 2 neue Regressionstests (Potenzial, breites Spielfeld inklusive Drehen des Handys), insgesamt 29
+
 ## v8.4: Hallen-Legenden aus dem echten Leben, Landingpage
 - **Zwei neue Spieler mit festem Aussehen:** Weidenhammer (Kiel, Star-Linksaußen, kurze braune Haare, Vollbart) und Hebbe (Coburg, Star-Spielmacher, lange braunrötliche Haare). Sie übernehmen den Star-Platz ihres Vereins mit unveränderten Werten. Laufende Karrieren bekommen sie beim Laden nachgerüstet, sofern der bisherige Star noch im Verein ist.
 - Neue Frisur: lange offene Haare (Spielfigur und Porträt)

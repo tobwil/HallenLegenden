@@ -1,5 +1,5 @@
 // ================= Halle: Boden mit Perspektive, Tribünen, LED-Banden, Videowürfel =================
-const TX0 = -6, TEXW = Math.round(52 * PX), TROW0 = 22;     // Textur: Welt-x -6..46, Zeile 0 = 22 px über der Seitenlinie
+const TX0 = -16, TEXW = Math.round(72 * PX), TROW0 = 22;   // Textur: Welt-x -16..56 (reicht auch für 20:9 und die schmalere hintere Reihe), Zeile 0 = 22 px über der Seitenlinie
 const FLOOR = document.createElement('canvas'); FLOOR.width = TEXW; FLOOR.height = Math.round(CH * DY) + TROW0 + 30;
 const STANDS = [0, 1, 2].map(() => { const c = document.createElement('canvas'); c.width = 1400; c.height = 96; return c; });
 const FRONT = document.createElement('canvas'); FRONT.width = 1600; FRONT.height = 30;

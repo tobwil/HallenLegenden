@@ -21,7 +21,7 @@ html,body{height:100%}
 body{background:var(--bg) radial-gradient(ellipse at 50% 30%,#1a1430 0%,#07060b 70%);color:var(--ink);font-family:var(--term);font-size:20px;line-height:1.15;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding-inline:16px;box-sizing:border-box;overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
-#wrap{position:relative;width:min(100%, calc((100dvh - 24px) * 16 / 9));aspect-ratio:16/9;max-width:100%;background:#000;
+#wrap{position:relative;width:min(100%, calc((100vh - 24px) * var(--ar, 16 / 9)));width:min(100%, calc((100dvh - 24px) * var(--ar, 16 / 9)));aspect-ratio:var(--ar, 16 / 9);max-width:100%;background:#000;
   box-shadow:0 0 0 3px #2a2140,0 0 0 6px #000,0 30px 80px rgba(0,0,0,.7),0 0 120px rgba(255,200,58,.06)}
 #cv{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 #crt{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.07) 2px 3px),radial-gradient(ellipse at center,rgba(0,0,0,0) 62%,rgba(0,0,0,.32) 100%)}
@@ -156,6 +156,7 @@ button.link{background:none;border:none;box-shadow:none;padding:0;font-family:va
 button.link:hover,button.link:focus-visible{background:none;color:var(--gold)}
 .age{font-size:15px;color:var(--mute);margin-left:6px}
 .tal{font-family:var(--pix);font-size:7px;color:var(--cyan)}
+.pot{white-space:nowrap}.pot-up{color:var(--cyan)}.pot-down{color:var(--mute)}
 .inj{font-family:var(--pix);font-size:7px;color:#fff;background:var(--hot);padding:1px 3px}
 .gkc{text-align:center!important;color:var(--dim)}
 .pdet{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
@@ -200,6 +201,9 @@ button:focus-visible{box-shadow:0 0 0 3px var(--cyan),3px 3px 0 #000}
   .logo{font-size:clamp(24px,9vw,52px)}
   .paper{padding:10px}
 }
+/* Handy: Spielfeld ohne Rahmen bis an den Rand, nur Notch und Home-Leiste bleiben frei */
+body.touch{padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px);gap:0}
+body.touch #wrap{width:min(100%, calc(100vh * var(--ar, 16 / 9)));width:min(100%, calc(100dvh * var(--ar, 16 / 9)));box-shadow:none}
 body.touch button{min-height:40px}
 body.touch button.small{min-height:36px;font-size:10px}
 body.touch .tbtn{min-height:60px}
@@ -279,7 +283,7 @@ body.touch.ingame #pad{display:block}
 <script>
 'use strict';
 // ================= Kern: Maße, Projektion, Helfer =================
-const W = 640, H = 360;
+let W = 640; const H = 360;   // W wächst auf breiten Bildschirmen (siehe fitView), H bleibt fest
 const CW = 40, CH = 20, GY1 = 8.5, GY2 = 11.5, GH = 2, GRAV = 9.8;
 const FAR_Y = 152, DY = 9.2, PX = 19, ZPX = 19;            // Sichtachse: Seitenlinie oben bei y=152, 9,2 px pro Tiefenmeter
 const kOf = y => 0.8 + 0.2 * (y / CH);                      // horizontale Perspektive (hinten schmaler)
@@ -291,7 +295,21 @@ const TOUCHDEV = 'ontouchstart' in window || matchMedia('(pointer:coarse)').matc
 let CAMX = 20;                                              // Kamerazentrum in Weltmetern
 const sx = (x, y) => Math.round(W / 2 + (x - CAMX) * PX * kOf(y));
 const sy = (y, z = 0) => Math.round(FAR_Y + y * DY - z * ZPX);
-const VIEW_HALF = W / 2 / PX;
+let VIEW_HALF = W / 2 / PX;
+const CAM_HALF = 640 / 2 / PX;                               // halbe Sichtbreite bei 16:9 in Metern
+// Kamera-Anschlag: Am Desktop wie bisher. Auf Touch-Geräten fährt die Kamera bei breitem Bild weiter über das Spielfeldende hinaus,
+// damit das Tor vor den Wurf- und Pass-Knöpfen liegt und dahinter nur Hallenboden verdeckt ist.
+const camHalf = () => TOUCHDEV ? 2 * CAM_HALF - VIEW_HALF : VIEW_HALF;
+const hudR = () => W - (TOUCHDEV ? 54 : 0);                 // rechter Rand fürs HUD oben, auf Touch-Geräten neben dem Pause-Knopf
+// Spielfeldbreite an das Seitenverhältnis anpassen: 16:9 (640 px) bis 20:9 (800 px). Breite Handys zeigen mehr Halle statt schwarzer Ränder,
+// die Höhe bleibt 360 px, nichts wird verzerrt oder abgeschnitten. Die Kamera zeigt an den Spielfeldenden nicht mehr als bisher.
+function fitView() {
+  const cs = getComputedStyle(document.body), aw = innerWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const ah = innerHeight - (document.body.classList.contains('touch') ? 0 : 24), w = Math.min(800, Math.max(640, Math.round(H * aw / Math.max(1, ah) / 2) * 2));
+  document.documentElement.style.setProperty('--ar', `${w} / ${H}`);
+  if (w === W) return;
+  W = w; VIEW_HALF = W / 2 / PX; cv.width = W; ctx.imageSmoothingEnabled = false;   // neue Canvas-Breite setzt den Zeichenzustand zurück
+}
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -402,10 +420,10 @@ const HAIR = ['#2a1a10', '#4a2e18', '#7a4a20', '#c9a050', '#e3c27a', '#1a1a1a', 
 const ROSTER_KEY = 'hl3_kader';
 let ROSTER_EDIT = store.get(ROSTER_KEY, {});
 // Hallen-Legenden aus dem echten Leben: feste Spieler auf dem Star-Platz ihres Vereins, mit den Werten des Stars, den sie ersetzen.
-// Aussehen: skin = Index in SKIN, style = Frisur (1 kurz, 6 lange offene Haare), beard = Vollbart
+// Aussehen: skin = Index in SKIN, style = Frisur (1 kurz, 6 lange offene Haare), beard = Vollbart. age: Alter beim Karrierestart (beste Jahre)
 const LEGENDS = {
-  KIE: { name: 'Weidenhammer', skin: 1, hair: '#4a2e18', style: 1, beard: true, band: false },
-  COB: { name: 'Hebbe', skin: 1, hair: '#7e3f1e', style: 6, beard: false, band: false },
+  KIE: { name: 'Weidenhammer', skin: 1, hair: '#4a2e18', style: 1, beard: true, band: false, age: 27 },
+  COB: { name: 'Hebbe', skin: 1, hair: '#7e3f1e', style: 6, beard: false, band: false, age: 27 },
 };
 const LEGEND_KEYS = ['name', 'skin', 'hair', 'style', 'beard', 'band'];
 function roster(tid, plain) {
@@ -829,7 +847,7 @@ function jerseyIcon(K) {
   return c;
 }
 // ================= Halle: Boden mit Perspektive, Tribünen, LED-Banden, Videowürfel =================
-const TX0 = -6, TEXW = Math.round(52 * PX), TROW0 = 22;     // Textur: Welt-x -6..46, Zeile 0 = 22 px über der Seitenlinie
+const TX0 = -16, TEXW = Math.round(72 * PX), TROW0 = 22;   // Textur: Welt-x -16..56 (reicht auch für 20:9 und die schmalere hintere Reihe), Zeile 0 = 22 px über der Seitenlinie
 const FLOOR = document.createElement('canvas'); FLOOR.width = TEXW; FLOOR.height = Math.round(CH * DY) + TROW0 + 30;
 const STANDS = [0, 1, 2].map(() => { const c = document.createElement('canvas'); c.width = 1400; c.height = 96; return c; });
 const FRONT = document.createElement('canvas'); FRONT.width = 1600; FRONT.height = 30;
@@ -2065,7 +2083,7 @@ function updateCamera() {
   const b = G.ball; let tgt;
   if (G.phase === 'intro') tgt = G.introT < 3.4 ? lerp(4, 36, ease(G.introT / 3.4)) : 20;
   else { const lead = G.poss >= 0 && G.phase === 'play' ? sgn(G.poss) * 3 : 0; tgt = b.x + lead; }
-  tgt = clamp(tgt, VIEW_HALF - 3, CW - VIEW_HALF + 3);
+  tgt = clamp(tgt, camHalf() - 3, CW - camHalf() + 3);
   CAMX = G.phase === 'intro' ? tgt : lerp(CAMX, tgt, 0.075);
 }
 function render() {
@@ -2120,11 +2138,11 @@ function scoreBug() {
   if (G.passiveWarn && G.phase === 'play' && Math.floor(G.t * 3) % 2) { rect(x + 144, y + 22, 64, 12, '#ffc83a'); text('PASSIV', x + 152, y + 24, '#0c0a12', 8, 'left', null); }
 }
 function radar() {
-  const rw = 90, rh = 45, x0 = W - rw - 10, y0 = 8, kx = rw / CW, ky = rh / CH;
+  const rw = 90, rh = 45, x0 = hudR() - rw - 10, y0 = 8, kx = rw / CW, ky = rh / CH;
   rect(x0 - 2, y0 - 2, rw + 4, rh + 4, 'rgba(8,7,14,0.85)'); rect(x0, y0, rw, rh, 'rgba(42,88,168,0.55)');
   rect(x0 + rw / 2, y0, 1, rh, 'rgba(255,255,255,0.4)');
   ctx.fillStyle = 'rgba(224,132,46,0.6)'; ctx.fillRect(x0, y0 + rh / 2 - 7 * ky * 1.4, 6 * kx, 14 * ky * 1.4 - 2); ctx.fillRect(x0 + rw - 6 * kx, y0 + rh / 2 - 7 * ky * 1.4, 6 * kx, 14 * ky * 1.4 - 2);
-  const l = (CAMX - VIEW_HALF) * kx; rect(x0 + l, y0, VIEW_HALF * 2 * kx, 1, '#ffc83a'); rect(x0 + l, y0 + rh - 1, VIEW_HALF * 2 * kx, 1, '#ffc83a');
+  const l = Math.max(0, (CAMX - VIEW_HALF) * kx), r = Math.min(rw, (CAMX + VIEW_HALF) * kx); rect(x0 + l, y0, r - l, 1, '#ffc83a'); rect(x0 + l, y0 + rh - 1, r - l, 1, '#ffc83a');   // Sichtbereich, auf die Karte begrenzt
   for (const p of G.players) if (!p.out) rect(x0 + p.x * kx - 1, y0 + p.y * ky - 1, 3, 3, p === G.ctrl ? '#ffc83a' : tcol(p.team));
   rect(x0 + G.ball.x * kx - 1, y0 + G.ball.y * ky - 1, 2, 2, '#fff');
 }
@@ -2218,7 +2236,7 @@ function ticker() {
 function replayHud() {
   rect(0, 0, W, 24, '#000'); rect(0, H - 24, W, 24, '#000');
   if (Math.floor(G.t * 2) % 2) rect(12, 8, 8, 8, '#e2372f');
-  text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', W - 12, 8, '#9b90ad', 8, 'right', null);
+  text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', hudR() - 12, 8, '#9b90ad', 8, 'right', null);
   text('TASTE = WEITER', W - 12, H - 16, '#9b90ad', 8, 'right', null);
   const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
   const yy = (G.t * 90) % H; rect(0, yy, W, 2, 'rgba(255,255,255,0.07)');
@@ -2227,7 +2245,7 @@ function replayHud() {
 function introHud() {
   const t = G.introT, T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]];
   rect(0, 0, W, 20, '#000'); rect(0, H - 20, W, 20, '#000');
-  text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), W - 14, 6, '#9b90ad', 8, 'right', null);
+  text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), hudR() - 14, 6, '#9b90ad', 8, 'right', null);
   text('TASTE = ÜBERSPRINGEN', W / 2, H - 14, '#6e6680', 8, 'center', null);
   if (t < 3.6) {
     const e = ease(t / 0.6), o = clamp((t - 3.1) / 0.5, 0, 1);
@@ -2244,11 +2262,11 @@ function introHud() {
   const ps = G.players.filter(p => p.team === team);
   rect(0, 40, W, 22, 'rgba(8,7,14,0.85)'); rect(0, 40, 8, 22, tcol(team));
   text(`AUFSTELLUNG ${TEAMS[G.tid[team]].n.toUpperCase()}`, 20, 47, '#f3ead6', 8, 'left', null, 440);
-  text(`DECKUNG ${DEF_SYS[G.tact[team]].n}`, W - 14, 47, '#ffc83a', 8, 'right', null);
+  text(`DECKUNG ${DEF_SYS[G.tact[team]].n}`, hudR() - 14, 47, '#ffc83a', 8, 'right', null);
   ps.forEach((p, i) => {
     const e = ease((lt - i * 0.18) / 0.35); if (e <= 0) return;
     const col = i < 4 ? i : i - 4, row = i < 4 ? 0 : 1, cw = 150;
-    const x = (row ? 90 : 14) + col * (cw + 6) + (1 - e) * 400, y = 72 + row * 112;
+    const x = (W - 640) / 2 + (row ? 90 : 14) + col * (cw + 6) + (1 - e) * 400, y = 72 + row * 112;   // mittig, auch bei breitem Spielfeld
     rect(x + 3, y + 3, cw, 104, 'rgba(0,0,0,0.5)'); rect(x, y, cw, 104, OUTLINE); rect(x + 2, y + 2, cw - 4, 100, '#14111d');
     rect(x + 2, y + 2, cw - 4, 64, shade(kit(team).c1, 0.45));
     ctx.drawImage(portrait(p, kit(team)), x + cw / 2 - 30, y + 4, 60, 60);
@@ -2605,6 +2623,11 @@ function pValue(p) {
   const o = ovr(p), af = p.age < 23 ? 1.5 : p.age < 28 ? 1.2 : p.age < 31 ? 0.9 : 0.5;
   return Math.max(5000, Math.round((Math.pow(Math.max(0, o - 55), 2) * 700 + 10000) * af / 5000) * 5000);
 }
+// Potenzial für die Anzeige: Bis 29 kann ein Spieler bis zu seinem Potenzial wachsen, ab 30 baut er ab (Höchstwert = aktueller Wert)
+const potOf = p => p.age >= 30 ? ovr(p) : Math.max(ovr(p), Math.round(p.pot ?? ovr(p)));
+const potTrend = p => p.age >= 30 ? 'down' : potOf(p) - ovr(p) >= 3 && p.age <= 26 ? 'up' : 'peak';
+const POT_TXT = { up: 'entwickelt sich noch', peak: 'auf dem Höhepunkt', down: 'baut altersbedingt ab' };
+const potCell = p => { const t = potTrend(p), v = potOf(p); return `<span class="pot pot-${t}" title="${POT_TXT[t]}">${v}${t === 'up' ? '↗' : t === 'down' ? '↘' : ''}</span>`; };
 const euro = v => v >= 1e6 ? (v / 1e6).toFixed(2).replace('.', ',') + ' Mio €' : Math.round(v / 1000) + ' Tsd €';
 
 function genPlayer(role, level, r, ageMin = 18, ageMax = 33) {
@@ -2625,7 +2648,7 @@ function fixNumbers(sq) {
 }
 function makeSquad(tid) {
   const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#bank'));
-  const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); return finalize(q, true); });
+  const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; if (p.age) q.age = p.age; /* Hallen-Legenden: festes Alter, gleicher Zufallsverlauf */ q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); return finalize(q, true); });
   const names = new Set(sq.map(p => p.name));
   for (const role of ROLES) { const q = genPlayer(role, T.r - 7 - r() * 5, r, 18, 32); while (names.has(q.name)) q.name = SUR[(r() * SUR.length) | 0]; names.add(q.name); sq.push(finalize(q)); }
   fixNumbers(sq); return sq;
@@ -3434,7 +3457,7 @@ function playerDetail(p) {
   const sellP = quickSalePrice(p), locked = isLocked(p);
   return `<div class="pdet"><canvas id="pdC" width="40" height="40"></canvas>
     <div class="pdet-info"><h2>#${p.num} ${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''}</h2>
-      <p class="muted">${ROLE_LONG[p.role]} · ${p.age} Jahre · Gesamt <b style="color:var(--gold)">${ovr(p)}</b>${p.age < 24 ? ` · Potenzial ${Math.round(p.pot)}` : ''}${p.trait ? ` · ${esc(p.trait)}` : ''}</p>
+      <p class="muted">${ROLE_LONG[p.role]} · ${p.age} Jahre · Gesamt <b style="color:var(--gold)">${ovr(p)}</b> · Potenzial <b style="color:var(--cyan)">${potOf(p)}</b> (${POT_TXT[potTrend(p)]}${potTrend(p) === 'up' ? `, noch etwa +${potOf(p) - ovr(p)}` : ''})${p.trait ? ` · ${esc(p.trait)}` : ''}</p>
       <div class="bars">${attrs.map(([l, v]) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}</span>`).join('')}</div>
       ${p.inj ? `<p style="margin:0;color:var(--hot)">Verletzt: fällt noch ${p.inj === 1 ? 'einen Spieltag' : `${p.inj} Spieltage`} aus.</p>` : ''}
       <p class="muted">Vertrag: ${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · Gehalt ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</p>
@@ -3556,9 +3579,9 @@ function careerHub(tab) {
     if (sel) body = playerDetail(sel);
     else {
       const sq = CAREER.squads[CAREER.team].slice().sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role) || b.start - a.start || ovr(b) - ovr(a));
-      body = `<p class="muted">Gelb = Startsieben. Tippe auf einen Namen für Details, Aufstellung und Verkauf. FIT ist die aktuelle Frische: Wer müde ist, spielt schwächer und läuft langsamer. AUS (Ausdauer) bestimmt, wie schnell ein Spieler ermüdet und sich erholt.${CAREER.coach.lineup ? ' <b style="color:var(--cyan)">Der Co-Trainer stellt vor jedem Spiel auf.</b>' : ''}</p>
-      <table class="sqt cards"><thead><tr><th>POS</th><th>NAME</th><th>GES</th><th>WUR</th><th>PAS</th><th>ABW</th><th>TEM</th><th>AUS</th><th>FORM</th><th>FIT</th><th>TORE</th><th>VTR</th><th>WERT</th></tr></thead><tbody>${
-        sq.map(p => `<tr class="${p.start ? 'me' : ''}"><td data-l="POS">${p.role}</td><td class="c-name"><button class="link" data-act="cPick" data-v="${p.pid}">${esc(p.name)}</button><span class="age">${p.age}</span>${p.star ? ' ★' : ''}${p.age <= 21 && p.pot - ovr(p) > 8 ? ' <span class="tal">TALENT</span>' : ''}${p.inj ? ` <span class="inj">VERL. ${p.inj}</span>` : ''}</td><td data-l="GES"><b>${ovr(p)}</b></td>
+      body = `<p class="muted">Gelb = Startsieben. Tippe auf einen Namen für Details, Aufstellung und Verkauf. POT ist das Potenzial: ↗ wächst noch, ↘ baut ab. FIT ist die aktuelle Frische: Wer müde ist, spielt schwächer und läuft langsamer. AUS (Ausdauer) bestimmt, wie schnell ein Spieler ermüdet und sich erholt.${CAREER.coach.lineup ? ' <b style="color:var(--cyan)">Der Co-Trainer stellt vor jedem Spiel auf.</b>' : ''}</p>
+      <table class="sqt cards"><thead><tr><th>POS</th><th>NAME</th><th>GES</th><th title="Potenzial: Höchstwert, den der Spieler erreichen kann">POT</th><th>WUR</th><th>PAS</th><th>ABW</th><th>TEM</th><th>AUS</th><th>FORM</th><th>FIT</th><th>TORE</th><th>VTR</th><th>WERT</th></tr></thead><tbody>${
+        sq.map(p => `<tr class="${p.start ? 'me' : ''}"><td data-l="POS">${p.role}</td><td class="c-name"><button class="link" data-act="cPick" data-v="${p.pid}">${esc(p.name)}</button><span class="age">${p.age}</span>${p.star ? ' ★' : ''}${p.age <= 21 && p.pot - ovr(p) > 8 ? ' <span class="tal">TALENT</span>' : ''}${p.inj ? ` <span class="inj">VERL. ${p.inj}</span>` : ''}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${potCell(p)}</td>
           ${p.role === 'TW' ? `<td colspan="3" class="gkc">TOR ${p.gk}</td>` : `<td data-l="WUR">${p.att}</td><td data-l="PAS">${p.pas}</td><td data-l="ABW">${p.def}</td>`}<td data-l="TEM">${p.spd}</td><td data-l="AUS">${p.sta ?? 75}</td>
           <td data-l="FORM">${formTxt(p.form)}</td><td data-l="FIT">${fitBar(Math.round(p.fit))}</td><td data-l="${p.role === 'TW' ? 'PAR' : 'TORE'}">${p.role === 'TW' ? p.ss : p.sg}</td><td data-l="VTR" style="${p.vt <= 1 ? 'color:var(--hot)' : ''}">${p.vt}J</td><td data-l="WERT">${euroS(pValue(p))}</td></tr>`).join('')}</tbody></table>`;
     }
@@ -3577,7 +3600,7 @@ function careerHub(tab) {
       <div class="row"><span class="tag">CPU-TRANSFERS</span><button class="small ${CAREER.aiTransfers ? 'on' : ''}" data-act="cAiT" data-v="1">AN</button><button class="small ${CAREER.aiTransfers ? '' : 'on'}" data-act="cAiT" data-v="0">AUS</button></div></div>`;
     if (CAREER.offers.length) body += `<h3>ANGEBOTE FÜR DEINE SPIELER</h3><table class="sqt cards"><tbody>${CAREER.offers.map(o => { const p = findCareerPlayer(CAREER.team, o.pid); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name">${esc(p.name)} <span class="age">${ovr(p)}</span></td><td data-l="VON">${esc(TEAMS[o.from].short)}</td><td data-l="BIETET">${euro(o.price)}</td><td data-l="BIS">${o.exp}. Sp.</td><td class="c-act"><button class="small main" data-act="cOffer" data-v="${p.pid}:1">ANNEHMEN</button> <button class="small" data-act="cOffer" data-v="${p.pid}:0">ABLEHNEN</button></td></tr>`; }).join('')}</tbody></table>`;
     body += `<h3>TRANSFERLISTE</h3><table class="sqt cards"><thead><tr><th>POS</th><th>NAME</th><th>VON</th><th>GES</th><th>POT</th><th>PREIS</th><th></th></tr></thead><tbody>${
-      CAREER.market.map(m => { const p = marketPlayer(m); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name">${esc(p.name)}<span class="age">${p.age}</span></td><td data-l="VON">${m.from < 0 ? 'frei' : TEAMS[m.from].k}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${p.age < 24 ? Math.round(p.pot) : '–'}</td><td data-l="PREIS">${euroS(m.price)}</td>
+      CAREER.market.map(m => { const p = marketPlayer(m); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name">${esc(p.name)}<span class="age">${p.age}</span></td><td data-l="VON">${m.from < 0 ? 'frei' : TEAMS[m.from].k}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${potCell(p)}</td><td data-l="PREIS">${euroS(m.price)}</td>
         <td class="c-act"><button class="small" data-act="cBuy" data-v="${p.pid}" ${CAREER.money >= m.price ? '' : 'disabled style="opacity:.45"'}>KAUFEN</button></td></tr>`; }).join('')}</tbody></table>`;
     if ((CAREER.transferLog || []).length) body += `<h3>WECHSEL IN DER LIGA</h3><p class="muted" style="font-size:17px">${CAREER.transferLog.slice(0, 5).map(esc).join('<br>')}</p>`;
   } else if (CTAB === 'table') {
@@ -3653,6 +3676,7 @@ Object.assign(ACT, {
 });
 // ================= Touch, Hauptschleife, Start =================
 if ('ontouchstart' in window || matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
+fitView(); addEventListener('resize', fitView); addEventListener('orientationchange', () => setTimeout(fitView, 250));
 // Kein Browser-Zoom beim Spielen mit zwei Daumen: iOS Safari ignoriert user-scalable=no und zoomt bei Stick + Knopf per Pinch.
 // Safaris Gesten-Events und Mehrfinger-Bewegungen abfangen; falls doch gezoomt wurde, Zoom zurücksetzen.
 for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
