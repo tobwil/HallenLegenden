@@ -3,7 +3,7 @@
 [![Jetzt spielen / Play now](https://img.shields.io/badge/%E2%96%B6%20Jetzt%20spielen%20%2F%20Play%20now-hallenlegenden.de-ffc83a?style=for-the-badge&labelColor=07060b)](https://hallenlegenden.de/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3ddc84?style=for-the-badge&labelColor=07060b)](LICENSE)
 
-<p align="center"><a href="https://hallenlegenden.de"><img src="docs/presse/hallenlegenden-teaser.gif" width="640" alt="Pixel-Handballer dribbelt durch die Halle, trifft, jubelt vor dem Fernseher, liest Zeitung, stemmt den Pokal und steht am Ende im Anzug am Spielfeldrand"></a><br><sub>Der Story-Film von <a href="https://hallenlegenden.de">hallenlegenden.de</a> · the story film from the landing page</sub></p>
+<p align="center"><a href="https://hallenlegenden.de"><img src="docs/presse/hallenlegenden-teaser.gif" width="640" alt="Szenen aus dem Spiel: Startbildschirm, Aufstellungskarten, ein Tor, ein Kempa-Tor, der Europapokal-Turnierbaum, das Final Four und die Pokalübergabe"></a><br><sub>Echte Szenen aus dem Spiel · real in-game footage · <a href="docs/presse/">mehr Clips / more clips</a></sub></p>
 
 **[Screenshots](#screenshots) · [Pressekit / press kit](docs/presse/) · [Deutsch](#deutsch) · [English](#english)**
 
