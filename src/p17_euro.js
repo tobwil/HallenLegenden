@@ -73,7 +73,7 @@ function playEuroRound(own, force) {
     if (!r) { const m = simMatch(a, b, neutral); r = { a, b, ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb }; }
     if (ko && r.win === undefined) { if (r.ga === r.gb) { r.so = true; r.win = Math.random() < 0.5 + (strength(a).ovr - strength(b).ovr) * 0.03 ? a : b; } else r.win = r.ga > r.gb ? a : b; }
     applyPlayers(r, false);
-    rows.push([a, b, r.ga, r.gb, !!r.so, ko ? r.win : null]);
+    rows.push([a, b, r.ga, r.gb, !!r.so, ko ? r.win : null]); noteResult(a, b, r.ga, r.gb, 'Europapokal');
     if (!ko) { recordIn(E.table, a, b, r.ga, r.gb); for (const [id, x, y] of [[a, r.ga, r.gb], [b, r.gb, r.ga]]) euroPay(id, x > y ? EURO_PRIZE.win : x === y ? EURO_PRIZE.draw : 0); }
     if (a === me || b === me) {
       const opp = a === me ? b : a, sc = a === me ? `${r.ga}:${r.gb}` : `${r.gb}:${r.ga}`, my = a === me ? r.ga : r.gb, th = a === me ? r.gb : r.ga;

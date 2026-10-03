@@ -57,6 +57,7 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
 #### Ligen und Karriere
 - **36 Vereine** in zwei Ligen, Ligazugehörigkeit nach der Saison 2026/27, dazu **16 internationale Vereine** (alle mit Fantasienamen aus Stadt und Spitzname). Im Schnellen Spiel unter „EUROPA“ wählbar
 - **Schnelles Spiel** mit Trikotwahl (Heim, Auswärts, Alternativ) und Warnung bei ähnlichen Farben
+- **Vor dem Spiel:** Stärkevergleich beider Teams mit Sternen für Angriff, Abwehr und Tor, Topwerfer und Pixel-Spieler im gewählten Trikot. In der Karriere dazu Tabellenplatz mit Bilanz, Form der letzten fünf Spiele, Hinspiel oder letztes Duell und ein SIMULIEREN-Knopf
 - **Karriere** über beliebig viele Saisons:
   - 6, 17 oder 34 Spieltage, Auf- und Abstieg zwischen beiden Ligen
   - 14er-Kader mit Werten für Wurf, Pass, Abwehr, Tempo, Torwart und Ausdauer, dazu Alter, Potenzial, Form und Fitness. Kader und Transferliste zeigen das Potenzial jedes Spielers mit Trend (↗ wächst noch, ↘ baut ab)
@@ -141,13 +142,13 @@ Das erzeugt `game/index.html` und `hallen-legenden.html`. Die Landingpage `index
 
 #### Tests
 
-Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere mit Pokal und Europapokal, Finanzen, Potenzial, Erfolge und Teilen-Bild, Editor, Menüfenster, Handy-Steuerung und Darstellung auf breiten Bildschirmen. Nach `sh src/build.sh` und vor jedem Merge:
+Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere mit Pokal und Europapokal, Finanzen, Potenzial, Erfolge und Teilen-Bild, Vergleich vor dem Spiel, Editor, Menüfenster, Handy-Steuerung und Darstellung auf breiten Bildschirmen. Nach `sh src/build.sh` und vor jedem Merge:
 
 ```sh
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 32 Tests, etwa eine Minute
+npm test                             # alle 33 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 ```
@@ -206,6 +207,7 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
 #### Leagues and career
 - **36 clubs** in two leagues, league membership based on the 2026/27 season, plus **16 international clubs** (all with fictional names made of city and nickname). Selectable under “EUROPA” in quick match
 - **Quick match** with kit choice (home, away, alternate) and a warning for similar colours
+- **Before the match:** side-by-side comparison with stars for attack, defence and goalkeeping, top scorer and a pixel player in the chosen kit. In career mode also table position and record, form over the last five matches, first leg or last meeting and a SIMULATE button
 - **Career** over as many seasons as you like:
   - 6, 17 or 34 matchdays, promotion and relegation between both leagues
   - 14-player squad with ratings for shooting, passing, defence, pace, goalkeeping and stamina, plus age, potential, form and fitness. Squad and transfer list show every player's potential with a trend (↗ still improving, ↘ declining)
@@ -290,13 +292,13 @@ This generates `game/index.html` and `hallen-legenden.html`. The landing page `i
 
 #### Tests
 
-Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career with cup and European cup, finances, potential, achievements and share image, editor, menu windows, touch controls and wide-screen layout, among others. After `sh src/build.sh` and before every merge:
+Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career with cup and European cup, finances, potential, achievements and share image, pre-match comparison, editor, menu windows, touch controls and wide-screen layout, among others. After `sh src/build.sh` and before every merge:
 
 ```sh
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 32 tests, about one minute
+npm test                             # all 33 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 ```

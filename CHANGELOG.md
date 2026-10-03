@@ -2,6 +2,16 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.8: Vor dem Spiel
+- **Stärkevergleich vor jedem Spiel** (Idee aus Retro Bowl): Der Bildschirm „Vor dem Spiel“ zeigt beide Teams nebeneinander:
+  - Starspieler als großer Pixel-Spieler im gewählten Trikot (wechselt beim Trikotwechsel mit)
+  - Sterne von 1 bis 5 für Angriff, Abwehr und Tor, gemessen an den Vereinen der beteiligten Ligen. In der Karriere zählen Aufstellung, Form und Fitness mit
+  - Topwerfer: in der Karriere der beste Torschütze der Saison, sonst der stärkste Werfer
+  - Nur Karriere: Tabellenplatz mit Bilanz (Siege-Unentschieden-Niederlagen), Form der letzten fünf Spiele aus Liga, Pokal und Europapokal (grün, grau, rot), Ergebnis des Hinspiels oder des letzten Duells der Saison
+- **SIMULIEREN direkt in der Vorschau:** Wer den Gegner gesehen hat, kann das Spiel von dort aus simulieren lassen.
+- Am Handy im Hochformat steht das Hinspiel zwischen den beiden Teamkarten.
+- 1 neuer Regressionstest (Sterne, Form, Bilanz, Topwerfer, Hinspiel, SIMULIEREN aus der Vorschau, Freundschaftsspiel ohne Form), insgesamt 33
+
 ## v8.7: Erfolge und Teilen
 - **Neuer Tab ERFOLGE im Karriere-Modus:**
   - Trophäenschrank: Deutscher Meister, Pokal, Europapokal, Meister 2. Liga, Aufstieg, jeweils mit Anzahl und Saisons. Noch nicht gewonnene Titel stehen grau im Regal.

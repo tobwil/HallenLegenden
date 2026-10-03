@@ -124,6 +124,7 @@ const ACT = {
   kitpick(v) { const [side, i] = v.split(':'); PM[side] = +i; prematch(); },
   pmGo() { startMatch(PM.a, PM.b, { ...PM.o, kitA: PM.ia, kitB: PM.ib }); },
   pmBack() { SCREEN = ''; PM.back === 'career' ? careerHub() : ACT.quick(); },
+  pmSim() { SCREEN = ''; ACT.cSim(); },   // aus der Vorschau heraus simulieren (dasselbe Spiel, das gerade angezeigt wurde)
   load() { loadMatch(); },
   saveQuit() { saveMatch(); G = null; ACT.main(); },
   help() {
@@ -262,19 +263,59 @@ function togglePause() {
 }
 
 // ================= Vor dem Spiel: Trikotwahl =================
+// ---------- Vor dem Spiel: Stärkevergleich (Form, Bilanz, Sterne, Topwerfer) ----------
+const PVSPR = new Map();
+function bigSprite(p, K, flip) {   // Pixel-Spieler in den gewählten Trikots, für die Vorschau
+  const L = lookOf({ ...p, num: p.num || 10 }, K), key = L.key + '|' + flip;
+  if (!PVSPR.has(key)) PVSPR.set(key, sprite(L, 'idle', 0, flip).toDataURL());
+  return PVSPR.get(key);
+}
+function scoutTeam(tid, o) {
+  const career = !!(o.career && CAREER), T = TEAMS[tid];
+  const players = career ? lineup(tid) : roster(tid), field = players.filter(p => p.role !== 'TW');
+  const star = field.find(p => p.star) || field.slice().sort((a, b) => b.att - a.att)[0];
+  const r = { star, rec: '', form: null, top: null };
+  if (career) {
+    const S = CAREER.season, lg = CAREER.lgOf[tid];
+    if (lg === S.lg && S.table[tid]) { const st = standingsOf(S.table), k = st.findIndex(x => x.i === tid), t = S.table[tid]; r.rec = `PLATZ ${k + 1} · ${t.s}-${t.u}-${t.n}`; }
+    else r.rec = lg === 3 ? 'INTERNATIONAL' : `${lg}. LIGA`;
+    r.form = (CAREER.formAll || {})[tid] || [];
+    const sc = Object.values(S.scorers).filter(x => x.tid === tid).sort((a, b) => b.n - a.n)[0];
+    r.top = sc ? `${sc.name.toUpperCase()} · ${sc.n} ${sc.n === 1 ? 'TOR' : 'TORE'}` : `${star.name.toUpperCase()} · WURF ${Math.round(star.att)}`;
+  } else { r.rec = lgName(T.lg); r.top = `${star.name.toUpperCase()} · WURF ${Math.round(star.att)}`; }
+  return r;
+}
+// Sterne 1 bis 5 im Vergleich zu den Vereinen der beteiligten Ligen
+function scoutStars(a, b, o) {
+  const career = !!(o.career && CAREER), lgOf = t => career ? CAREER.lgOf[t] : TEAMS[t].lg, lgs = new Set([lgOf(a), lgOf(b)]);
+  const pool = TEAMS.filter(t => lgs.has(lgOf(t.id))).map(t => t.id), val = id => { if (career) { const s = strength(id); return { att: s.att, def: s.def, gk: s.gk }; } const T = TEAMS[id]; return { att: T.att, def: T.def, gk: T.gk }; };
+  const V = new Map(pool.map(id => [id, val(id)])); [a, b].forEach(id => { if (!V.has(id)) V.set(id, val(id)); });
+  const star = (id, k) => { const xs = [...V.values()].map(v => v[k]), lo = Math.min(...xs), hi = Math.max(...xs); return clamp(1 + Math.round(4 * (V.get(id)[k] - lo) / Math.max(1, hi - lo)), 1, 5); };
+  return id => ({ att: star(id, 'att'), def: star(id, 'def'), gk: star(id, 'gk') });
+}
+const pxStar = on => `<svg viewBox="0 0 7 7" width="12" height="12" aria-hidden="true"><path d="M3 0h1v2h3v1h-1v1h1v3h-2v-1h-3v1h-2v-3h1v-1h-1v-1h3z" fill="${on ? 'var(--gold)' : '#3a2f4d'}"/></svg>`;
+const starRow = (l, n) => `<div class="pvst"><span>${l}</span><b aria-label="${n} von 5 Sternen">${[1, 2, 3, 4, 5].map(i => pxStar(i <= n)).join('')}</b></div>`;
+const formBoxes = f => `<div class="pvform" aria-label="Form: ${f.join(' ') || 'noch keine Spiele'}">${[0, 1, 2, 3, 4].map(i => { const x = f[f.length - 5 + i]; return `<i class="${x === 'S' ? 'w' : x === 'U' ? 'd' : x === 'N' ? 'l' : ''}">${x || ''}</i>`; }).join('')}</div>`;
 function prematch(a, b, o, back) {
   SCREEN = 'pre';
   if (a !== undefined) { const [ia, ib] = autoKits(a, b); PM = { a, b, o, ia, ib, back }; }
   const A = TEAMS[PM.a], B = TEAMS[PM.b], ka = kitSet(A)[PM.ia], kb = kitSet(B)[PM.ib], clash = colDist(ka.c1, kb.c1) < 110;
-  const side = (T, key, sel, label) => `<div class="tcard ${key === 'ib' ? 'b' : 'a'} active"><span class="tag">${label}</span>
-    <div class="tname"><img src="${icon(T)}" alt="">${esc(T.n)}</div>
-    <div class="row">${kitSet(T).map((K, i) => `<button class="tbtn ${sel === i ? (key === 'ia' ? 'sel-a' : 'sel-b') : ''}" data-act="kitpick" data-v="${key}:${i}"><img src="${kitIcon(K)}" alt="">${KIT_NAMES[i]}</button>`).join('')}</div></div>`;
+  const stars = scoutStars(PM.a, PM.b, PM.o), career = !!(PM.o.career && CAREER);
+  const side = (T, key, sel, label, K) => { const sc = scoutTeam(T.id, PM.o), st = stars(T.id);
+    return `<div class="tcard ${key === 'ib' ? 'b' : 'a'} active"><span class="tag">${label}</span>
+    <div class="pv"><img class="pvspr" src="${bigSprite(sc.star, K, key === 'ib')}" alt="${esc(sc.star.name)} im Trikot von ${esc(T.n)}"><div class="pvinfo">
+      <div class="tname">${esc(T.n)}</div><div class="pvrec">${esc(sc.rec)}</div>${sc.form ? formBoxes(sc.form) : ''}
+      ${starRow('ANGRIFF', st.att)}${starRow('ABWEHR', st.def)}${starRow('TOR', st.gk)}
+      <div class="pvtop">TOPWERFER: ${esc(sc.top)}</div></div></div>
+    <div class="row">${kitSet(T).map((Kk, i) => `<button class="tbtn ${sel === i ? (key === 'ia' ? 'sel-a' : 'sel-b') : ''}" data-act="kitpick" data-v="${key}:${i}"><img src="${kitIcon(Kk)}" alt="">${KIT_NAMES[i]}</button>`).join('')}</div></div>`; };
   const hum = PM.o.human;
+  const m = career && CAREER.season.meet ? CAREER.season.meet[PM.a < PM.b ? PM.a + '-' + PM.b : PM.b + '-' + PM.a] : null;
+  const prev = m ? `<div class="pvprev">${m.comp === 'Liga' ? 'HINSPIEL' : 'LETZTES DUELL'}<b>${m.a === PM.a ? `${m.ga}:${m.gb}` : `${m.gb}:${m.ga}`}</b></div>` : '';
   showMenu(`<div class="panel"><div class="row spread"><h2>VOR DEM SPIEL</h2><span class="tag">${esc(PM.o.label || '')}</span></div>
-    <div class="duel">${side(A, 'ia', PM.ia, hum === 0 ? 'HEIM · DU' : 'HEIM · CPU')}<div class="vs">VS</div>${side(B, 'ib', PM.ib, hum === 1 ? 'GAST · DU' : 'GAST · CPU')}</div>
+    <div class="duel">${side(A, 'ia', PM.ia, hum === 0 ? 'HEIM · DU' : 'HEIM · CPU', ka)}<div class="vs">VS${prev}</div>${side(B, 'ib', PM.ib, hum === 1 ? 'GAST · DU' : 'GAST · CPU', kb)}</div>
     <p class="muted" style="color:${clash ? 'var(--hot)' : 'var(--dim)'}">${clash ? 'Achtung: Die Trikots sind kaum zu unterscheiden. Wähle für ein Team einen anderen Satz.' : 'Trikots gut unterscheidbar. Die Torhüter bekommen automatisch eigene Farben.'}</p>
     ${optRow('DEINE DECKUNG', DEF_SYS, 'def')}
-    <div class="row"><button class="main" data-act="pmGo">ANPFIFF</button><button data-act="pmBack">ZURÜCK</button></div></div>`);
+    <div class="row"><button class="main" data-act="pmGo">ANPFIFF</button>${PM.back === 'career' ? '<button data-act="pmSim">SIMULIEREN</button>' : ''}<button data-act="pmBack">ZURÜCK</button></div></div>`);
 }
 // ================= Spielstand speichern & laden =================
 function saveMatch() {
