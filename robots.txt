@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /tests/
+Disallow: /tools/
+Disallow: /src/
+
+Sitemap: https://hallenlegenden.de/sitemap.xml

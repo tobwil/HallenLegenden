@@ -409,6 +409,28 @@ test('Final Four: Nach eigenem Halbfinal-Aus wird das Finale sofort gespielt (Po
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Hallen-Legenden: Weidenhammer (Kiel) und Hebbe (Coburg) im Kader, auch in laufenden Karrieren', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 5);
+  const r = await page.evaluate(() => {
+    const chk = {};
+    for (const [k, name] of [['KIE', 'Weidenhammer'], ['COB', 'Hebbe']]) {
+      const tid = TEAM_BASE.findIndex(b => b[0] === k), ro = roster(tid), pl = roster(tid, true), i = ro.findIndex(x => x.name === name);
+      chk[k] = i > 0 && ro[i].star && ['att', 'pas', 'def', 'spd', 'sta', 'num', 'role'].every(f => ro[i][f] === pl[i][f]) && ro.every((x, j) => j === i || x.name === pl[j].name);
+    }
+    careerCreate(3, 1, 1, 1);
+    const inCareer = ['Weidenhammer', 'Hebbe'].every(n => TEAMS.some(t => CAREER.squads[t.id].some(p => p.name === n)));
+    // alter Spielstand: Star heißt noch wie früher, kein Merker -> beim Laden umbenennen
+    const kie = TEAM_BASE.findIndex(b => b[0] === 'KIE'), w = CAREER.squads[kie].find(p => p.name === 'Weidenhammer'), orig = roster(kie, true).find((p, i) => i > 0 && p.star);
+    w.name = orig.name; w.beard = false; delete CAREER.legends; saveCareer();
+    return { chk, inCareer, orig: orig.name };
+  });
+  await page.reload(); await page.waitForTimeout(600);
+  const m = await page.evaluate(() => { const kie = TEAM_BASE.findIndex(b => b[0] === 'KIE'), w = CAREER.squads[kie].find(p => p.name === 'Weidenhammer'); return { found: !!w, beard: w && w.beard, flag: CAREER.legends }; });
+  ok(r.chk.KIE && r.chk.COB, 'Kader: ' + JSON.stringify(r.chk)); ok(r.inCareer, 'nicht in der Karriere');
+  ok(m.found && m.beard && m.flag === 1, 'Nachrüsten im alten Spielstand: ' + JSON.stringify(m));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Pokal: Sieger mit Vereinsnummer 0 (Magdeburg) bleibt Sieger', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 7);
   const r = await page.evaluate(() => {

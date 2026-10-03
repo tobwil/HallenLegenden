@@ -2,6 +2,17 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.4: Hallen-Legenden aus dem echten Leben, Landingpage
+- **Zwei neue Spieler mit festem Aussehen:** Weidenhammer (Kiel, Star-Linksaußen, kurze braune Haare, Vollbart) und Hebbe (Coburg, Star-Spielmacher, lange braunrötliche Haare). Sie übernehmen den Star-Platz ihres Vereins mit unveränderten Werten. Laufende Karrieren bekommen sie beim Laden nachgerüstet, sofern der bisherige Star noch im Verein ist.
+- Neue Frisur: lange offene Haare (Spielfigur und Porträt)
+- **Landingpage:** Kapitel „POKAL & EUROPA“ mit Final Four, 52 Vereine, Finanzen im Manager-Kapitel
+- **Suchmaschinen:**
+  - Neuer Abschnitt „Das Spiel“ mit Trailer, vier Feature-Kacheln und häufigen Fragen (auch als strukturierte Daten: VideoGame mit Trailer, FAQ, WebSite)
+  - Titel und Beschreibungen auf „Handball-Spiel“ und „Handball-Manager“ ausgerichtet, Vorschaubilder für soziale Netzwerke
+  - `robots.txt` und `sitemap.xml` (mit Bildern und Trailer), Doppel-Fassung `hallen-legenden.html` und Entwicklerordner auf `noindex`
+- Doppelte CSS-Blöcke der Landingpage entfernt
+- Neuer Regressionstest für die beiden Spieler, insgesamt 27
+
 ## v8.3: Europapokal und Final Four
 - **Final Four:** Halbfinale und Finale des Pokals finden an einem Termin in neutraler Halle statt: lila Boden, goldene Torräume, ausverkaufte Ränge mit den Fans beider Teams je zur Hälfte, eigene Bandenwerbung, großer Event-Titel im Intro. Nach dem Finale gibt es eine Pokalübergabe mit Konfetti, auf dem Abpfiff-Bildschirm einen Pokal-Hinweis. Kein Heimvorteil und keine Zuschauereinnahmen für einen „Gastgeber“.
 - **16 internationale Vereine** mit Fantasienamen (zum Beispiel Barcelona Katalanenstiere, Veszprém Bakonylöwen, Kielce Kreuzritter), im Schnellen Spiel unter „EUROPA“ wählbar. Laufende Karrieren bekommen ihre Kader und Budgets automatisch nachgerüstet.

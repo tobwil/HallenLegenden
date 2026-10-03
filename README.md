@@ -20,6 +20,8 @@ Actual browser gameplay and menus. Click any image to view it at full size.
 | [![Schnelles Spiel: Mannschaften, Teamwerte, Schwierigkeit und Abwehrsystem auswählen](docs/screenshots/team-selection.jpg)](docs/screenshots/team-selection.jpg) | [![Karriere-Modus mit Handball-Kurier, nächstem Spiel, Tabelle, Budget und Vorstandsziel](docs/screenshots/career-newspaper.jpg)](docs/screenshots/career-newspaper.jpg) |
 | **Statistik · Statistics** | **Pokal · Cup bracket** |
 | [![Statistik-Seite mit Kennzahlen, Verlauf des Tabellenplatzes, Torjägern und Kaderwerten](docs/screenshots/career-stats.jpg)](docs/screenshots/career-stats.jpg) | [![Pokal als Turnierbaum von der ersten Runde bis zum Sieger](docs/screenshots/career-cup.jpg)](docs/screenshots/career-cup.jpg) |
+| **Final Four** | **Europapokal · European cup** |
+| [![Final Four in der lila Event-Halle: Kiel holt den Europapokal, Konfetti in den Vereinsfarben](docs/screenshots/final-four.jpg)](docs/screenshots/final-four.jpg) | [![Europapokal im Karriere-Modus: Gruppentabellen, Ergebnisse und Turnierbaum bis zum Sieger](docs/screenshots/career-euro.jpg)](docs/screenshots/career-euro.jpg) |
 
 ---
 

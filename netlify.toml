@@ -12,3 +12,24 @@
   from = "/spielen.html"
   to = "/game/"
   status = 301
+
+# Suchmaschinen: Doppelte Fassungen des Spiels und Entwickler-Ordner nicht in den Index
+[[headers]]
+  for = "/hallen-legenden.html"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
+[[headers]]
+  for = "/tests/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
+[[headers]]
+  for = "/tools/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
+[[headers]]
+  for = "/src/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
