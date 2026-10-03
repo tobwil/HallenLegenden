@@ -8,6 +8,7 @@ const fs = require('fs'), path = require('path');
 const [OUT, BASE = 'http://localhost:8765'] = process.argv.slice(2);
 if (!OUT) { console.error('Aufruf: node bilder.js <ordner> [basis-url]'); process.exit(1); }
 fs.mkdirSync(OUT, { recursive: true });
+// Das Demo-Spiel im Hintergrund verbraucht laufend Zufallszahlen: daher vor jedem Schritt neu setzen (__seed)
 const SEED = s => { window.__seed = s => { let x = s; Math.random = () => (x = (x * 16807) % 2147483647) / 2147483647; }; window.__seed(s); window.AudioContext = window.webkitAudioContext = undefined; };
 
 (async () => {
@@ -28,10 +29,10 @@ const SEED = s => { window.__seed = s => { let x = s; Math.random = () => (x = (
   { const { p, ctx } = await open(2026);
     await p.evaluate(() => { __seed(2026); G = null; careerCreate(TEAMS.find(t => t.k === 'KIE').id, 1, 1, 1, true, 1); careerHub('home'); document.activeElement.blur(); });
     await shot(p, 'career-newspaper');
-    await p.evaluate(() => { let g = 0; while ((CAREER.season.round < 9 || cupDue() || euroDue()) && g++ < 40) ACT.cSim(); ACT.cTab('stats'); document.activeElement.blur(); });
+    await p.evaluate(() => { __seed(2027); let g = 0; while ((CAREER.season.round < 9 || cupDue() || euroDue()) && g++ < 40) ACT.cSim(); ACT.cTab('stats'); document.activeElement.blur(); });
     await shot(p, 'career-stats');
     await p.evaluate(() => { ACT.cTab('cup'); document.activeElement.blur(); }); await shot(p, 'career-cup');
-    await p.evaluate(() => { let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 80) ACT.cSim(); ACT.cTab('euro'); document.activeElement.blur(); const sc = [...menu.querySelectorAll('*')].find(e => e.scrollHeight > e.clientHeight + 20 && /auto|scroll/.test(getComputedStyle(e).overflowY)); if (sc) sc.scrollTop = sc.scrollHeight; });
+    await p.evaluate(() => { __seed(2028); let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 80) ACT.cSim(); ACT.cTab('euro'); document.activeElement.blur(); const sc = [...menu.querySelectorAll('*')].find(e => e.scrollHeight > e.clientHeight + 20 && /auto|scroll/.test(getComputedStyle(e).overflowY)); if (sc) sc.scrollTop = sc.scrollHeight; });
     await shot(p, 'career-euro');   /* ans Ende gescrollt: K.-o.-Phase bis zum Sieger */ await ctx.close(); }
 
   // Vor dem Spiel: Kiel in der Rückrunde, Vergleich mit Form, Bilanz, Sternen und Hinspiel
@@ -47,8 +48,8 @@ const SEED = s => { window.__seed = s => { let x = s; Math.random = () => (x = (
       ACT.cTab('trophy'); document.activeElement.blur();
     });
     await shot(p, 'career-trophies');
-    await p.evaluate(() => { for (let i = 0; i < 8; i++) ACT.cSim(); ACT.cTab('squad'); document.activeElement.blur(); }); await shot(p, 'career-squad');
-    await p.evaluate(() => shareCard('career')); await p.waitForSelector('#menu img.sharecard'); await p.waitForTimeout(300);
+    await p.evaluate(() => { __seed(20); for (let i = 0; i < 8; i++) ACT.cSim(); ACT.cTab('squad'); document.activeElement.blur(); }); await shot(p, 'career-squad');
+    await p.evaluate(() => { __seed(21); return shareCard('career'); }); await p.waitForSelector('#menu img.sharecard'); await p.waitForTimeout(300);
     await shot(p, 'share-card'); await ctx.close(); }
 
   // Handy quer: Spielfeld über die volle Breite, durchscheinende Touch-Knöpfe

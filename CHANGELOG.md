@@ -11,7 +11,7 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
 - **SIMULIEREN direkt in der Vorschau:** Wer den Gegner gesehen hat, kann das Spiel von dort aus simulieren lassen.
 - Am Handy im Hochformat steht das Hinspiel zwischen den beiden Teamkarten.
 - **Namen mit Ć, Š, Ž, Ł und Co.** (zum Beispiel Petrović, Kovač) erscheinen jetzt auch im Spielfeld, in den Aufstellungen und auf dem Teilen-Bild richtig. Die Pixelschrift lud ihren erweiterten Zeichensatz bisher nicht, stattdessen erschienen falsche Zeichen wie „PETROVI(“.
-- **README-Screenshots:** neu sind Vor dem Spiel, Erfolge, Kader mit Potenzial, Teilen-Bild und Handy im Querformat. Teamauswahl, Zeitung, Statistik, Pokal und Europapokal sind neu aufgenommen (vorher fehlten die Tabs EUROPA und ERFOLGE). Die Landingpage nutzt dieselben Bilder. `sh tools/promo/promo.sh bilder` nimmt alle jederzeit neu auf, mit festem Zufall.
+- **README-Screenshots:** neu sind Vor dem Spiel, Erfolge, Kader mit Potenzial, Teilen-Bild und Handy im Querformat. Teamauswahl, Zeitung, Statistik, Pokal und Europapokal sind neu aufgenommen (vorher fehlten die Tabs EUROPA und ERFOLGE). Die Landingpage nutzt dieselben Bilder. `sh tools/promo/promo.sh bilder` nimmt alle jederzeit neu auf, mit festem Zufall (die Menübilder sind bei jedem Lauf pixelgleich).
 - 1 neuer Regressionstest (Sterne, Form, Bilanz, Topwerfer, Hinspiel, SIMULIEREN aus der Vorschau, Freundschaftsspiel ohne Form), insgesamt 33. Der Ladetest prüft jetzt auch, dass beide Zeichensätze der Pixelschrift geladen sind
 
 ## v8.7: Erfolge und Teilen
