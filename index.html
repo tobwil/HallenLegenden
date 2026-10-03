@@ -4,15 +4,29 @@
 <meta charset="utf-8">
 <script src="assets/umzug.js"></script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Hallen-Legenden</title>
-<meta name="description" content="Retro-Handball im Pixel-Look: 7 gegen 7, Karriere mit zwei Ligen, Pokal, Europapokal mit Final Four und Transfermarkt. Kostenlos im Browser spielen, am Computer und am Smartphone. Konsole: coming soon.">
+<title>Hallen-Legenden – Handball-Spiel &amp; Handball-Manager kostenlos im Browser</title>
+<meta name="description" content="Das Handball-Spiel für den Browser: 7 gegen 7 selbst spielen und als Handball-Manager den Verein führen, mit Pokal und Europapokal. Kostenlos, auch am Handy.">
 <meta name="author" content="tobwil">
+<meta name="robots" content="index,follow,max-image-preview:large,max-video-preview:-1">
 <meta name="theme-color" content="#07060b">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Hallen-Legenden · Retro-Handball im Browser">
-<meta property="og:description" content="7 gegen 7 im Pixel-Look, Karriere mit zwei Ligen, Pokal, Europapokal mit Final Four und Transfermarkt. Kostenlos im Browser spielen.">
+<meta property="og:site_name" content="Hallen-Legenden">
+<meta property="og:locale" content="de_DE">
+<meta property="og:title" content="Hallen-Legenden – das Handball-Spiel und Handball-Manager für den Browser">
+<meta property="og:description" content="7 gegen 7 selbst spielen, den Verein als Manager führen, Pokal und Europapokal mit Final Four gewinnen. Kostenlos, ohne Download, am Computer und am Handy.">
 <meta property="og:url" content="https://hallenlegenden.de/">
 <meta property="og:image" content="https://hallenlegenden.de/docs/screenshots/gameplay.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="Handball-Partie im Pixel-Look: Kiel gegen Flensburg in voller Halle">
+<meta property="og:video" content="https://hallenlegenden.de/docs/presse/hallenlegenden-teaser.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1280">
+<meta property="og:video:height" content="720">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hallen-Legenden – Handball-Spiel &amp; Handball-Manager im Browser">
+<meta name="twitter:description" content="7 gegen 7 im Pixel-Look, Karriere als Handball-Manager, Pokal und Europapokal mit Final Four. Kostenlos im Browser spielen.">
+<meta name="twitter:image" content="https://hallenlegenden.de/docs/screenshots/gameplay.jpg">
 <link rel="canonical" href="https://hallenlegenden.de/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤾</text></svg>">
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -38,16 +52,6 @@ p{margin:0}
 .skip:focus{top:12px}
 :focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
 
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--term);font-size:22px;line-height:1.2;overflow-x:hidden}
-img{display:block;max-width:100%}
-a{color:inherit}
-h1,h2,h3{font-family:var(--pix);font-weight:400;margin:0;line-height:1.25}
-p{margin:0}
-.skip{position:fixed;left:16px;top:-80px;z-index:50;background:var(--gold);color:#1a1205;padding:10px 12px;font-family:var(--pix);font-size:11px}
-.skip:focus{top:12px}
-:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
 .num{font-family:var(--pix);font-size:12px;color:var(--hot);letter-spacing:.2em;display:block}
 
 /* ---------- Knöpfe wie im Spiel ---------- */
@@ -125,53 +129,29 @@ html:not(.js) .hud{display:none}
 .hud .hint{font-family:var(--pix);font-size:9px;color:var(--mute);white-space:nowrap}
 @media (max-width:640px){.hud .hint{display:none}.board .lbl{min-width:0}}
 
-/* ---------- Wunsch-Formular ---------- */
-.wish{position:relative;padding:clamp(72px,10vw,140px) 16px;background:
-  linear-gradient(var(--bg),transparent 30%),
-  repeating-linear-gradient(90deg,transparent 0 79px,rgba(243,234,214,.025) 79px 80px)}
-.wish-inner{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(28px,5vw,72px);align-items:start}
-.wish h2{font-size:clamp(20px,3vw,36px);color:var(--gold);text-shadow:0 3px 0 #7a2c0c,0 5px 0 #000;margin:10px 0 18px}
-.wish .lead{font-size:clamp(22px,2.2vw,28px);margin-bottom:18px}
-.wish .steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;color:var(--dim)}
-.wish .steps li{display:flex;gap:12px}
-.wish .steps b{font-family:var(--pix);font-weight:400;font-size:11px;color:var(--bg);background:var(--green);padding:4px 6px;height:max-content}
-form{background:var(--panel);border:3px solid var(--ink);box-shadow:8px 8px 0 #000,inset 0 0 0 3px var(--panel2);padding:clamp(18px,3vw,30px);display:grid;gap:16px}
-.field{display:grid;gap:6px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-label{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;font-family:var(--pix);font-size:10px;line-height:18px;color:var(--cyan);letter-spacing:.05em}
-label small{font-family:var(--term);font-size:18px;color:var(--mute);letter-spacing:0}
-input,select,textarea{font:inherit;font-size:22px;color:var(--ink);background:#0d0b14;border:2px solid var(--line);padding:8px 10px;width:100%;border-radius:0;min-width:0}
-textarea{min-height:140px;resize:vertical;line-height:1.15}
-select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);
-  background-position:calc(100% - 18px) 55%,calc(100% - 12px) 55%;background-size:6px 6px;background-repeat:no-repeat;padding-right:34px}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,200,58,.25)}
-input::placeholder,textarea::placeholder{color:#5f5772}
-.count{justify-self:end;font-size:18px;color:var(--mute)}
-.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.note{font-size:18px;color:var(--mute)}
-.note a{color:var(--dim)}
-.human{display:flex;align-items:center;gap:14px;padding:12px 14px;border:2px dashed var(--line);background:#0d0b14}
-.human.need{border-color:var(--hot)}
-.switch{position:relative;flex-shrink:0;width:64px;height:32px;padding:0;border:2px solid var(--ink);background:var(--panel2);box-shadow:3px 3px 0 #000;cursor:pointer}
-.switch .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;background:var(--mute);transition:left .15s,background .15s}
-.switch[aria-checked="true"]{background:#14361f}
-.switch[aria-checked="true"] .knob{left:35px;background:var(--green)}
-.human-txt{display:grid;gap:2px}
-.human-txt b{font-family:var(--pix);font-weight:400;font-size:10px;color:var(--ink);line-height:1.5}
-.human-txt span{font-size:18px;color:var(--mute)}
-@media (prefers-reduced-motion:reduce){.switch .knob{transition:none}}
-.form-foot{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px}
-.form-foot .btn{border:2px solid var(--ink)}
-.status{font-size:22px;min-height:1.2em}
-.status.ok{color:var(--green)}
-.status.err{color:var(--hot)}
-.btn[disabled]{opacity:.6;cursor:wait}
-
-/* ---------- Fuß ---------- */
-footer{border-top:2px solid var(--line);padding:32px 16px 40px;color:var(--mute);font-size:19px}
-.foot-inner{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
-footer a{color:var(--dim)}
-footer a:hover{color:var(--gold)}
+/* ---------- Das Spiel: Text für Suchmaschinen und Neugierige ---------- */
+.about{padding:clamp(72px,10vw,140px) 16px 0;border-top:2px solid var(--line)}
+.about-inner{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(28px,5vw,64px);align-items:start}
+.about h2{font-size:clamp(20px,3vw,36px);color:var(--gold);text-shadow:0 3px 0 #7a2c0c,0 5px 0 #000;margin:10px 0 18px}
+.about .lead{font-size:clamp(22px,2.2vw,28px);margin-bottom:22px}
+.trailer{margin:0;border:3px solid var(--ink);box-shadow:8px 8px 0 #000;background:#000}
+.trailer video{display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;background:#000}
+.trailer figcaption{font-size:18px;color:var(--mute);padding:8px 12px;background:var(--panel)}
+.features{grid-column:1/-1;list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.features li{background:var(--panel);border:3px solid var(--ink);box-shadow:6px 6px 0 #000,inset 0 0 0 3px var(--panel2);padding:16px 18px}
+.features h3{font-size:12px;color:var(--cyan);margin-bottom:10px;line-height:1.5}
+.features p{color:var(--dim);font-size:20px}
+.faq{grid-column:1/-1;display:grid;gap:10px}
+.faq h2{font-size:clamp(16px,2vw,24px);margin-bottom:6px}
+.faq details{background:#0d0b14;border:2px solid var(--line)}
+.faq details[open]{border-color:var(--gold)}
+.faq summary{cursor:pointer;padding:12px 16px;font-size:22px;color:var(--ink);list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::before{content:"+";display:inline-block;width:1.2em;font-family:var(--pix);font-size:12px;color:var(--gold)}
+.faq details[open] summary::before{content:"–"}
+.faq details p{padding:0 16px 14px calc(16px + 1.2em);color:var(--dim);font-size:20px}
+.about .en{grid-column:1/-1;font-size:19px;color:var(--mute)}
+.about .en b{color:var(--dim);font-weight:400}
 
 /* ---------- Wunsch-Formular ---------- */
 .wish{position:relative;padding:clamp(72px,10vw,140px) 16px;background:
@@ -214,12 +194,6 @@ input::placeholder,textarea::placeholder{color:#5f5772}
 .status.ok{color:var(--green)}
 .status.err{color:var(--hot)}
 .btn[disabled]{opacity:.6;cursor:wait}
-
-/* ---------- Fuß ---------- */
-footer{border-top:2px solid var(--line);padding:32px 16px 40px;color:var(--mute);font-size:19px}
-.foot-inner{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
-footer a{color:var(--dim)}
-footer a:hover{color:var(--gold)}
 
 /* ---------- Fuß ---------- */
 footer{border-top:2px solid var(--line);padding:32px 16px 40px;color:var(--mute);font-size:19px}
@@ -232,7 +206,8 @@ footer a:hover{color:var(--gold)}
 @media (max-width:820px){
   .js .cap{left:16px;right:16px;width:auto;top:calc(var(--head) + 10px)}
   .cap .more,.thumb{display:none}
-  .wish-inner{grid-template-columns:1fr}
+  .wish-inner,.about-inner{grid-template-columns:1fr}
+  .features{grid-template-columns:1fr 1fr}
   .row{grid-template-columns:1fr}
 }
 @media (max-width:820px) and (max-height:720px){ .cap p{display:none} }
@@ -247,8 +222,64 @@ footer a:hover{color:var(--gold)}
 }
 @media (max-height:1000px) and (min-width:821px){ .scroll-hint{display:none} }
 @media (max-width:420px){ .cap .platforms li{font-size:8px;padding:6px 7px;gap:6px} }
+@media (max-width:560px){ .features{grid-template-columns:1fr} }
 @media (prefers-reduced-motion:reduce){ .logo,.scroll-hint{animation:none} }
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://hallenlegenden.de/#website",
+      "name": "Hallen-Legenden",
+      "alternateName": ["Hallenlegenden", "Hallen Legenden"],
+      "url": "https://hallenlegenden.de/",
+      "inLanguage": "de"
+    },
+    {
+      "@type": "VideoGame",
+      "@id": "https://hallenlegenden.de/#spiel",
+      "name": "Hallen-Legenden",
+      "alternateName": ["Hallenlegenden", "Hallen-Legenden Handball 26/27"],
+      "description": "Kostenloses Handball-Spiel im Retro-Pixel-Look für den Browser: 7 gegen 7 mit echten Regeln selbst spielen und im Karriere-Modus als Handball-Manager den Verein führen, mit zwei Ligen, Pokal und Europapokal mit Final Four.",
+      "url": "https://hallenlegenden.de/",
+      "sameAs": ["https://github.com/tobwil/HallenLegenden"],
+      "image": ["https://hallenlegenden.de/docs/screenshots/gameplay.jpg", "https://hallenlegenden.de/docs/screenshots/final-four.jpg", "https://hallenlegenden.de/docs/screenshots/career-newspaper.jpg"],
+      "screenshot": "https://hallenlegenden.de/docs/screenshots/gameplay.jpg",
+      "genre": ["Sportspiel", "Handballspiel", "Sportmanager", "Retro"],
+      "gamePlatform": ["Webbrowser", "PC", "Smartphone"],
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Windows, macOS, Linux, Android, iOS (im Browser)",
+      "playMode": "SinglePlayer",
+      "inLanguage": "de",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock", "url": "https://hallenlegenden.de/game/" },
+      "author": { "@type": "Person", "name": "tobwil", "url": "https://github.com/tobwil" },
+      "license": "https://opensource.org/licenses/MIT",
+      "trailer": {
+        "@type": "VideoObject",
+        "name": "Hallen-Legenden Trailer",
+        "description": "Echte Szenen aus dem Handball-Spiel: Aufstellungskarten, Tor, Kempa-Trick, Europapokal und Final Four mit Pokalübergabe.",
+        "thumbnailUrl": "https://hallenlegenden.de/docs/screenshots/final-four.jpg",
+        "contentUrl": "https://hallenlegenden.de/docs/presse/hallenlegenden-teaser.mp4",
+        "uploadDate": "2026-10-03",
+        "duration": "PT27S"
+      }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://hallenlegenden.de/#faq",
+      "mainEntity": [{"@type": "Question", "name": "Ist Hallen-Legenden kostenlos?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Das Handball-Spiel ist komplett kostenlos, ohne Werbung, ohne In-App-Käufe und ohne Anmeldung."}},
+        {"@type": "Question", "name": "Kann ich das Handball-Spiel am Handy spielen?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Hallen-Legenden läuft im Browser am Smartphone mit Touch-Steuerung: links ein Stick zum Laufen, rechts Knöpfe für Pass, Wurf und Finte. Am besten im Querformat."}},
+        {"@type": "Question", "name": "Gibt es einen Handball-Manager-Modus?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Im Karriere-Modus führst du deinen Verein über viele Saisons: Aufstellung, Training, Transfermarkt, Gehälter, Zuschauer und Sponsoren. Der Vorstand gibt ein Saisonziel vor. Die Spiele spielst du selbst oder lässt sie simulieren."}},
+        {"@type": "Question", "name": "Muss ich etwas herunterladen oder installieren?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Das Spiel startet direkt im Browser, am Computer und am Handy. Dein Spielstand wird im Browser gespeichert."}},
+        {"@type": "Question", "name": "Wie funktioniert die Steuerung?", "acceptedAnswer": {"@type": "Answer", "text": "Am Computer laufen die Spieler mit den Pfeiltasten, S passt, die Leertaste wirft, A spielt den Kempa-Trick, D täuscht an, W oder Shift sprintet. Ein Gamepad funktioniert auch."}},
+        {"@type": "Question", "name": "Spielen echte Vereine mit?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Alle 52 Vereine und ihre Spieler haben Fantasienamen aus Stadt und Spitzname. Hallen-Legenden ist ein inoffizielles Fan-Projekt."}}]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <script>document.documentElement.classList.add('js')</script>
@@ -258,6 +289,7 @@ footer a:hover{color:var(--gold)}
   <a class="brand" href="#film">HALLENLEGENDEN</a>
   <nav aria-label="Hauptnavigation">
     <a href="#film">Die Story</a>
+    <a href="#handball-spiel">Das Spiel</a>
     <a href="#wunsch">Feature-Wünsche</a>
     <a class="btn main" href="game/" data-umami-event="spielen-klick" data-umami-event-ort="kopf">▶ Spielen</a>
   </nav>
@@ -269,7 +301,7 @@ footer a:hover{color:var(--gold)}
     <canvas id="story" aria-hidden="true"></canvas>
     <div class="caps">
       <div class="cap cap-hero" id="start">
-        <h1 class="logo">HALLEN-<br>LEGENDEN<span>HANDBALL 26/27</span></h1>
+        <h1 class="logo">HALLEN-<br>LEGENDEN<span>HANDBALL 26/27</span><span class="sr"> – das Handball-Spiel und Handball-Manager im Browser</span></h1>
         <p class="tagline">Retro-Handball im Pixel-Look. Vom ersten Anwurf bis in den Chefsessel.</p>
         <div class="cta">
           <a class="btn main big" href="game/" data-umami-event="spielen-klick" data-umami-event-ort="start">▶ JETZT SPIELEN</a>
@@ -365,6 +397,39 @@ footer a:hover{color:var(--gold)}
       <div class="court"><i></i><span class="fill" id="hudFill"></span><span class="ball" id="hudBall"></span></div>
       <span class="hint">SCROLLEN ↓</span>
     </div>
+  </div>
+</section>
+
+<section class="about" id="handball-spiel" aria-labelledby="about-title">
+  <div class="about-inner">
+    <div class="about-head">
+      <span class="num">DAS SPIEL</span>
+      <h2 id="about-title">Handball-Spiel und Handball-Manager in einem</h2>
+      <p class="lead">Hallen-Legenden ist ein kostenloses Handballspiel für den Browser. Du spielst 7 gegen 7 selbst, mit Sprungwurf, Kempa-Trick und 7-Meter-Duell, und führst im Karriere-Modus deinen Verein als Handball-Manager durch viele Saisons, vom Abstiegskampf bis zum Europapokal.</p>
+      <a class="btn main big" href="game/" data-umami-event="spielen-klick" data-umami-event-ort="das-spiel">▶ JETZT KOSTENLOS SPIELEN</a>
+    </div>
+    <figure class="trailer">
+      <video controls muted playsinline preload="none" poster="docs/screenshots/final-four.jpg" width="1280" height="720" aria-label="Trailer mit echten Szenen aus dem Spiel">
+        <source src="docs/presse/hallenlegenden-teaser.mp4" type="video/mp4">
+      </video>
+      <figcaption>Trailer: echte Szenen aus dem Spiel, vom Anpfiff bis zur Pokalübergabe im Final Four.</figcaption>
+    </figure>
+    <ul class="features">
+      <li><h3>Selbst spielen</h3><p>7 gegen 7 mit echten Handball-Regeln: Zeitstrafen, passives Spiel, 7-Meter, Abwehr im 6:0, 5:1 oder 3:2:1. Jedes Spiel wie eine TV-Übertragung, mit Aufstellungen, Torschützen-Karte und Wiederholung.</p></li>
+      <li><h3>Handball-Manager</h3><p>Kader, Training, Transfermarkt, Gehälter und Verträge. Zuschauer und Sponsoren bringen das Geld, der Vorstand will Erfolg ohne Schulden. Der Handball-Kurier berichtet nach jedem Spieltag.</p></li>
+      <li><h3>Liga, Pokal, Europapokal</h3><p>36 Vereine in zwei Ligen mit Auf- und Abstieg, dazu 16 internationale Topklubs. Pokal mit 32 Teams und Europapokal mit Gruppenphase, beide mit Final Four in neutraler Halle.</p></li>
+      <li><h3>Auf jedem Gerät</h3><p>Am Computer mit Tastatur oder Gamepad, am Smartphone mit Touch. Ohne Download, ohne Anmeldung, ohne Werbung. Der Spielstand bleibt im Browser.</p></li>
+    </ul>
+    <div class="faq">
+      <h2>Häufige Fragen</h2>
+        <details open><summary>Ist Hallen-Legenden kostenlos?</summary><p>Ja. Das Handball-Spiel ist komplett kostenlos, ohne Werbung, ohne In-App-Käufe und ohne Anmeldung.</p></details>
+        <details><summary>Kann ich das Handball-Spiel am Handy spielen?</summary><p>Ja. Hallen-Legenden läuft im Browser am Smartphone mit Touch-Steuerung: links ein Stick zum Laufen, rechts Knöpfe für Pass, Wurf und Finte. Am besten im Querformat.</p></details>
+        <details><summary>Gibt es einen Handball-Manager-Modus?</summary><p>Ja. Im Karriere-Modus führst du deinen Verein über viele Saisons: Aufstellung, Training, Transfermarkt, Gehälter, Zuschauer und Sponsoren. Der Vorstand gibt ein Saisonziel vor. Die Spiele spielst du selbst oder lässt sie simulieren.</p></details>
+        <details><summary>Muss ich etwas herunterladen oder installieren?</summary><p>Nein. Das Spiel startet direkt im Browser, am Computer und am Handy. Dein Spielstand wird im Browser gespeichert.</p></details>
+        <details><summary>Wie funktioniert die Steuerung?</summary><p>Am Computer laufen die Spieler mit den Pfeiltasten, S passt, die Leertaste wirft, A spielt den Kempa-Trick, D täuscht an, W oder Shift sprintet. Ein Gamepad funktioniert auch.</p></details>
+        <details><summary>Spielen echte Vereine mit?</summary><p>Nein. Alle 52 Vereine und ihre Spieler haben Fantasienamen aus Stadt und Spitzname. Hallen-Legenden ist ein inoffizielles Fan-Projekt.</p></details>
+    </div>
+    <p class="en" lang="en"><b>English:</b> Hallen-Legenden is a free retro handball game and handball manager that runs in your browser on desktop and mobile: play 7 vs 7 yourself and lead your club through leagues, cup and a European cup with Final Four events. The game is in German.</p>
   </div>
 </section>
 

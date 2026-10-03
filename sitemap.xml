@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https://hallenlegenden.de/</loc>
+    <lastmod>2026-10-03</lastmod>
+    <image:image><image:loc>https://hallenlegenden.de/docs/screenshots/gameplay.jpg</image:loc></image:image>
+    <image:image><image:loc>https://hallenlegenden.de/docs/screenshots/final-four.jpg</image:loc></image:image>
+    <image:image><image:loc>https://hallenlegenden.de/docs/screenshots/career-newspaper.jpg</image:loc></image:image>
+    <image:image><image:loc>https://hallenlegenden.de/docs/screenshots/career-euro.jpg</image:loc></image:image>
+    <video:video>
+      <video:thumbnail_loc>https://hallenlegenden.de/docs/screenshots/final-four.jpg</video:thumbnail_loc>
+      <video:title>Hallen-Legenden Trailer: Handball-Spiel im Browser</video:title>
+      <video:description>Echte Szenen aus dem Handball-Spiel: Aufstellungskarten, Tor, Kempa-Trick, Europapokal und Final Four mit Pokalübergabe.</video:description>
+      <video:content_loc>https://hallenlegenden.de/docs/presse/hallenlegenden-teaser.mp4</video:content_loc>
+      <video:duration>27</video:duration>
+      <video:family_friendly>yes</video:family_friendly>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://hallenlegenden.de/game/</loc>
+    <lastmod>2026-10-03</lastmod>
+  </url>
+</urlset>

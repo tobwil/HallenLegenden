@@ -113,6 +113,7 @@ function renderSprite(L, pose, fr, flip = false) {
     case 2: R(hxx, hy - 2, 8, 3, H); R(hxx - 1, hy, 3, 8, H); R(hxx, hy + 1, 8, 1, L.trim); R(hxx + 2, hy - 2, 3, 1, HL); break;
     case 3: R(hxx + 3, hy + 1, 2, 1, mix(L.skin, '#fff', 0.45)); break;
     case 4: R(hxx, hy - 3, 9, 4, H); R(hxx - 1, hy - 1, 3, 6, H); R(hxx + 2, hy - 3, 3, 1, HL); break;
+    case 6: R(hxx, hy - 2, 8, 3, H); R(hxx - 1, hy, 3, 10, H); R(hxx + 7, hy, 1, 2, H); R(hxx + 2, hy - 2, 3, 1, HL); break;   // lange offene Haare
     default: R(hxx + 1, hy - 1, 7, 2, H); R(hxx - 2, hy - 2, 3, 3, H); R(hxx, hy, 1, 4, H);
   }
   if (L.beard) { R(hxx + 2, hy + 6, 6, 3, shade(H, 0.9)); R(hxx + 6, hy + 7, 2, 1, L.skinS); }
@@ -162,6 +163,7 @@ function portrait(p, kit) {
     case 2: R(10, 5, 20, 6, H); R(8, 8, 3, 18, H); R(29, 8, 3, 18, H); R(10, 10, 20, 2, L.trim); break;
     case 3: R(15, 10, 5, 1, mix(L.skin, '#fff', 0.45)); break;
     case 4: R(9, 2, 22, 9, H); R(8, 6, 3, 10, H); R(29, 6, 3, 10, H); R(13, 3, 5, 1, mix(H, '#fff', 0.25)); break;
+    case 6: R(10, 5, 20, 6, H); R(8, 7, 3, 22, H); R(29, 7, 3, 22, H); R(11, 10, 5, 2, H); R(24, 10, 5, 1, H); R(14, 5, 6, 1, mix(H, '#fff', 0.25)); break;   // lange offene Haare bis auf die Schultern
     default: R(11, 6, 18, 4, H); R(17, 2, 6, 4, H); R(10, 8, 2, 5, H); R(28, 8, 2, 5, H);
   }
   if (L.beard) { R(12, 21, 16, 7, shade(H, 0.9)); R(16, 22, 8, 1, L.skinS); R(16, 23, 8, 1, shade(L.skinS, 0.75)); }
