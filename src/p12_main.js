@@ -1,5 +1,6 @@
 // ================= Touch, Hauptschleife, Start =================
 if ('ontouchstart' in window || matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
+fitView(); addEventListener('resize', fitView); addEventListener('orientationchange', () => setTimeout(fitView, 250));
 // Kein Browser-Zoom beim Spielen mit zwei Daumen: iOS Safari ignoriert user-scalable=no und zoomt bei Stick + Knopf per Pinch.
 // Safaris Gesten-Events und Mehrfinger-Bewegungen abfangen; falls doch gezoomt wurde, Zoom zurücksetzen.
 for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });

@@ -22,6 +22,11 @@ function pValue(p) {
   const o = ovr(p), af = p.age < 23 ? 1.5 : p.age < 28 ? 1.2 : p.age < 31 ? 0.9 : 0.5;
   return Math.max(5000, Math.round((Math.pow(Math.max(0, o - 55), 2) * 700 + 10000) * af / 5000) * 5000);
 }
+// Potenzial für die Anzeige: Bis 29 kann ein Spieler bis zu seinem Potenzial wachsen, ab 30 baut er ab (Höchstwert = aktueller Wert)
+const potOf = p => p.age >= 30 ? ovr(p) : Math.max(ovr(p), Math.round(p.pot ?? ovr(p)));
+const potTrend = p => p.age >= 30 ? 'down' : potOf(p) - ovr(p) >= 3 && p.age <= 26 ? 'up' : 'peak';
+const POT_TXT = { up: 'entwickelt sich noch', peak: 'auf dem Höhepunkt', down: 'baut altersbedingt ab' };
+const potCell = p => { const t = potTrend(p), v = potOf(p); return `<span class="pot pot-${t}" title="${POT_TXT[t]}">${v}${t === 'up' ? '↗' : t === 'down' ? '↘' : ''}</span>`; };
 const euro = v => v >= 1e6 ? (v / 1e6).toFixed(2).replace('.', ',') + ' Mio €' : Math.round(v / 1000) + ' Tsd €';
 
 function genPlayer(role, level, r, ageMin = 18, ageMax = 33) {
@@ -42,7 +47,7 @@ function fixNumbers(sq) {
 }
 function makeSquad(tid) {
   const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#bank'));
-  const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); return finalize(q, true); });
+  const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; if (p.age) q.age = p.age; /* Hallen-Legenden: festes Alter, gleicher Zufallsverlauf */ q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); return finalize(q, true); });
   const names = new Set(sq.map(p => p.name));
   for (const role of ROLES) { const q = genPlayer(role, T.r - 7 - r() * 5, r, 18, 32); while (names.has(q.name)) q.name = SUR[(r() * SUR.length) | 0]; names.add(q.name); sq.push(finalize(q)); }
   fixNumbers(sq); return sq;

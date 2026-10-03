@@ -1,6 +1,6 @@
 'use strict';
 // ================= Kern: Maße, Projektion, Helfer =================
-const W = 640, H = 360;
+let W = 640; const H = 360;   // W wächst auf breiten Bildschirmen (siehe fitView), H bleibt fest
 const CW = 40, CH = 20, GY1 = 8.5, GY2 = 11.5, GH = 2, GRAV = 9.8;
 const FAR_Y = 152, DY = 9.2, PX = 19, ZPX = 19;            // Sichtachse: Seitenlinie oben bei y=152, 9,2 px pro Tiefenmeter
 const kOf = y => 0.8 + 0.2 * (y / CH);                      // horizontale Perspektive (hinten schmaler)
@@ -12,7 +12,21 @@ const TOUCHDEV = 'ontouchstart' in window || matchMedia('(pointer:coarse)').matc
 let CAMX = 20;                                              // Kamerazentrum in Weltmetern
 const sx = (x, y) => Math.round(W / 2 + (x - CAMX) * PX * kOf(y));
 const sy = (y, z = 0) => Math.round(FAR_Y + y * DY - z * ZPX);
-const VIEW_HALF = W / 2 / PX;
+let VIEW_HALF = W / 2 / PX;
+const CAM_HALF = 640 / 2 / PX;                               // halbe Sichtbreite bei 16:9 in Metern
+// Kamera-Anschlag: Am Desktop wie bisher. Auf Touch-Geräten fährt die Kamera bei breitem Bild weiter über das Spielfeldende hinaus,
+// damit das Tor vor den Wurf- und Pass-Knöpfen liegt und dahinter nur Hallenboden verdeckt ist.
+const camHalf = () => TOUCHDEV ? 2 * CAM_HALF - VIEW_HALF : VIEW_HALF;
+const hudR = () => W - (TOUCHDEV ? 54 : 0);                 // rechter Rand fürs HUD oben, auf Touch-Geräten neben dem Pause-Knopf
+// Spielfeldbreite an das Seitenverhältnis anpassen: 16:9 (640 px) bis 20:9 (800 px). Breite Handys zeigen mehr Halle statt schwarzer Ränder,
+// die Höhe bleibt 360 px, nichts wird verzerrt oder abgeschnitten. Die Kamera zeigt an den Spielfeldenden nicht mehr als bisher.
+function fitView() {
+  const cs = getComputedStyle(document.body), aw = innerWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const ah = innerHeight - (document.body.classList.contains('touch') ? 0 : 24), w = Math.min(800, Math.max(640, Math.round(H * aw / Math.max(1, ah) / 2) * 2));
+  document.documentElement.style.setProperty('--ar', `${w} / ${H}`);
+  if (w === W) return;
+  W = w; VIEW_HALF = W / 2 / PX; cv.width = W; ctx.imageSmoothingEnabled = false;   // neue Canvas-Breite setzt den Zeichenzustand zurück
+}
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
@@ -123,10 +137,10 @@ const HAIR = ['#2a1a10', '#4a2e18', '#7a4a20', '#c9a050', '#e3c27a', '#1a1a1a', 
 const ROSTER_KEY = 'hl3_kader';
 let ROSTER_EDIT = store.get(ROSTER_KEY, {});
 // Hallen-Legenden aus dem echten Leben: feste Spieler auf dem Star-Platz ihres Vereins, mit den Werten des Stars, den sie ersetzen.
-// Aussehen: skin = Index in SKIN, style = Frisur (1 kurz, 6 lange offene Haare), beard = Vollbart
+// Aussehen: skin = Index in SKIN, style = Frisur (1 kurz, 6 lange offene Haare), beard = Vollbart. age: Alter beim Karrierestart (beste Jahre)
 const LEGENDS = {
-  KIE: { name: 'Weidenhammer', skin: 1, hair: '#4a2e18', style: 1, beard: true, band: false },
-  COB: { name: 'Hebbe', skin: 1, hair: '#7e3f1e', style: 6, beard: false, band: false },
+  KIE: { name: 'Weidenhammer', skin: 1, hair: '#4a2e18', style: 1, beard: true, band: false, age: 27 },
+  COB: { name: 'Hebbe', skin: 1, hair: '#7e3f1e', style: 6, beard: false, band: false, age: 27 },
 };
 const LEGEND_KEYS = ['name', 'skin', 'hair', 'style', 'beard', 'band'];
 function roster(tid, plain) {

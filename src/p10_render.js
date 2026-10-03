@@ -27,7 +27,7 @@ function updateCamera() {
   const b = G.ball; let tgt;
   if (G.phase === 'intro') tgt = G.introT < 3.4 ? lerp(4, 36, ease(G.introT / 3.4)) : 20;
   else { const lead = G.poss >= 0 && G.phase === 'play' ? sgn(G.poss) * 3 : 0; tgt = b.x + lead; }
-  tgt = clamp(tgt, VIEW_HALF - 3, CW - VIEW_HALF + 3);
+  tgt = clamp(tgt, camHalf() - 3, CW - camHalf() + 3);
   CAMX = G.phase === 'intro' ? tgt : lerp(CAMX, tgt, 0.075);
 }
 function render() {
@@ -82,11 +82,11 @@ function scoreBug() {
   if (G.passiveWarn && G.phase === 'play' && Math.floor(G.t * 3) % 2) { rect(x + 144, y + 22, 64, 12, '#ffc83a'); text('PASSIV', x + 152, y + 24, '#0c0a12', 8, 'left', null); }
 }
 function radar() {
-  const rw = 90, rh = 45, x0 = W - rw - 10, y0 = 8, kx = rw / CW, ky = rh / CH;
+  const rw = 90, rh = 45, x0 = hudR() - rw - 10, y0 = 8, kx = rw / CW, ky = rh / CH;
   rect(x0 - 2, y0 - 2, rw + 4, rh + 4, 'rgba(8,7,14,0.85)'); rect(x0, y0, rw, rh, 'rgba(42,88,168,0.55)');
   rect(x0 + rw / 2, y0, 1, rh, 'rgba(255,255,255,0.4)');
   ctx.fillStyle = 'rgba(224,132,46,0.6)'; ctx.fillRect(x0, y0 + rh / 2 - 7 * ky * 1.4, 6 * kx, 14 * ky * 1.4 - 2); ctx.fillRect(x0 + rw - 6 * kx, y0 + rh / 2 - 7 * ky * 1.4, 6 * kx, 14 * ky * 1.4 - 2);
-  const l = (CAMX - VIEW_HALF) * kx; rect(x0 + l, y0, VIEW_HALF * 2 * kx, 1, '#ffc83a'); rect(x0 + l, y0 + rh - 1, VIEW_HALF * 2 * kx, 1, '#ffc83a');
+  const l = Math.max(0, (CAMX - VIEW_HALF) * kx), r = Math.min(rw, (CAMX + VIEW_HALF) * kx); rect(x0 + l, y0, r - l, 1, '#ffc83a'); rect(x0 + l, y0 + rh - 1, r - l, 1, '#ffc83a');   // Sichtbereich, auf die Karte begrenzt
   for (const p of G.players) if (!p.out) rect(x0 + p.x * kx - 1, y0 + p.y * ky - 1, 3, 3, p === G.ctrl ? '#ffc83a' : tcol(p.team));
   rect(x0 + G.ball.x * kx - 1, y0 + G.ball.y * ky - 1, 2, 2, '#fff');
 }
@@ -180,7 +180,7 @@ function ticker() {
 function replayHud() {
   rect(0, 0, W, 24, '#000'); rect(0, H - 24, W, 24, '#000');
   if (Math.floor(G.t * 2) % 2) rect(12, 8, 8, 8, '#e2372f');
-  text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', W - 12, 8, '#9b90ad', 8, 'right', null);
+  text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', hudR() - 12, 8, '#9b90ad', 8, 'right', null);
   text('TASTE = WEITER', W - 12, H - 16, '#9b90ad', 8, 'right', null);
   const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
   const yy = (G.t * 90) % H; rect(0, yy, W, 2, 'rgba(255,255,255,0.07)');
@@ -189,7 +189,7 @@ function replayHud() {
 function introHud() {
   const t = G.introT, T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]];
   rect(0, 0, W, 20, '#000'); rect(0, H - 20, W, 20, '#000');
-  text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), W - 14, 6, '#9b90ad', 8, 'right', null);
+  text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), hudR() - 14, 6, '#9b90ad', 8, 'right', null);
   text('TASTE = ÜBERSPRINGEN', W / 2, H - 14, '#6e6680', 8, 'center', null);
   if (t < 3.6) {
     const e = ease(t / 0.6), o = clamp((t - 3.1) / 0.5, 0, 1);
@@ -206,11 +206,11 @@ function introHud() {
   const ps = G.players.filter(p => p.team === team);
   rect(0, 40, W, 22, 'rgba(8,7,14,0.85)'); rect(0, 40, 8, 22, tcol(team));
   text(`AUFSTELLUNG ${TEAMS[G.tid[team]].n.toUpperCase()}`, 20, 47, '#f3ead6', 8, 'left', null, 440);
-  text(`DECKUNG ${DEF_SYS[G.tact[team]].n}`, W - 14, 47, '#ffc83a', 8, 'right', null);
+  text(`DECKUNG ${DEF_SYS[G.tact[team]].n}`, hudR() - 14, 47, '#ffc83a', 8, 'right', null);
   ps.forEach((p, i) => {
     const e = ease((lt - i * 0.18) / 0.35); if (e <= 0) return;
     const col = i < 4 ? i : i - 4, row = i < 4 ? 0 : 1, cw = 150;
-    const x = (row ? 90 : 14) + col * (cw + 6) + (1 - e) * 400, y = 72 + row * 112;
+    const x = (W - 640) / 2 + (row ? 90 : 14) + col * (cw + 6) + (1 - e) * 400, y = 72 + row * 112;   // mittig, auch bei breitem Spielfeld
     rect(x + 3, y + 3, cw, 104, 'rgba(0,0,0,0.5)'); rect(x, y, cw, 104, OUTLINE); rect(x + 2, y + 2, cw - 4, 100, '#14111d');
     rect(x + 2, y + 2, cw - 4, 64, shade(kit(team).c1, 0.45));
     ctx.drawImage(portrait(p, kit(team)), x + cw / 2 - 30, y + 4, 60, 60);

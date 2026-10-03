@@ -13,7 +13,7 @@ html,body{height:100%}
 body{background:var(--bg) radial-gradient(ellipse at 50% 30%,#1a1430 0%,#07060b 70%);color:var(--ink);font-family:var(--term);font-size:20px;line-height:1.15;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding-inline:16px;box-sizing:border-box;overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
-#wrap{position:relative;width:min(100%, calc((100dvh - 24px) * 16 / 9));aspect-ratio:16/9;max-width:100%;background:#000;
+#wrap{position:relative;width:min(100%, calc((100vh - 24px) * var(--ar, 16 / 9)));width:min(100%, calc((100dvh - 24px) * var(--ar, 16 / 9)));aspect-ratio:var(--ar, 16 / 9);max-width:100%;background:#000;
   box-shadow:0 0 0 3px #2a2140,0 0 0 6px #000,0 30px 80px rgba(0,0,0,.7),0 0 120px rgba(255,200,58,.06)}
 #cv{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
 #crt{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.07) 2px 3px),radial-gradient(ellipse at center,rgba(0,0,0,0) 62%,rgba(0,0,0,.32) 100%)}
@@ -148,6 +148,7 @@ button.link{background:none;border:none;box-shadow:none;padding:0;font-family:va
 button.link:hover,button.link:focus-visible{background:none;color:var(--gold)}
 .age{font-size:15px;color:var(--mute);margin-left:6px}
 .tal{font-family:var(--pix);font-size:7px;color:var(--cyan)}
+.pot{white-space:nowrap}.pot-up{color:var(--cyan)}.pot-down{color:var(--mute)}
 .inj{font-family:var(--pix);font-size:7px;color:#fff;background:var(--hot);padding:1px 3px}
 .gkc{text-align:center!important;color:var(--dim)}
 .pdet{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
@@ -192,6 +193,9 @@ button:focus-visible{box-shadow:0 0 0 3px var(--cyan),3px 3px 0 #000}
   .logo{font-size:clamp(24px,9vw,52px)}
   .paper{padding:10px}
 }
+/* Handy: Spielfeld ohne Rahmen bis an den Rand, nur Notch und Home-Leiste bleiben frei */
+body.touch{padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px);gap:0}
+body.touch #wrap{width:min(100%, calc(100vh * var(--ar, 16 / 9)));width:min(100%, calc(100dvh * var(--ar, 16 / 9)));box-shadow:none}
 body.touch button{min-height:40px}
 body.touch button.small{min-height:36px;font-size:10px}
 body.touch .tbtn{min-height:60px}
