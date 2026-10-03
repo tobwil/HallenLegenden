@@ -140,7 +140,7 @@ const ACT = {
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
       <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück</span>
-      <b>TOUCH</b><span>Stick links zum Laufen, rechts PASS, WURF (halten), FINTE/KLAU, SPRINT. SPRINT + PASS = Kempa. II oben rechts = Pause</span></div>
+      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
   },
@@ -150,6 +150,7 @@ const ACT = {
     showMenu(`<div class="panel narrow"><h2>OPTIONEN</h2>
       <div class="ed" style="grid-template-columns:auto 1fr 40px">${sl('master', 'GESAMT')}${sl('music', 'MUSIK')}${sl('sfx', 'EFFEKTE')}${sl('crowd', 'PUBLIKUM')}</div>
       <div class="row"><span class="tag" style="min-width:150px">SPIELTEMPO</span>${[1, 0.85, 0.7].map(v => `<button class="small ${SETTINGS.speed === v ? 'on' : ''}" data-act="speed" data-v="${v}">${Math.round(v * 100)} %</button>`).join('')}</div>
+      ${TOUCHDEV ? `<div class="row"><span class="tag" style="min-width:150px">TOUCH-KNÖPFE</span>${[['s', 'KLEIN'], ['m', 'NORMAL'], ['l', 'GROSS']].map(([k, n]) => `<button class="small ${(SETTINGS.btn || 'm') === k ? 'on' : ''}" data-act="btnSize" data-v="${k}">${n}</button>`).join('')}</div>` : ''}
       <div class="row"><span class="tag" style="min-width:150px">TON</span><button class="small ${AU.on ? 'on' : ''}" data-act="sound">${AU.on ? 'AN' : 'AUS'}</button></div>
       <div class="row"><span class="tag" style="min-width:150px">HALLENSPRECHER</span><button class="small ${AU.vol.speaker ? 'on' : ''}" data-act="speaker">${AU.vol.speaker ? 'AN' : 'AUS'}</button><button class="small" data-act="sndTest">PROBE</button></div>
       <p class="muted">Der Hallensprecher nutzt die Sprachausgabe deines Browsers. Je nach Gerät klingt die Stimme anders oder fehlt ganz.</p>
@@ -157,6 +158,7 @@ const ACT = {
     ['master', 'music', 'sfx', 'crowd'].forEach(k => { const el = menu.querySelector('#vol_' + k); el.oninput = () => { AU.setVol(k, el.value / 100); menu.querySelector('#vv_' + k).textContent = el.value; }; });
   },
   speed(v) { SETTINGS.speed = +v; store.set('hl4_settings', SETTINGS); ACT.options(); },
+  btnSize(v) { SETTINGS.btn = v; store.set('hl4_settings', SETTINGS); applyBtnSize(); ACT.options(); },
   speaker() { AU.vol.speakerChosen = true; AU.setVol('speaker', !AU.vol.speaker); ACT.options(); },
   sndTest() { AU.init(); AU.whistle(1); setTimeout(() => { AU.cheer(0.7); AU.horn(); }, 400); setTimeout(() => AU.say('Tor für die Heimmannschaft! Torschütze mit der Nummer 7!'), 900); },
   pause() {

@@ -42,12 +42,31 @@ test('Seite lädt ohne Fehler, Spielschleife läuft (Desktop und Handy)', async 
   }
 });
 
-test('Handy: im Spiel liegt kein Menü-Overlay über dem Feld', async () => {
+test('Handy: kein Menü-Overlay im Spiel, Antipp-Tipp beim ersten Spiel, dezente Knöpfe', async () => {
   const { page, ctx, errors } = await open(MOBILE);
   await page.evaluate(() => { document.body.classList.add('touch'); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); G.introT = 99; });
+  // Tipp erscheint beim Anwurf, hält das Spiel an und gibt es nach VERSTANDEN wieder frei
+  await page.waitForSelector('#ttip', { timeout: 10000 });
+  const tip = await page.evaluate(() => ({ paused: G.paused, text: document.getElementById('ttip').innerText.includes('Tor antippen') }));
+  await page.tap('#ttip button');
   await page.waitForFunction(() => G && G.phase === 'play', null, { timeout: 20000 });
-  const r = await page.evaluate(() => ({ hidden: menu.hidden, display: getComputedStyle(menu).display, ingame: document.body.classList.contains('ingame') }));
-  ok(r.hidden && r.display === 'none' && r.ingame, JSON.stringify(r)); ok(!errors.length, errors.join('; ')); await ctx.close();
+  const r = await page.evaluate(() => ({ hidden: menu.hidden, display: getComputedStyle(menu).display, ingame: document.body.classList.contains('ingame'), tipGone: !document.getElementById('ttip'),
+    btnBg: getComputedStyle(document.querySelector('.tb-a')).backgroundColor, stickOp: +getComputedStyle(document.getElementById('stick')).opacity }));
+  // im zweiten Spiel noch einmal, ab dem dritten nicht mehr
+  const again = await page.evaluate(() => { const n = []; for (let i = 0; i < 2; i++) { hideMenu(); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); G.introT = 99; G.phase = 'kickoff'; touchTip(); n.push(!!document.getElementById('ttip')); const t = document.getElementById('ttip'); if (t) t.remove(); } return n; });
+  ok(tip.paused && tip.text, 'Tipp: ' + JSON.stringify(tip)); ok(r.hidden && r.display === 'none' && r.ingame && r.tipGone, JSON.stringify(r));
+  ok(/rgba\(.*0\.\d+\)/.test(r.btnBg) && r.stickOp < 0.4, 'Knöpfe/Stick nicht dezent: ' + JSON.stringify(r)); ok(again[0] && !again[1], 'Tipp-Zähler: ' + JSON.stringify(again));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Handy: Knopfgröße klein/normal/groß aus den Optionen, bleibt gespeichert', async () => {
+  const { page, ctx, errors } = await open(MOBILE);
+  const size = () => page.evaluate(() => { const c = document.body.classList, mo = c.contains('menuopen'); c.add('ingame'); c.remove('menuopen'); const w = document.querySelector('.tb-b').getBoundingClientRect().width; c.remove('ingame'); if (mo) c.add('menuopen'); return Math.round(w); });
+  await page.evaluate(() => ACT.options()); const row = await page.evaluate(() => menu.innerText.includes('TOUCH-KNÖPFE'));
+  const m = await size(); await page.evaluate(() => ACT.btnSize('l')); const l = await size(); await page.evaluate(() => ACT.btnSize('s')); const sm = await size();
+  await page.reload(); await page.waitForTimeout(500); const kept = await size();
+  ok(row, 'Option fehlt'); ok(l > m && m > sm && kept === sm, `Größen: normal ${m}, groß ${l}, klein ${sm}, nach Neuladen ${kept}`);
+  ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
 test('Alle Menüfenster gleich groß, Tabwechsel ändert nichts', async () => {
@@ -409,25 +428,31 @@ test('Final Four: Nach eigenem Halbfinal-Aus wird das Finale sofort gespielt (Po
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
-test('Hallen-Legenden: Weidenhammer (Kiel) und Hebbe (Coburg) im Kader, auch in laufenden Karrieren', async () => {
+test('Hallen-Legenden: Weidenhammer, Hebbe, Richardson und Schörner im Kader, auch in laufenden Karrieren', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 5);
-  const r = await page.evaluate(() => {
+  const NAMES = [['KIE', 'Weidenhammer'], ['COB', 'Hebbe'], ['BER', 'Richardson'], ['ERL', 'Schörner']];
+  const r = await page.evaluate(NAMES => {
     const chk = {};
-    for (const [k, name] of [['KIE', 'Weidenhammer'], ['COB', 'Hebbe']]) {
+    for (const [k, name] of NAMES) {
       const tid = TEAM_BASE.findIndex(b => b[0] === k), ro = roster(tid), pl = roster(tid, true), i = ro.findIndex(x => x.name === name);
-      chk[k] = i > 0 && ro[i].star && ['att', 'pas', 'def', 'spd', 'sta', 'num', 'role'].every(f => ro[i][f] === pl[i][f]) && ro.every((x, j) => j === i || x.name === pl[j].name);
+      chk[k] = i > 0 && i === legendSlot(LEGENDS[k], pl) && ['att', 'pas', 'def', 'spd', 'sta', 'num', 'role', 'star'].every(f => ro[i][f] === pl[i][f]) && ro.every((x, j) => j === i || x.name === pl[j].name);
     }
     careerCreate(3, 1, 1, 1);
-    const inCareer = ['Weidenhammer', 'Hebbe'].every(n => TEAMS.some(t => CAREER.squads[t.id].some(p => p.name === n)));
-    // alter Spielstand: Star heißt noch wie früher, kein Merker -> beim Laden umbenennen
-    const kie = TEAM_BASE.findIndex(b => b[0] === 'KIE'), w = CAREER.squads[kie].find(p => p.name === 'Weidenhammer'), orig = roster(kie, true).find((p, i) => i > 0 && p.star);
-    w.name = orig.name; w.beard = false; delete CAREER.legends; saveCareer();
-    return { chk, inCareer, orig: orig.name };
-  });
+    const all = () => TEAMS.flatMap(t => CAREER.squads[t.id]), find = n => all().find(p => p.name === n);
+    const inCareer = NAMES.every(([, n]) => find(n)), rich = find('Richardson'), sch = find('Schörner');
+    const looks = { musc: rich.musc === true, talent: rich.age === 19 && rich.pot - ovr(rich) > 8, tall: sch.tall === 2, trait: sch.trait === 'Kreis-Turm' };
+    // alter Spielstand (Version 1): Richardson und Schörner heißen noch wie früher
+    for (const [k, n] of [['BER', 'Richardson'], ['ERL', 'Schörner']]) { const tid = TEAM_BASE.findIndex(b => b[0] === k), p = find(n), o = roster(tid, true)[LEGENDS[k].slot]; p.name = o.name; p.musc = undefined; p.tall = o.tall; p.trait = o.trait; }
+    const kie = TEAM_BASE.findIndex(b => b[0] === 'KIE'), w = find('Weidenhammer'), orig = roster(kie, true)[legendSlot(LEGENDS.KIE, roster(kie, true))];
+    w.name = orig.name; w.beard = false; CAREER.legends = undefined; saveCareer();
+    return { chk, inCareer, looks };
+  }, NAMES);
+  // alter Spielstand ohne Merker: alle vier werden nachgerüstet
   await page.reload(); await page.waitForTimeout(600);
-  const m = await page.evaluate(() => { const kie = TEAM_BASE.findIndex(b => b[0] === 'KIE'), w = CAREER.squads[kie].find(p => p.name === 'Weidenhammer'); return { found: !!w, beard: w && w.beard, flag: CAREER.legends }; });
-  ok(r.chk.KIE && r.chk.COB, 'Kader: ' + JSON.stringify(r.chk)); ok(r.inCareer, 'nicht in der Karriere');
-  ok(m.found && m.beard && m.flag === 1, 'Nachrüsten im alten Spielstand: ' + JSON.stringify(m));
+  const m0 = await page.evaluate(() => { const f = n => TEAMS.flatMap(t => CAREER.squads[t.id]).find(p => p.name === n); return { w: !!f('Weidenhammer') && f('Weidenhammer').beard, r: !!f('Richardson') && f('Richardson').musc, s: !!f('Schörner') && f('Schörner').tall === 2, flag: CAREER.legends }; });
+  ok(r.chk.KIE && r.chk.COB && r.chk.BER && r.chk.ERL, 'Kader: ' + JSON.stringify(r.chk)); ok(r.inCareer, 'nicht in der Karriere');
+  ok(Object.values(r.looks).every(Boolean), 'Aussehen/Talent: ' + JSON.stringify(r.looks));
+  ok(m0.w && m0.r && m0.s && m0.flag === 2, 'Nachrüsten im alten Spielstand: ' + JSON.stringify(m0));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
@@ -497,7 +522,7 @@ test('Handy: kein Zoom mit zwei Daumen, Menü scrollt mit einem Finger', async (
   for (let i = 1; i < 12; i++) { await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 420, y: 330 - i * 20 }] }); await page.waitForTimeout(16); }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] }); await page.waitForTimeout(300);
   ok(await page.evaluate(() => menu.scrollTop) > 50, 'Menü scrollt nicht mit einem Finger');
-  await page.evaluate(() => { hideMenu(); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); G.introT = 99; });
+  await page.evaluate(() => { store.set('hl4_touchtip', 2); hideMenu(); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); G.introT = 99; });   // Tipp schon gesehen
   await page.waitForFunction(() => G && G.phase === 'play', null, { timeout: 20000 });
   const pts = k => [{ x: 120 + k * 3, y: 250 - k * 2, id: 1 }, { x: 760 - k * 4, y: 300 - k * 3, id: 2 }];
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: pts(0) });

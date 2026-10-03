@@ -215,11 +215,11 @@ function readInput(dt) {
 function clearEdges() { IN.pa = IN.pb = IN.pc = IN.ra = IN.rb = IN.rc = IN.any = false; }
 
 // ================= Spielerdaten, Bank & Wechsel =================
-const DATA_KEYS = ['name', 'num', 'role', 'star', 'trait', 'att', 'pas', 'df', 'gk', 'sp', 'sta', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'pid', 'fitMul', 'energy', 'goals', 'shots', 'saves', 'stealsN', 'fouls', 'look', 'mins', 'injured'];
+const DATA_KEYS = ['name', 'num', 'role', 'star', 'trait', 'att', 'pas', 'df', 'gk', 'sp', 'sta', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'musc', 'pid', 'fitMul', 'energy', 'goals', 'shots', 'saves', 'stealsN', 'fouls', 'look', 'mins', 'injured'];
 function matchData(r, boost) {
   const f = r.form !== undefined ? r.form - Math.max(0, 75 - (r.fit ?? 100)) * 0.2 : 0;   // Form & Fitness aus der Karriere
   const fitMul = r.fit !== undefined ? r.fit / 100 : 1;
-  return { name: r.name, num: r.num, role: r.role, star: r.star, trait: r.trait, skin: r.skin, hair: r.hair, style: r.style, beard: r.beard, band: r.band, tall: r.tall, pid: r.pid,
+  return { name: r.name, num: r.num, role: r.role, star: r.star, trait: r.trait, skin: r.skin, hair: r.hair, style: r.style, beard: r.beard, band: r.band, tall: r.tall, musc: r.musc, pid: r.pid,
     att: r.att + boost + f, pas: r.pas + boost + f, df: r.def + boost + f, gk: r.gk + boost + f, sp: r.spd + boost * 0.5 + f * 0.5, sta: r.sta ?? 80,
     fitMul, energy: fitMul, goals: 0, shots: 0, saves: 0, stealsN: 0, fouls: 0, mins: 0, injured: false, look: null };
 }

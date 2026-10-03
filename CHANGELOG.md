@@ -2,6 +2,19 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.6: Dezente Touch-Steuerung, zwei neue Hallen-Legenden
+- **Touch-Knöpfe durchscheinend:** Im Ruhezustand sieht man durch PASS, WURF und FINTE aufs Spielfeld. Beim Drücken leuchten sie voll auf.
+- **Stick:** Der Ring ist nur noch ganz dezent zu sehen (Hinweis, wo der Daumen hingehört). Bei Berührung erscheint er voll unter dem Daumen.
+- **Knopfgröße** klein, normal oder groß unter Optionen (nur auf Touch-Geräten), wird gespeichert.
+- **Tipp „Einfach antippen“** in den ersten beiden Spielen auf dem Handy: Mitspieler antippen = Pass, Tor antippen = Wurf in diese Ecke, in der Abwehr Spieler antippen = wechseln. Das Spiel wartet, bis man VERSTANDEN tippt. Beim Anwurf zeigt die Laufschrift auf dem Handy dieselben Hinweise statt der Tastenbelegung.
+- **Hinweise im Spiel:** „TIPPEN = WEITER“ statt „TASTE = …“ und „FINTE=HEBER“ statt „D=HEBER“ auf Touch-Geräten. Der Touch-Abschnitt der Steuerungshilfe ist korrigiert (es gibt keinen SPRINT-Knopf mehr, Kempa geht per langem Druck auf PASS).
+- **Zwei neue Spieler:**
+  - Richardson (Berlin): Kreisläufer und „Supertalent“, schwarze Haare, muskulös. In der Karriere 19 Jahre alt, mit sehr hohem Potenzial.
+  - Schörner (Erlangen): Kreisläufer und „Kreis-Turm“, sehr groß, braune Haare.
+  - Beide haben die Werte des Spielers, den sie ersetzen. Laufende Karrieren bekommen sie beim Laden nachgerüstet.
+- Neue Figurenmerkmale: muskulös (breitere Schultern, kräftigere Arme und Nacken) und sehr groß (zweite Größenstufe)
+- 1 neuer Regressionstest (Knopfgröße), Handy- und Legenden-Test erweitert, insgesamt 30
+
 ## v8.5: Potenzial und volles Bild auf breiten Handys
 - **Potenzial im Karriere-Modus:**
   - Kader und Transferliste zeigen für alle Spieler die Spalte POT: cyan mit ↗ = wächst noch, ↘ = baut altersbedingt ab.
