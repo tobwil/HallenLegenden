@@ -198,7 +198,7 @@ function introHud() {
     bigText(T0.n.toUpperCase(), W / 2 - (1 - e) * 300, 134, clamp(Math.floor((W - 60) / T0.n.length), 8, 16), lum(tcol(0)) > 0.7 ? '#16161a' : '#ffffff', 2);
     bigText(T1.n.toUpperCase(), W / 2 + (1 - e) * 300, 180, clamp(Math.floor((W - 60) / T1.n.length), 8, 16), lum(tcol(1)) > 0.7 ? '#16161a' : '#ffffff', 2);
     if (t > 0.6) { rect(W / 2 - 22, 152, 44, 26, OUTLINE); bigText('VS', W / 2, 157, 16, '#ffc83a', 2); }
-    if (G.event) { const e2 = ease(t / 0.8); ctx.globalAlpha = (1 - o) * e2; bigText(G.event.title, W / 2, 56, 24, '#ffc83a', 3); text(G.event.stage, W / 2, 92, '#f3ead6', 8, 'center', null); ctx.globalAlpha = 1 - o; }
+    if (G.event) { const e2 = ease(t / 0.8); ctx.globalAlpha = (1 - o) * e2; bigText(G.event.title, W / 2, 56, 24, '#ffc83a', 3); rect(W / 2 - G.event.stage.length * 4 - 10, 87, G.event.stage.length * 8 + 20, 17, 'rgba(8,7,14,0.85)'); text(G.event.stage, W / 2, 92, '#f3ead6', 8, 'center', null); ctx.globalAlpha = 1 - o; }
     ctx.globalAlpha = 1;
     return;
   }

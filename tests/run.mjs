@@ -86,7 +86,7 @@ test('Aktionen mit Ball: Pass, Kempa, Shift+S, W+S ohne Kempa, Finte, Wurf', asy
     for (const [label, keys, hold] of [['S', ['KeyS']], ['A', ['KeyA']], ['Shift+S', ['ShiftLeft', 'KeyS']], ['W+S', ['KeyW', 'KeyS']], ['D', ['KeyD']], ['Leertaste', ['Space']]]) {
       const calls = [], orig = {};
       for (const f of ['pass', 'kempa', 'feint', 'shoot']) { orig[f] = window[f]; window[f] = function (...a) { calls.push(f); return orig[f].apply(this, a); }; }
-      const a = G.players.find(q => q.team === 0 && q.role === 'RM'); G.phase = 'play'; giveBall(a); G.ctrl = a; a.charging = false;
+      const a = G.players.find(q => q.team === 0 && q.role === 'RM'); G.phase = 'play'; place(a, a.x, a.y); giveBall(a); G.ctrl = a;   // place: steht wieder (könnte gefoult am Boden liegen)
       for (const k of keys) KEY[k] = true; __run(1); for (const k of keys) KEY[k] = false; __run(1);
       for (const f in orig) window[f] = orig[f];
       res[label] = calls[0] || '';

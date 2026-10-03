@@ -16,7 +16,9 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
 - **Fehler behoben:** Das TV-Intro mit den Aufstellungskarten wurde nie angezeigt, weil die Anwurf-Vorbereitung die Intro-Phase sofort überschrieb. Es läuft jetzt wieder vor jedem Spiel und lässt sich mit einer Taste überspringen.
 - **Fehler behoben:** Gewann Magdeburg (Vereinsnummer 0) den Pokal, wurde das Finale am Saisonende erneut ausgespielt. In der Historie stand dann ein falscher Pokalsieger, im ungünstigen Fall drohte eine Endlosschleife.
 - Lange Banner (z. B. bei der Pokalübergabe) passen ihre Schriftgröße der Bildbreite an
-- 4 neue Regressionstests (`tests/run.mjs`), insgesamt 25
+- Die Untertitelzeile unter „FINAL FOUR“ im Intro hat einen dunklen Hintergrund und ist vor dem Publikum lesbar
+- 4 neue Regressionstests (`tests/run.mjs`), insgesamt 25. Der Aktionen-Test stellt den Spieler vor jeder Aktion wieder hin; vorher schlug er ab und zu fehl, wenn der Spieler in den Zwischenframes gefoult worden war und noch lag.
+- **Pressekit:** neue Clips direkt aus dem Spiel: Final Four mit Pokalübergabe, TV-Intro mit Aufstellungskarten, Spielszene mit Tor und Wiederholung, Europapokal-Ansicht, dazu Standbilder (`docs/presse/`). Aufnahme mit `tools/promo/spiel.js`, Bild für Bild und mit festem Zufall reproduzierbar, alles neu mit `sh tools/promo/promo.sh spiel`.
 
 ## v8.2: Finanzen im Karrieremodus
 - **Zuschauereinnahmen:** Jedes Heimspiel bringt Geld nach Hallengröße und Auslastung. Die Auslastung steigt mit Tabellenplatz, Siegesserie, starkem Gegner und im Pokal. Pokal-Heimspiele bringen jetzt auch Zuschauergeld. Die Zeitung nennt die Zuschauerzahl. Dazu Sponsoren pro Spieltag und TV-Geld nach Platz. Die Pauschalen für Sieg, Remis und Niederlage entfallen.
