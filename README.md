@@ -171,11 +171,19 @@ Die alte Adresse [tobwil.github.io/HallenLegenden](https://tobwil.github.io/Hall
 
 Das Spiel hat **tobwil** im Dialog mit Claude (Anthropic) in Claude Code entwickelt: von einer ersten Version mit fiktiven Teams über die Pixel-Halle, die Ligen 2026/27 und den Manager-Modus bis zur Touch-Steuerung. Den Verlauf mit allen Wünschen, Entscheidungen und Tests beschreibt [docs/ENTWICKLUNG.md](docs/ENTWICKLUNG.md), die Versionen stehen in [CHANGELOG.md](CHANGELOG.md).
 
-### Lizenz und Namensnennung
+### Lizenz, Name und Namensnennung
 
-Open Source unter der [MIT-Lizenz](LICENSE), © 2026 [tobwil](https://github.com/tobwil).
+Der Code steht unter der [MIT-Lizenz](LICENSE), © 2026 [tobwil](https://github.com/tobwil).
 
-Du darfst das Spiel frei nutzen, verändern, weitergeben und auch in eigene Projekte übernehmen. **Bedingung:** Der Urheberhinweis „Copyright (c) 2026 tobwil“ und der Lizenztext müssen in allen Kopien und abgeleiteten Versionen erhalten bleiben. Bei einer Veröffentlichung (z. B. als Website oder Fork) freue ich mich über einen sichtbaren Hinweis wie *„Basiert auf Hallen-Legenden von tobwil“* mit Link auf dieses Repository.
+Du darfst das Spiel frei nutzen, verändern, weitergeben und auch in eigene Projekte übernehmen. **Bedingung:** Der Urheberhinweis „Copyright (c) 2026 tobwil“ und der Lizenztext müssen in allen Kopien und abgeleiteten Versionen erhalten bleiben.
+
+**Name und Logo sind von der MIT-Lizenz ausgenommen.** Der Name „Hallen-Legenden“ und das Logo (der Schriftzug des Spiels) gehören nicht zum lizenzierten Code und bleiben tobwil vorbehalten. Das gilt auch für andere Schreibweisen und verwechselbare Abwandlungen, zum Beispiel „Hallenlegenden“, „Hallen Legenden“, „Legenden der Halle“, „Hall Legends“ oder „Hallen-Legenden 2“, und für die Domain hallenlegenden.de.
+
+Wer eine veränderte Version veröffentlicht (zum Beispiel als Website, App oder Download):
+- muss ihr einen anderen Namen geben, der sich klar von „Hallen-Legenden“ unterscheidet,
+- darf nicht den Eindruck erwecken, es handle sich um das offizielle Spiel oder um eine von tobwil unterstützte Version.
+
+Erlaubt und erwünscht ist ein Hinweis auf die Herkunft, etwa *„Basiert auf Hallen-Legenden von tobwil“* mit Link auf dieses Repository. Ein Fork hier auf GitHub, um Änderungen beizutragen oder auszuprobieren, darf den Namen des Repositorys behalten.
 
 ---
 
@@ -321,8 +329,16 @@ The old address [tobwil.github.io/HallenLegenden](https://tobwil.github.io/Halle
 
 **tobwil** developed the game in conversation with Claude (Anthropic) in Claude Code: from a first version with fictional teams, through the pixel arena, the 2026/27 leagues and the manager mode, to touch controls. The full history with all requests, decisions and tests is in [docs/ENTWICKLUNG.md](docs/ENTWICKLUNG.md), the versions are listed in [CHANGELOG.md](CHANGELOG.md).
 
-### License and attribution
+### License, name and attribution
 
-Open source under the [MIT License](LICENSE), © 2026 [tobwil](https://github.com/tobwil).
+The code is licensed under the [MIT License](LICENSE), © 2026 [tobwil](https://github.com/tobwil).
 
-You are free to use, modify, share and include the game in your own projects. **Condition:** the copyright notice "Copyright (c) 2026 tobwil" and the license text must be kept in all copies and derived versions. If you publish it (e.g. as a website or fork), I'd appreciate a visible note such as *"Based on Hallen-Legenden by tobwil"* with a link to this repository.
+You are free to use, modify, share and include the game in your own projects. **Condition:** the copyright notice "Copyright (c) 2026 tobwil" and the license text must be kept in all copies and derived versions.
+
+**The name and logo are not covered by the MIT License.** The name "Hallen-Legenden" and the logo (the game's wordmark) are not part of the licensed code and remain reserved to tobwil. This also applies to other spellings and confusingly similar variations, such as "Hallenlegenden", "Hallen Legenden", "Legenden der Halle", "Hall Legends" or "Hallen-Legenden 2", and to the domain hallenlegenden.de.
+
+If you publish a modified version (for example as a website, app or download), you:
+- must give it a different name that is clearly distinct from "Hallen-Legenden",
+- must not suggest that it is the official game or a version endorsed by tobwil.
+
+A note on where it comes from is allowed and welcome, such as *"Based on Hallen-Legenden by tobwil"* with a link to this repository. A fork here on GitHub for contributing or trying out changes may keep the repository name.

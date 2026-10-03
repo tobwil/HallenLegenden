@@ -2,6 +2,9 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.11: Name und Logo geschützt
+- README (deutsch und englisch): Die MIT-Lizenz gilt für den Code. Der Name „Hallen-Legenden“, verwechselbare Abwandlungen (zum Beispiel „Hallenlegenden“, „Legenden der Halle“, „Hall Legends“), das Logo und die Domain sind ausgenommen. Veränderte Versionen brauchen einen eigenen Namen und dürfen nicht wie das offizielle Spiel auftreten. Ein Hinweis „Basiert auf Hallen-Legenden von tobwil“ bleibt erwünscht, Forks zum Mitentwickeln dürfen den Repository-Namen behalten.
+
 ## v8.10: Hebbe heißt jetzt Schülein
 - Die Hallen-Legende in Coburg heißt jetzt **Schülein** (Aussehen und Werte bleiben: Star-Spielmacher, lange braunrötliche Haare).
 - Laufende Karrieren werden beim Laden umgestellt: Kader, Torjägerliste, Ehrenhalle, Rekorde, Zeitung und Historie zeigen überall den neuen Namen.
