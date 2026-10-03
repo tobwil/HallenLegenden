@@ -1,0 +1,28 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../fonts/fonts.css">
+<!-- Icon und Banner für r/HallenLegenden. reddit.html?icon oder reddit.html?banner, aufgenommen von reddit.js -->
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#07060b;color:#f3ead6;font-family:'VT323',monospace;overflow:hidden}
+.logo{font-family:'Press Start 2P';font-weight:400;color:#ffc83a;margin:0;line-height:1.05;text-align:center}
+#icon{width:256px;height:256px;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+  background:#07060b radial-gradient(circle at 50% 42%,#2a1f4a,#07060b 72%)}
+#icon .logo{font-size:84px;text-shadow:0 5px 0 #c96a12,0 10px 0 #7a2c0c,0 14px 0 #000;letter-spacing:-4px}
+#icon .ball{width:66px;height:66px;image-rendering:pixelated}
+#banner{width:1920px;height:384px;display:none;position:relative;align-items:center;justify-content:center;flex-direction:column;gap:22px;
+  background:url(../../docs/screenshots/gameplay.jpg) center -200px/1920px auto no-repeat;image-rendering:pixelated}
+#banner::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 48% 75% at 50% 50%,#07060be6,#07060b8c 100%)}
+#banner>*{position:relative}
+#banner .logo{font-size:64px;text-shadow:0 4px 0 #c96a12,0 8px 0 #7a2c0c,0 12px 0 #000}
+#banner p{margin:0;font-size:40px;text-shadow:0 3px 0 #000}
+#banner .url{font-family:'Press Start 2P';font-size:20px;color:#1a1205;background:#ffc83a;padding:12px 18px;box-shadow:5px 5px 0 #000;border:3px solid #f3ead6}
+</style></head><body>
+<div id="icon"><svg class="ball" viewBox="0 0 11 11" shape-rendering="crispEdges">
+  <!-- Pixel-Handball -->
+  <path fill="#000" d="M3 0h5v1h2v2h1v5h-1v2H8v1H3v-1H1V8H0V3h1V1h2z"/>
+  <path fill="#f3ead6" d="M3 1h5v1h1v1h1v5H9v1H8v1H3V9H2V8H1V3h1V2h1z"/>
+  <path fill="#ffc83a" d="M4 1h3v2H4zM1 5h2v2H1zM8 5h2v2H8zM4 8h3v2H4z"/>
+  <path fill="#c96a12" d="M5 4h1v3H5zM4 5h3v1H4z"/>
+</svg><h1 class="logo">HL</h1></div>
+<div id="banner"><h1 class="logo">HALLEN-LEGENDEN</h1><p>Retro-Handball im Browser · Karriere, Pokal, Europapokal</p><div class="url">HALLENLEGENDEN.DE</div></div>
+<script>document.getElementById(location.search.slice(1)||'banner').style.display='flex'</script>
+</body></html>

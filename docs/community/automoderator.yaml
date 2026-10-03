@@ -1,0 +1,59 @@
+# AutoModerator für r/HallenLegenden
+# Einfügen unter: reddit.com/r/HallenLegenden/wiki/config/automoderator
+# Reddit prüft die Syntax beim Speichern und meldet Fehler mit Zeilennummer.
+# "filter" = Beitrag landet in der Mod-Warteschlange und erscheint erst nach Freigabe.
+
+# Brandneue Konten oder negatives Karma: erst prüfen, dann freigeben (Spam-Schutz)
+type: any
+author:
+    account_age: "< 2 days"
+    combined_karma: "< -5"
+    satisfy_any_threshold: true
+    is_contributor: false
+action: filter
+action_reason: "Neues Konto oder negatives Karma"
+---
+# Linkverkürzer verstecken das Ziel
+type: any
+body (includes): ["bit.ly", "tinyurl.com", "goo.gl", "shorturl.at", "cutt.ly"]
+action: remove
+action_reason: "Linkverkürzer"
+comment: |
+    Dein Beitrag wurde entfernt, weil er einen Linkverkürzer enthält. Bitte poste den vollständigen Link.
+---
+type: link submission
+domain: [bit.ly, tinyurl.com, goo.gl, t.co, shorturl.at, cutt.ly]
+action: remove
+action_reason: "Linkverkürzer"
+---
+# Typischer Spam
+type: submission
+title+body (includes): ["crypto", "airdrop", "onlyfans", "free robux", "nitro gratis", "casino bonus"]
+action: filter
+action_reason: "Spam-Verdacht: {{match}}"
+---
+# Ab drei Meldungen vorsorglich ausblenden, bis ein Mod draufschaut
+reports: 3
+action: filter
+action_reason: "3 Meldungen"
+---
+# Bug-Meldungen: nach den wichtigsten Angaben fragen
+type: submission
+flair_text (includes): ["Bug"]
+comment_stickied: true
+comment: |
+    Danke für die Meldung! Damit der Fehler schnell gefunden wird, ergänze bitte, falls noch nicht drin:
+
+    - **Gerät und Browser** (z. B. Windows + Chrome, iPhone + Safari)
+    - **Modus** (Schnelles Spiel oder Karriere, welche Saison/welcher Spieltag)
+    - **Was ist passiert, was hättest du erwartet?**
+    - Ein **Screenshot** oder kurzes Video hilft sehr
+
+    Wünsche für neue Funktionen gern auch über das [Wunsch-Formular](https://hallenlegenden.de/#wunsch).
+---
+# Karriere-Posts: freundlicher Hinweis aufs Teilen-Bild aus dem Spiel
+type: submission
+flair_text (includes): ["Karriere"]
+comment: |
+    Starke Saison? Erzähl gern ein paar Sätze dazu: Verein, Saisonziel, bester Transfer, größter Fehlgriff.
+    Tipp: Im Karriere-Modus unter **Erfolge → Karriere als Bild teilen** (oder im Saisonabschluss) erzeugt das Spiel ein Pixel-Bild zum Hochladen.
