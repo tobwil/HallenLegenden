@@ -124,5 +124,6 @@ function frame(now) {
 }
 startDemo();
 ACT.title();
-(document.fonts && document.fonts.load ? document.fonts.load('8px "Press Start 2P"') : Promise.resolve()).then(() => { if (G) buildArena(G.kits[0], G.kits[1], G.lg, G.event); }).catch(() => { });
+// beide Zeichensätze laden: die Leinwand lädt Schriften nicht selbst nach, sonst fehlen Ć, Š, Ž, Ł … in Namen wie Petrović
+(document.fonts && document.fonts.load ? Promise.all([document.fonts.load('8px "Press Start 2P"'), document.fonts.load('8px "Press Start 2P"', 'ĆČŠŽŁŐ')]) : Promise.resolve()).then(() => { if (G) buildArena(G.kits[0], G.kits[1], G.lg, G.event); }).catch(() => { });
 requestAnimationFrame(frame);

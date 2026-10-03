@@ -22,6 +22,12 @@ Actual browser gameplay and menus. Click any image to view it at full size.
 | [![Statistik-Seite mit Kennzahlen, Verlauf des Tabellenplatzes, Torjägern und Kaderwerten](docs/screenshots/career-stats.jpg)](docs/screenshots/career-stats.jpg) | [![Pokal als Turnierbaum von der ersten Runde bis zum Sieger](docs/screenshots/career-cup.jpg)](docs/screenshots/career-cup.jpg) |
 | **Final Four** | **Europapokal · European cup** |
 | [![Final Four in der lila Event-Halle: Kiel holt den Europapokal, Konfetti in den Vereinsfarben](docs/screenshots/final-four.jpg)](docs/screenshots/final-four.jpg) | [![Europapokal im Karriere-Modus: Gruppentabellen, Ergebnisse und Turnierbaum bis zum Sieger](docs/screenshots/career-euro.jpg)](docs/screenshots/career-euro.jpg) |
+| **Vor dem Spiel · Pre-match comparison** | **Erfolge · Achievements** |
+| [![Vor dem Spiel: Kiel gegen Berlin mit Tabellenplatz, Form der letzten fünf Spiele, Sternen für Angriff, Abwehr und Tor, Topwerfer und Hinspiel](docs/screenshots/prematch.jpg)](docs/screenshots/prematch.jpg) | [![Tab Erfolge: Trophäenschrank mit Meisterschaft, Pokal und Europapokal, darunter die Rekorde der Karriere](docs/screenshots/career-trophies.jpg)](docs/screenshots/career-trophies.jpg) |
+| **Kader mit Potenzial · Squad with potential** | **Karriere als Bild teilen · Share your career** |
+| [![Kader mit Gesamtwert, Potenzial und Trend, Einzelwerten, Form, Fitness, Toren, Vertrag und Marktwert](docs/screenshots/career-squad.jpg)](docs/screenshots/career-squad.jpg) | [![Teilen-Bild der Karriere: drei Titel in fünf Saisons, beste Saison, höchster Sieg, Torjäger und Vereinslegende](docs/screenshots/share-card.jpg)](docs/screenshots/share-card.jpg) |
+| **Handy quer · Phone landscape** | |
+| [![Spiel auf dem Handy im Querformat: Spielfeld über die volle Breite, Stick links, durchscheinende Knöpfe für Pass, Wurf und Finte](docs/screenshots/mobile.jpg)](docs/screenshots/mobile.jpg) | |
 
 ---
 
@@ -117,7 +123,7 @@ impressum.html        Impressum
 datenschutz.html      Datenschutzerklärung
 assets/               Story-Film, Umzugs-Skript, Styles und Kontakt-Skript für Impressum und Datenschutz
 fonts/                Schriften lokal (Press Start 2P, VT323, SIL OFL)
-tools/                Google-Apps-Script für die Wunschliste, tools/promo: Teaser, Spielclips und GIFs neu aufnehmen
+tools/                Google-Apps-Script für die Wunschliste, tools/promo: Teaser, Spielclips, GIFs und Screenshots neu aufnehmen
 netlify.toml          Einstellungen für Netlify (Hosting von hallenlegenden.de)
 hallen-legenden.html  dieselbe Seite ohne <html>-Gerüst (für die Veröffentlichung als Claude-Artifact)
 src/                  Quellcode in Modulen, wird per build.sh zusammengesetzt
@@ -267,7 +273,7 @@ impressum.html        legal notice (German)
 datenschutz.html      privacy policy (German)
 assets/               story film, move script, styles and contact script for the legal pages
 fonts/                self-hosted fonts (Press Start 2P, VT323, SIL OFL)
-tools/                Google Apps Script for the wish list, tools/promo: re-record teaser, game clips and GIFs
+tools/                Google Apps Script for the wish list, tools/promo: re-record teaser, game clips, GIFs and screenshots
 netlify.toml          Netlify settings (hosting for hallenlegenden.de)
 hallen-legenden.html  same page without the <html> wrapper (for publishing as a Claude Artifact)
 src/                  modular source code, assembled by build.sh

@@ -111,7 +111,7 @@ function seasonHead(s) {
   return `PLATZ ${s.pos}`;
 }
 async function drawShareCard(kind) {
-  try { if (document.fonts && document.fonts.load) await document.fonts.load(`8px ${FONT}`); } catch (e) { }
+  try { if (document.fonts && document.fonts.load) await Promise.all([document.fonts.load(`8px ${FONT}`), document.fonts.load(`8px ${FONT}`, 'ĆČŠŽŁŐ')]); } catch (e) { }
   const c = document.createElement('canvas'); c.width = CARD_W; c.height = CARD_H; const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
   const me = CAREER.team, T = TEAMS[me], K = T.home, R = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
   const tx = (s, x, y, size, col, align = 'center', maxW = CARD_W - 24) => {
