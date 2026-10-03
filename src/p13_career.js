@@ -446,6 +446,8 @@ if (CAREER) {
   if (!CAREER.aiMoney) { CAREER.aiMoney = {}; TEAMS.forEach(t => CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 20000) + 50000); }
   TEAMS.forEach(t => { if (CAREER.squads[t.id]) return; CAREER.squads[t.id] = makeSquad(t.id); CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 25000) + 50000; });   // später hinzugekommene Vereine (international)
   if (!CAREER.goal) CAREER.goal = { txt: 'Obere Tabellenhälfte', pos: 9, rank: 9 };
+  // umbenannte Legenden: überall im Spielstand (Kader, Torjäger, Ehrenhalle, Rekorde, Zeitung, Historie)
+  for (const [v, [from, to]] of Object.entries(LEGEND_RENAMED)) if ((CAREER.legends || 0) < +v) CAREER = JSON.parse(JSON.stringify(CAREER).replace(new RegExp(`\\b${from}\\b`, 'g'), to));
   // Hallen-Legenden nachrüsten: der Spieler auf ihrem Platz bekommt Namen und Aussehen (falls er noch im Verein ist und es sie noch nicht gibt)
   if ((CAREER.legends || 0) < LEGENDS_VER) {
     for (const [k, L] of Object.entries(LEGENDS)) {

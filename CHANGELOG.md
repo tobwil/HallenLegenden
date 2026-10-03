@@ -2,6 +2,11 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.10: Hebbe heißt jetzt Schülein
+- Die Hallen-Legende in Coburg heißt jetzt **Schülein** (Aussehen und Werte bleiben: Star-Spielmacher, lange braunrötliche Haare).
+- Laufende Karrieren werden beim Laden umgestellt: Kader, Torjägerliste, Ehrenhalle, Rekorde, Zeitung und Historie zeigen überall den neuen Namen.
+- Der Legenden-Test prüft zusätzlich die Umbenennung in einem alten Spielstand.
+
 ## v8.9: CPU-Vereine schonen müde Stars
 - **CPU-Vereine rotieren jetzt.** Bisher stellte die CPU immer den stärksten Spieler auf, auch wenn er völlig erschöpft war. Ein Star mit Fitness 20 war immer noch „besser“ als ein frischer Ersatz, also spielte er durch. Im Schnitt hatte der beste Feldspieler jedes CPU-Vereins zur Saisonmitte nur 28 % Fitness, fast ein Drittel der aufgestellten CPU-Spieler lag bei 20 bis 30 %.
 - Jetzt wird ein Spieler unter 60 % Fitness zunehmend geschont, der frische Ersatz kommt rein. Die aufgestellten CPU-Spieler haben zur Saisonmitte im Schnitt rund 72 % Fitness, nur noch etwa 4 % liegen bei 20 bis 30 %.

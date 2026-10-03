@@ -142,12 +142,13 @@ let ROSTER_EDIT = store.get(ROSTER_KEY, {});
 // Nur für neue Karrieren: age = Alter, potPlus = Potenzial über dem aktuellen Wert.
 const LEGENDS = {
   KIE: { name: 'Weidenhammer', skin: 1, hair: '#4a2e18', style: 1, beard: true, band: false, age: 27 },
-  COB: { name: 'Hebbe', skin: 1, hair: '#7e3f1e', style: 6, beard: false, band: false, age: 27 },
+  COB: { name: 'Schülein', skin: 1, hair: '#7e3f1e', style: 6, beard: false, band: false, age: 27 },
   BER: { slot: 6, name: 'Richardson', skin: 1, hair: '#1a1a1a', style: 1, beard: false, band: false, musc: true, trait: 'Supertalent', age: 19, potPlus: 11 },
   ERL: { slot: 6, name: 'Schörner', skin: 1, hair: '#4a2e18', style: 0, beard: false, band: false, tall: 2, trait: 'Kreis-Turm', age: 25 },
 };
 const LEGEND_KEYS = ['name', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'musc', 'trait'];
-const LEGENDS_VER = 2;   // bei neuen Legenden erhöhen: laufende Karrieren rüsten sie dann beim Laden nach
+const LEGENDS_VER = 3;   // bei neuen Legenden erhöhen: laufende Karrieren rüsten sie dann beim Laden nach
+const LEGEND_RENAMED = { 3: ['Hebbe', 'Schülein'] };   // umbenannte Legenden: Version, alter Name, neuer Name
 const legendSlot = (L, ro) => L.slot ?? ro.findIndex((p, i) => i > 0 && p.star && p.role !== 'TW');
 function roster(tid, plain) {
   const t = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#kader')), used = new Set(), nums = new Set(), legend = !plain && LEGENDS[TEAM_BASE[tid][0]];

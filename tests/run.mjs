@@ -459,9 +459,9 @@ test('Final Four: Nach eigenem Halbfinal-Aus wird das Finale sofort gespielt (Po
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
-test('Hallen-Legenden: Weidenhammer, Hebbe, Richardson und Schörner im Kader, auch in laufenden Karrieren', async () => {
+test('Hallen-Legenden: Weidenhammer, Schülein, Richardson und Schörner im Kader, auch in laufenden Karrieren', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 5);
-  const NAMES = [['KIE', 'Weidenhammer'], ['COB', 'Hebbe'], ['BER', 'Richardson'], ['ERL', 'Schörner']];
+  const NAMES = [['KIE', 'Weidenhammer'], ['COB', 'Schülein'], ['BER', 'Richardson'], ['ERL', 'Schörner']];
   const r = await page.evaluate(NAMES => {
     const chk = {};
     for (const [k, name] of NAMES) {
@@ -475,15 +475,19 @@ test('Hallen-Legenden: Weidenhammer, Hebbe, Richardson und Schörner im Kader, a
     // alter Spielstand (Version 1): Richardson und Schörner heißen noch wie früher
     for (const [k, n] of [['BER', 'Richardson'], ['ERL', 'Schörner']]) { const tid = TEAM_BASE.findIndex(b => b[0] === k), p = find(n), o = roster(tid, true)[LEGENDS[k].slot]; p.name = o.name; p.musc = undefined; p.tall = o.tall; p.trait = o.trait; }
     const kie = TEAM_BASE.findIndex(b => b[0] === 'KIE'), w = find('Weidenhammer'), orig = roster(kie, true)[legendSlot(LEGENDS.KIE, roster(kie, true))];
-    w.name = orig.name; w.beard = false; CAREER.legends = undefined; saveCareer();
+    w.name = orig.name; w.beard = false; CAREER.legends = undefined;
+    // Schülein hieß bis Version 2 Hebbe: auch Torjäger, Zeitung und Ehrenhalle kennen noch den alten Namen
+    const s = find('Schülein'); s.name = 'Hebbe'; CAREER.season.scorers[s.pid] = { n: 7, tid: TEAM_BASE.findIndex(b => b[0] === 'COB'), name: 'Hebbe' }; CAREER.news.push('Hebbe trifft dreimal.'); saveCareer();
     return { chk, inCareer, looks };
   }, NAMES);
   // alter Spielstand ohne Merker: alle vier werden nachgerüstet
   await page.reload(); await page.waitForTimeout(600);
-  const m0 = await page.evaluate(() => { const f = n => TEAMS.flatMap(t => CAREER.squads[t.id]).find(p => p.name === n); return { w: !!f('Weidenhammer') && f('Weidenhammer').beard, r: !!f('Richardson') && f('Richardson').musc, s: !!f('Schörner') && f('Schörner').tall === 2, flag: CAREER.legends }; });
+  const m0 = await page.evaluate(() => { const all = TEAMS.flatMap(t => CAREER.squads[t.id]), f = n => all.find(p => p.name === n), js = JSON.stringify(CAREER);
+    return { w: !!f('Weidenhammer') && f('Weidenhammer').beard, r: !!f('Richardson') && f('Richardson').musc, s: !!f('Schörner') && f('Schörner').tall === 2, flag: CAREER.legends === LEGENDS_VER,
+      sch: all.filter(p => p.name === 'Schülein').length === 1 && !js.includes('Hebbe') && Object.values(CAREER.season.scorers).some(x => x.name === 'Schülein') && CAREER.news.some(n => n.includes('Schülein trifft')) }; });
   ok(r.chk.KIE && r.chk.COB && r.chk.BER && r.chk.ERL, 'Kader: ' + JSON.stringify(r.chk)); ok(r.inCareer, 'nicht in der Karriere');
   ok(Object.values(r.looks).every(Boolean), 'Aussehen/Talent: ' + JSON.stringify(r.looks));
-  ok(m0.w && m0.r && m0.s && m0.flag === 2, 'Nachrüsten im alten Spielstand: ' + JSON.stringify(m0));
+  ok(m0.w && m0.r && m0.s && m0.flag && m0.sch, 'Nachrüsten im alten Spielstand: ' + JSON.stringify(m0));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
@@ -496,7 +500,7 @@ test('Karriere: Potenzial in Kader, Transferliste und Spielerprofil', async () =
     ACT.cTab('squad'); ACT.cPick(sq[0].pid); const det = menu.innerText.includes('Potenzial');
     // Regeln: nie unter dem aktuellen Wert, ab 30 Jahren gleich dem aktuellen Wert (baut ab)
     const all = TEAMS.flatMap(t => CAREER.squads[t.id]), rules = all.every(p => potOf(p) >= ovr(p) && (p.age < 30 || (potOf(p) === ovr(p) && potTrend(p) === 'down')));
-    const legends = ['Weidenhammer', 'Hebbe'].map(n => all.find(p => p.name === n)).map(p => p && p.age === 27 && potTrend(p) !== 'down');
+    const legends = ['Weidenhammer', 'Schülein'].map(n => all.find(p => p.name === n)).map(p => p && p.age === 27 && potTrend(p) !== 'down');
     return { pot: head.includes('POT'), cells, n: sq.length, mcells, mrows, det, rules, legends };
   });
   ok(r.pot && r.cells === r.n, 'Kader: ' + JSON.stringify(r)); ok(r.mcells === r.mrows && r.mrows > 0, 'Transferliste: ' + JSON.stringify(r));
