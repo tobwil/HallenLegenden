@@ -18,7 +18,7 @@ const formTxt = f => { const v = Math.round(f); return `<span style="color:${v >
 const formTxtPlain = f => { const v = Math.round(f); return (v > 0 ? '+' : '') + v; };
 const fitBar = (v, w = 34) => `<span class="bar" style="display:inline-block;width:${w}px;vertical-align:middle"><i style="width:${v}%;background:${v > 75 ? 'var(--green)' : v > 55 ? 'var(--gold)' : 'var(--hot)'}"></i></span>`;
 function tabs() {
-  const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['euro', 'EUROPA'], ['stats', 'STATISTIK'], ['hist', 'HISTORIE']];
+  const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['euro', 'EUROPA'], ['stats', 'STATISTIK'], ['trophy', 'ERFOLGE'], ['hist', 'HISTORIE']];
   return `<div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div>`;
 }
 function leagueTable(hl, rows, compact) {
@@ -242,6 +242,7 @@ function careerHub(tab) {
   } else if (CTAB === 'cup') body = cupView();
   else if (CTAB === 'euro') body = euroView();
   else if (CTAB === 'stats') body = statsView();
+  else if (CTAB === 'trophy') body = trophyView();
   else if (CTAB === 'hist') {
     // Handy: Karten statt Spalten (Kopfzeile Saison · Liga · Platz, darunter beschriftete Felder)
     body = CAREER.history.length ? `<table class="sqt cards hist"><thead><tr><th>SAISON</th><th>LIGA</th><th>PLATZ</th><th>ZIEL</th><th>MEISTER</th><th>POKAL</th><th>EUROPA</th><th>TORJÄGER</th></tr></thead><tbody>${
@@ -257,7 +258,9 @@ function seasonSummary() {
   const s = CAREER.summary, me = TEAMS[CAREER.team];
   const head = s.move === 'auf' ? 'AUFSTIEG!' : s.move === 'ab' ? 'ABSTIEG' : s.pos === 1 ? (s.lg === 1 ? 'DEUTSCHER MEISTER!' : 'MEISTER DER 2. LIGA') : `PLATZ ${s.pos}`;
   showMenu(`<div class="panel"><h2>SAISON ${seasonName(s.year)} · ABSCHLUSS</h2>
-    <p class="res" style="color:${s.move === 'ab' ? 'var(--hot)' : 'var(--gold)'}">${head}</p>
+    <p class="res" style="color:${s.move === 'ab' ? 'var(--hot)' : 'var(--gold)'}">${s.titles && s.titles.length ? seasonHead(s) : head}</p>
+    ${s.titles && s.titles.length ? `<div class="tshelves mini">${s.titles.map(k => `<div class="tshelf won">${trophySvg(TITLE_TYPES.find(t => t.k === k).col, true)}<span>${titleName(k)}</span></div>`).join('')}</div>` : ''}
+    <div class="row" style="justify-content:center"><button class="main" data-act="cShare" data-v="season">SAISON ALS BILD TEILEN</button></div>
     <p class="muted" style="text-align:center">${esc(me.n)} beendet die ${s.lg}. Liga auf Platz ${s.pos}. Saisonziel „${esc(s.goal || '')}“ ${s.goalMet ? '<b style="color:var(--green)">erreicht</b>' : '<b style="color:var(--hot)">verfehlt</b>'}. Prämie: ${euro(s.prize)}.</p>
     ${s.board ? `<p class="muted" style="text-align:center;color:${s.board.fired ? 'var(--hot)' : s.board.warn ? 'var(--gold)' : 'var(--green)'}"><b>VORSTAND:</b> ${esc(s.board.txt)}</p>` : ''}
     ${s.fin ? finTable(s.fin, s.money) : ''}

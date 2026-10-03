@@ -70,6 +70,8 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
   - Europapokal: Platz 1 und 2 der 1. Liga und der Pokalsieger treffen auf 13 internationale Vereine. Gruppenphase (4 × 4, Hin- und Rückspiel), Viertelfinale, Final Four am Saisonende. Bei 6 Spieltagen kompakt mit 8 Vereinen. Prämien und Zuschauereinnahmen, eigener Tab mit Gruppen und Turnierbaum
   - Jede Partie selbst spielen oder simulieren
   - Zeitung „Handball-Kurier“ mit Schlagzeilen, Tabelle, Torjägern und Meldungen
+  - Erfolge: Trophäenschrank mit allen Titeln, Rekorde (höchster Sieg, längste Siegesserie, meiste Tore in einem Spiel, beste Saison, Zuschauerrekord und mehr) und eine Ehrenhalle mit den Vereinslegenden
+  - Saisonbilanz und Karriere als Pixel-Bild teilen (am Handy direkt per WhatsApp und Co., sonst als Bild speichern)
 - **Editor** für Vereinsnamen, Kürzel, Trikotfarben, Spielernamen und Nummern
 - **Speichern:** laufende Spiele automatisch und per „Speichern & Beenden“, Karriere dauerhaft im Browser (`localStorage`)
 
@@ -139,13 +141,13 @@ Das erzeugt `game/index.html` und `hallen-legenden.html`. Die Landingpage `index
 
 #### Tests
 
-Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere mit Pokal und Europapokal, Finanzen, Potenzial, Editor, Menüfenster, Handy-Steuerung und Darstellung auf breiten Bildschirmen. Nach `sh src/build.sh` und vor jedem Merge:
+Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere mit Pokal und Europapokal, Finanzen, Potenzial, Erfolge und Teilen-Bild, Editor, Menüfenster, Handy-Steuerung und Darstellung auf breiten Bildschirmen. Nach `sh src/build.sh` und vor jedem Merge:
 
 ```sh
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 30 Tests, etwa eine Minute
+npm test                             # alle 32 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 ```
@@ -217,6 +219,8 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
   - European cup: 1st and 2nd of the 1st league plus the cup winner meet 13 international clubs. Group stage (4 × 4, home and away), quarter-finals, Final Four at the end of the season. Compact with 8 clubs for 6-matchday seasons. Prize money and gate receipts, own tab with groups and bracket
   - Play every match yourself or simulate it
   - "Handball-Kurier" newspaper with headlines, table, top scorers and news
+  - Achievements: trophy cabinet with every title, records (biggest win, longest winning streak, most goals in a match, best season, attendance record and more) and a hall of fame for your club legends
+  - Share your season summary or whole career as a pixel image (straight to WhatsApp and co. on phones, or save it)
 - **Editor** for club names, abbreviations, kit colours, player names and numbers
 - **Saving:** ongoing matches automatically and via "Save & Quit", careers persist in the browser (`localStorage`)
 
@@ -286,13 +290,13 @@ This generates `game/index.html` and `hallen-legenden.html`. The landing page `i
 
 #### Tests
 
-Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career with cup and European cup, finances, potential, editor, menu windows, touch controls and wide-screen layout, among others. After `sh src/build.sh` and before every merge:
+Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career with cup and European cup, finances, potential, achievements and share image, editor, menu windows, touch controls and wide-screen layout, among others. After `sh src/build.sh` and before every merge:
 
 ```sh
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 30 tests, about one minute
+npm test                             # all 32 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 ```
