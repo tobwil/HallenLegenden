@@ -10,12 +10,13 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
   - Viertelfinale mit Heimrecht für Gruppensieger, Final Four am Saisonende
   - Bei 6 Spieltagen kompakt: 8 Vereine, Viertelfinale, Final Four
   - Termine zwischen den Ligaspieltagen, alle Spiele selbst spielbar oder simuliert. Mehr Spiele bedeuten mehr Belastung für den Kader.
-  - Startprämie, Prämien für Siege und Runden, Zuschauereinnahmen bei Heimspielen
+  - Startprämie, Prämien für Siege und Runden, Zuschauereinnahmen bei Heimspielen (Beträge siehe unten)
   - Neuer Tab „EUROPA“ mit Gruppentabellen, Ergebnissen und Turnierbaum. Zeitung, Saisonabschluss, Finanzbilanz und Historie zeigen den Europapokal.
   - Laufende Karrieren starten ab der nächsten Saison im Europapokal.
 - **Fehler behoben:** Das TV-Intro mit den Aufstellungskarten wurde nie angezeigt, weil die Anwurf-Vorbereitung die Intro-Phase sofort überschrieb. Es läuft jetzt wieder vor jedem Spiel und lässt sich mit einer Taste überspringen.
 - **Fehler behoben:** Gewann Magdeburg (Vereinsnummer 0) den Pokal, wurde das Finale am Saisonende erneut ausgespielt. In der Historie stand dann ein falscher Pokalsieger, im ungünstigen Fall drohte eine Endlosschleife.
 - **Fehler behoben (beim Test der Deploy Preview gefunden):** Schied der eigene Verein im Halbfinale eines Final Four aus, blieb das Finale am selben Termin liegen. Im Europapokal wurde es erst beim Saisonabschluss nachgeholt, im Pokal erst mit dem nächsten Ligaspieltag. Bis dahin fehlten Sieger und Zeitungsmeldung. Jetzt wird das Finale sofort simuliert.
+- **Europapokal-Finanzen nachjustiert (beim Test der Deploy Preview gefunden):** Ein Teilnehmer verdiente im Schnitt rund 400.000 € pro Saison, fast das Siebenfache dessen, was eine Ligasaison einem Erstligisten einbringt. Die Budgets der internationalen Vereine verdoppelten sich so binnen drei Saisons. Jetzt: Startprämie 25.000 €, Sieg 10.000 €, Remis 5.000 €, Viertelfinale/Final Four/Finale 20.000/40.000/60.000 €, Titel 120.000 €, beim Gastgeber bleiben 60 % der Zuschauereinnahmen. Im Schnitt sind das etwa 225.000 € pro Teilnehmer, für den Sieger rund 450.000 €. Die Heimatliga-Prämie der internationalen Vereine sinkt auf 25.000 €. Der Budget-Test prüft 1. Liga und internationale Vereine jetzt einzeln.
 - Lange Banner (z. B. bei der Pokalübergabe) passen ihre Schriftgröße der Bildbreite an
 - Die Untertitelzeile unter „FINAL FOUR“ im Intro hat einen dunklen Hintergrund und ist vor dem Publikum lesbar
 - 5 neue Regressionstests (`tests/run.mjs`), insgesamt 26. Der Aktionen-Test stellt den Spieler vor jeder Aktion wieder hin; vorher schlug er ab und zu fehl, wenn der Spieler in den Zwischenframes gefoult worden war und noch lag.

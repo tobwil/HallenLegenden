@@ -3,7 +3,11 @@
 // Gruppenphase mit 4 Gruppen à 4 (Hin- und Rückspiel), Viertelfinale (Gruppensieger mit Heimrecht), Final Four in neutraler Halle.
 // Kompakt bei 6 Spieltagen: 8 Vereine, direkt Viertelfinale, dann Final Four.
 const EURO_KO = ['VIERTELFINALE', 'HALBFINALE', 'FINALE'];
-const EURO_PRIZE = { start: 60000, win: 15000, draw: 7500, reach: [40000, 75000, 100000], title: 200000 };   // reach: Viertelfinale, Final Four, Finale erreicht
+// Geeicht an der Liga: Ein Erstligist macht pro Saison im Schnitt etwa 60.000 € Plus, ein Teilnehmer verdient im Europapokal
+// im Schnitt etwa das Doppelte bis Dreifache, der Sieger rund 400.000 €. Mehr würde die Budgets der Dauerteilnehmer aufblähen.
+const EURO_PRIZE = { start: 25000, win: 10000, draw: 5000, reach: [20000, 40000, 60000], title: 120000 };   // reach: Viertelfinale, Final Four, Finale erreicht
+const EURO_GATE = 0.6;   // Anteil der Zuschauereinnahmen, der beim Gastgeber bleibt (Rest: Verband, Reise, Organisation)
+const INTL_HOME_PRIZE = 25000;   // internationale Vereine: Prämie aus der (nicht simulierten) Heimatliga, dazu fast jedes Jahr Europapokal-Geld
 const GROUP_N = 'ABCD';
 const euroEvent = r => r >= 1 ? { title: 'FINAL FOUR', stage: r === 1 ? 'EUROPAPOKAL · HALBFINALE' : 'EUROPAPOKAL · FINALE', trophy: 'EUROPAPOKAL', final: r === 2 } : null;
 function euroPay(id, v) { if (!v) return; if (id === CAREER.team) { CAREER.money += v; const F = finOf(); F.euro = (F.euro || 0) + v; } else CAREER.aiMoney[id] += v; }
@@ -64,7 +68,7 @@ function playEuroRound(own, force) {
   if (!E.paid) { E.teams.forEach(id => euroPay(id, EURO_PRIZE.start)); E.paid = true; }
   const ko = n.type === 'ko', neutral = ko && n.r >= 1, rows = [];
   for (const [a, b] of euroTies(n)) {
-    if (!neutral) { const g = attendance(a, b, 3); if (a === me) { CAREER.money += g.money; const F = finOf(); F.euro = (F.euro || 0) + g.money; F.fans.push(g.n); } else CAREER.aiMoney[a] += g.money; }
+    if (!neutral) { const g = attendance(a, b, 3); g.money = Math.round(g.money * EURO_GATE); if (a === me) { CAREER.money += g.money; const F = finOf(); F.euro = (F.euro || 0) + g.money; F.fans.push(g.n); } else CAREER.aiMoney[a] += g.money; }
     let r = own && own.a === a && own.b === b ? own : null;
     if (!r) { const m = simMatch(a, b, neutral); r = { a, b, ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb }; }
     if (ko && r.win === undefined) { if (r.ga === r.gb) { r.so = true; r.win = Math.random() < 0.5 + (strength(a).ovr - strength(b).ovr) * 0.03 ? a : b; } else r.win = r.ga > r.gb ? a : b; }

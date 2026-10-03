@@ -340,7 +340,7 @@ function careerEndSeason() {
   CAREER.history.push({ year: CAREER.year, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null, euro: euroW, euroMy });
   sum.euroWinner = euroW; sum.euroMy = euroMy;
   for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += leaguePrize(k + 1, l); });
-  leagueIds(3).forEach(id => { CAREER.aiMoney[id] += leaguePrize(5, 1); });   // internationale Vereine: Prämien aus ihrer Heimatliga
+  leagueIds(3).forEach(id => { CAREER.aiMoney[id] += INTL_HOME_PRIZE; });   // internationale Vereine: Prämien aus ihrer Heimatliga
   if (CAREER.aiTransfers) aiTransferRound(4);
   CAREER.year++;
   CAREER.board.warned = false; TEAMS.forEach(t => CAREER.squads[t.id].forEach(p => delete p.lock));

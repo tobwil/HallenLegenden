@@ -326,12 +326,15 @@ test('Wirtschaft: Vorstand entlässt nach zweimal deutlich verfehltem Ziel, neue
 test('Wirtschaft: CPU-Budgets bleiben über drei Saisons stabil', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 4711);
   const r = await page.evaluate(() => {
-    careerCreate(12, 1, 1, 1, true, 3); const avgAi = () => { const v = Object.entries(CAREER.aiMoney).filter(([id]) => +id !== CAREER.team).map(([, x]) => x); return v.reduce((a, c) => a + c, 0) / v.length; };
-    const a0 = avgAi();
-    for (let s = 0; s < 3; s++) { while (!CAREER.season.done) ACT.cSim(); careerEndSeason(); if (CAREER.jobOffers) ACT.cJob(CAREER.jobOffers[0]); }
-    return { a0, a3: avgAi() };
+    careerCreate(12, 1, 1, 1, true, 3);
+    // Durchschnitt aller CPU-Vereine, dazu einzeln 1. Liga (Stammbesetzung) und internationale Vereine (spielen fast jedes Jahr Europapokal)
+    const avgAi = f => { const v = Object.entries(CAREER.aiMoney).filter(([id]) => +id !== CAREER.team && f(+id)).map(([, x]) => x); return v.reduce((a, c) => a + c, 0) / v.length; };
+    const lg1 = TEAMS.filter(t => t.lg === 1).map(t => t.id), all = () => avgAi(() => true), l1 = () => avgAi(id => lg1.includes(id)), l3 = () => avgAi(id => TEAMS[id].lg === 3);
+    const a0 = [all(), l1(), l3()];
+    for (let s = 0; s < 3; s++) { while (!CAREER.season.done || euroDue()) ACT.cSim(); careerEndSeason(); if (CAREER.jobOffers) ACT.cJob(CAREER.jobOffers[0]); }
+    return { a0, a3: [all(), l1(), l3()] };
   });
-  ok(r.a3 > r.a0 * 0.5 && r.a3 < r.a0 * 2, `CPU-Durchschnitt ${Math.round(r.a0 / 1000)}k -> ${Math.round(r.a3 / 1000)}k`);
+  ['alle', '1. Liga', 'international'].forEach((n, i) => ok(r.a3[i] > r.a0[i] * 0.5 && r.a3[i] < r.a0[i] * 1.8, `CPU-Durchschnitt ${n}: ${Math.round(r.a0[i] / 1000)}k -> ${Math.round(r.a3[i] / 1000)}k`));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
