@@ -384,6 +384,28 @@ test('Europapokal und Pokal: Final Four am selben Termin, neutral, mit Event und
   ok(r.intro, 'keine Pokalübergabe im Finale'); ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Final Four: Nach eigenem Halbfinal-Aus wird das Finale sofort gespielt (Pokal und Europapokal)', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 2024);
+  const r = await page.evaluate(() => {
+    careerCreate(3, 1, 1, 1, true, 3); const me = CAREER.team, C = CAREER.cup, E = CAREER.euro;
+    // Eigenes Spiel als Niederlage melden (wie nach einem selbst gespielten Spiel)
+    const lose = (t, neutral) => { const m = simMatch(t[0], t[1], neutral), home = t[0] === me; return { a: t[0], b: t[1], ga: home ? 20 : 30, gb: home ? 30 : 20, stats: m.stats, La: m.La, Lb: m.Lb, win: home ? t[1] : t[0] }; };
+    let g = 0; while (C.round < CUP_F4 && g++ < 60) ACT.cSim();
+    if (!C.ties.flat().includes(me)) C.ties[0][0] = me;                 // eigenen Verein ins Halbfinale setzen
+    g = 0; while (!cupDue() && g++ < 60) ACT.cSim();
+    const cupBefore = C.winner; playCupRound(lose(ownCupTie(), true));
+    const cup = { before: cupBefore, winner: C.winner, inFinal: C.results.slice(-1)[0].rows.flat().includes(me) };
+    g = 0; while (E.kround < 1 && g++ < 60) ACT.cSim();
+    if (!E.ko[1].ties.flat().includes(me)) E.ko[1].ties[0][0] = me;
+    g = 0; while (!ownEuroTie() && g++ < 60) ACT.cSim();
+    const due = euroNext(); playEuroRound(lose(ownEuroTie(), true));
+    return { cup, semi: due && due.type === 'ko' && due.r === 1, euroWinner: E.winner, round: CAREER.season.round, len: CAREER.season.fixtures.length };
+  });
+  ok(r.cup.before === null && r.cup.winner !== null && !r.cup.inFinal, 'Pokalfinale nicht gleich gespielt: ' + JSON.stringify(r.cup));
+  ok(r.semi && r.euroWinner !== null && r.euroWinner !== undefined, 'Europapokal-Finale nicht gleich gespielt: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Pokal: Sieger mit Vereinsnummer 0 (Magdeburg) bleibt Sieger', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 7);
   const r = await page.evaluate(() => {

@@ -15,9 +15,10 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
   - Laufende Karrieren starten ab der nächsten Saison im Europapokal.
 - **Fehler behoben:** Das TV-Intro mit den Aufstellungskarten wurde nie angezeigt, weil die Anwurf-Vorbereitung die Intro-Phase sofort überschrieb. Es läuft jetzt wieder vor jedem Spiel und lässt sich mit einer Taste überspringen.
 - **Fehler behoben:** Gewann Magdeburg (Vereinsnummer 0) den Pokal, wurde das Finale am Saisonende erneut ausgespielt. In der Historie stand dann ein falscher Pokalsieger, im ungünstigen Fall drohte eine Endlosschleife.
+- **Fehler behoben (beim Test der Deploy Preview gefunden):** Schied der eigene Verein im Halbfinale eines Final Four aus, blieb das Finale am selben Termin liegen. Im Europapokal wurde es erst beim Saisonabschluss nachgeholt, im Pokal erst mit dem nächsten Ligaspieltag. Bis dahin fehlten Sieger und Zeitungsmeldung. Jetzt wird das Finale sofort simuliert.
 - Lange Banner (z. B. bei der Pokalübergabe) passen ihre Schriftgröße der Bildbreite an
 - Die Untertitelzeile unter „FINAL FOUR“ im Intro hat einen dunklen Hintergrund und ist vor dem Publikum lesbar
-- 4 neue Regressionstests (`tests/run.mjs`), insgesamt 25. Der Aktionen-Test stellt den Spieler vor jeder Aktion wieder hin; vorher schlug er ab und zu fehl, wenn der Spieler in den Zwischenframes gefoult worden war und noch lag.
+- 5 neue Regressionstests (`tests/run.mjs`), insgesamt 26. Der Aktionen-Test stellt den Spieler vor jeder Aktion wieder hin; vorher schlug er ab und zu fehl, wenn der Spieler in den Zwischenframes gefoult worden war und noch lag.
 - **Pressekit:** neue Clips direkt aus dem Spiel: Final Four mit Pokalübergabe, TV-Intro mit Aufstellungskarten, Spielszene mit Tor und Wiederholung, Kempa-Tor, Europapokal-Ansicht, dazu Standbilder (`docs/presse/`). Aufnahme mit `tools/promo/spiel.js`, Bild für Bild und mit festem Zufall reproduzierbar, alles neu mit `sh tools/promo/promo.sh spiel`.
 - **Neuer Teaser** aus echten Spielszenen (27 s, `tools/promo/schnitt.js`), auch oben in der README. Der bisherige Teaser heißt jetzt `hallenlegenden-story` (Story-Film der Landingpage).
 

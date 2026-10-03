@@ -96,6 +96,7 @@ function playEuroRound(own, force) {
     }
   }
   saveCareer();
+  if (!force) autoEuro();   // Final Four: Nach dem eigenen Halbfinale ist das Finale sofort fällig, ohne eigenen Verein gleich simulieren
 }
 function euroSimOwn() {
   const t = ownEuroTie(), n = euroNext(); if (!t) return; coachPrep();

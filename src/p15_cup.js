@@ -42,6 +42,7 @@ function playCupRound(own, force) {
   if (C.round >= CUP_ROUNDS.length) { C.winner = alive[0]; news(C.winner === me ? `POKALSIEG! ${TEAMS[me].n} holt den Pokal!` : `Pokalsieger: ${TEAMS[C.winner].n}.`); }
   else { C.ties = []; for (let i = 0; i < alive.length; i += 2) C.ties.push([alive[i], alive[i + 1]]); }   // fester Turnierbaum: Sieger benachbarter Partien treffen aufeinander
   saveCareer();
+  if (!force) autoCup();   // Final Four: Finale am selben Termin wie das Halbfinale
 }
 function cupSimOwn() { const t = ownCupTie(); if (!t) return; coachPrep(); const m = simMatch(t[0], t[1], CAREER.cup.round >= CUP_F4); const r = { a: t[0], b: t[1], ga: m.ga, gb: m.gb, stats: m.stats, La: m.La, Lb: m.Lb }; if (r.ga === r.gb) { r.so = true; r.win = Math.random() < 0.5 ? r.a : r.b; } else r.win = r.ga > r.gb ? r.a : r.b; playCupRound(r); }
 // ================= Verträge =================
