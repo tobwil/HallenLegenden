@@ -2,6 +2,13 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.9: CPU-Vereine schonen müde Stars
+- **CPU-Vereine rotieren jetzt.** Bisher stellte die CPU immer den stärksten Spieler auf, auch wenn er völlig erschöpft war. Ein Star mit Fitness 20 war immer noch „besser“ als ein frischer Ersatz, also spielte er durch. Im Schnitt hatte der beste Feldspieler jedes CPU-Vereins zur Saisonmitte nur 28 % Fitness, fast ein Drittel der aufgestellten CPU-Spieler lag bei 20 bis 30 %.
+- Jetzt wird ein Spieler unter 60 % Fitness zunehmend geschont, der frische Ersatz kommt rein. Die aufgestellten CPU-Spieler haben zur Saisonmitte im Schnitt rund 72 % Fitness, nur noch etwa 4 % liegen bei 20 bis 30 %.
+- Spürbar vor allem in selbst gespielten Karriere-Spielen: Die Fitness bestimmt die Kraft zu Spielbeginn. Die Stars des Gegners starten nicht mehr fast leer.
+- Die Spielstärke bleibt im Saisonmittel fast gleich (gemessen über 14 Saisons mit Kiel, Melsungen und Wetzlar, mit und ohne Co-Trainer: im Schnitt etwa einen halben Tabellenplatz schwerer). Eine zusätzliche Erholung für CPU-Vereine wurde verworfen, sie hätte die CPU um zwei bis drei Plätze stärker gemacht.
+- 1 neuer Regressionstest (Fitness der CPU-Aufstellungen nach 12 Spieltagen), insgesamt 34
+
 ## v8.8: Vor dem Spiel
 - **Stärkevergleich vor jedem Spiel** (Idee aus Retro Bowl): Der Bildschirm „Vor dem Spiel“ zeigt beide Teams nebeneinander:
   - Starspieler als großer Pixel-Spieler im gewählten Trikot (wechselt beim Trikotwechsel mit)

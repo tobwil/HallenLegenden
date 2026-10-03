@@ -358,6 +358,21 @@ test('Wirtschaft: Entlassung nach zweimal deutlich verfehltem Ziel, neuer Verein
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('CPU-Vereine schonen müde Stars: kaum erschöpfte Spieler in den CPU-Aufstellungen', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 77);
+  const r = await page.evaluate(() => {
+    careerCreate(TEAMS.find(t => t.k === 'MEL').id, 1, 1, 1); let g = 0; while (CAREER.season.round < 12 && g++ < 60) ACT.cSim();
+    const cpu = TEAMS.filter(t => CAREER.lgOf[t.id] === 1 && t.id !== CAREER.team).map(t => t.id), fits = cpu.flatMap(id => lineup(id).map(p => p.fit));
+    // bester Feldspieler jedes CPU-Vereins: früher spielte er bis auf Fitness 20 herunter
+    const stars = cpu.map(id => CAREER.squads[id].filter(p => p.role !== 'TW').sort((a, b) => ovr(b) - ovr(a))[0].fit);
+    // wer müde ist und einen frischen Ersatz hat, spielt nicht
+    const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+    return { avg: Math.round(avg(fits)), low: fits.filter(f => f <= 30).length / fits.length, stars: Math.round(avg(stars)) };
+  });
+  ok(r.avg >= 62 && r.low < 0.12 && r.stars >= 38, 'CPU-Fitness nach 12 Spieltagen: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Wirtschaft: CPU-Budgets bleiben über drei Saisons stabil', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 4711);
   const r = await page.evaluate(() => {
