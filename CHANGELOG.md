@@ -2,6 +2,11 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.12: Neue Lizenz, nicht kommerziell
+- **Lizenz:** Ab dieser Version steht das Spiel unter der **PolyForm Noncommercial License 1.0.0** statt unter MIT. Der Quellcode bleibt offen: Spielen, Lesen, Verändern und kostenloses Weitergeben sind erlaubt, kommerzielle Nutzung (zum Beispiel Verkauf, App-Store, Werbung) braucht eine eigene Lizenz von tobwil.
+- Versionen bis einschließlich v8.11 bleiben MIT-lizenziert. Das steht in `LICENSE` und in der README.
+- Angepasst: `LICENSE`, README (deutsch und englisch, Badge), Hinweis auf dem Titelbildschirm, Impressum, Fußzeile und strukturierte Daten der Landingpage, Pressekit
+
 ## v8.11: Name und Logo geschützt
 - README (deutsch und englisch): Die MIT-Lizenz gilt für den Code. Der Name „Hallen-Legenden“, verwechselbare Abwandlungen (zum Beispiel „Hallenlegenden“, „Legenden der Halle“, „Hall Legends“), das Logo und die Domain sind ausgenommen. Veränderte Versionen brauchen einen eigenen Namen und dürfen nicht wie das offizielle Spiel auftreten. Ein Hinweis „Basiert auf Hallen-Legenden von tobwil“ bleibt erwünscht, Forks zum Mitentwickeln dürfen den Repository-Namen behalten.
 

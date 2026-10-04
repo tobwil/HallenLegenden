@@ -43,7 +43,7 @@ Story-Film und Anzug-Wechsel stammen von der Landingpage, alle anderen Clips (au
 - **Preis:** kostenlos
 - **Sprache:** Deutsch
 - **Entwicklung:** tobwil, privates Projekt, entstanden mit KI-Programmierassistenten
-- **Quellcode:** [github.com/tobwil/HallenLegenden](https://github.com/tobwil/HallenLegenden) (MIT-Lizenz)
+- **Quellcode:** [github.com/tobwil/HallenLegenden](https://github.com/tobwil/HallenLegenden) (PolyForm Noncommercial 1.0.0: offen einsehbar, nicht für kommerzielle Nutzung)
 - **Kontakt:** über das [Impressum](https://hallenlegenden.de/impressum.html)
 
 ## Neu erzeugen

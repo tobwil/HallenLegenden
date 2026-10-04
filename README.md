@@ -1,7 +1,7 @@
 # Hallen-Legenden
 
 [![Jetzt spielen / Play now](https://img.shields.io/badge/%E2%96%B6%20Jetzt%20spielen%20%2F%20Play%20now-hallenlegenden.de-ffc83a?style=for-the-badge&labelColor=07060b)](https://hallenlegenden.de/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-3ddc84?style=for-the-badge&labelColor=07060b)](LICENSE)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-3ddc84?style=for-the-badge&labelColor=07060b)](LICENSE)
 
 <p align="center"><a href="https://hallenlegenden.de"><img src="docs/presse/hallenlegenden-teaser.gif" width="640" alt="Szenen aus dem Spiel: Startbildschirm, Aufstellungskarten, ein Tor, ein Kempa-Tor, der Europapokal-Turnierbaum, das Final Four und die Pokalübergabe"></a><br><sub>Echte Szenen aus dem Spiel · real in-game footage · <a href="docs/presse/">mehr Clips / more clips</a></sub></p>
 
@@ -133,7 +133,7 @@ docs/LANDINGPAGE.md   Landingpage, Wunsch-Formular und eigene Domain einrichten
 docs/ARCHITEKTUR.md   Aufbau des Codes, Datenmodell, Speicher-Schlüssel
 docs/ENTWICKLUNG.md   Entwicklungsgeschichte: Wünsche, Entscheidungen, Tests
 CHANGELOG.md          Versionen
-LICENSE               MIT-Lizenz
+LICENSE               Lizenz (PolyForm Noncommercial 1.0.0)
 ```
 
 #### Bauen
@@ -173,11 +173,15 @@ Das Spiel hat **tobwil** im Dialog mit Claude (Anthropic) in Claude Code entwick
 
 ### Lizenz, Name und Namensnennung
 
-Der Code steht unter der [MIT-Lizenz](LICENSE), © 2026 [tobwil](https://github.com/tobwil).
+Der Code steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE), © 2026 [tobwil](https://github.com/tobwil). Der Quellcode ist offen einsehbar, das Spiel ist aber nicht für kommerzielle Zwecke freigegeben.
 
-Du darfst das Spiel frei nutzen, verändern, weitergeben und auch in eigene Projekte übernehmen. **Bedingung:** Der Urheberhinweis „Copyright (c) 2026 tobwil“ und der Lizenztext müssen in allen Kopien und abgeleiteten Versionen erhalten bleiben.
+**Erlaubt** ist alles, was nicht kommerziell ist: das Spiel spielen, den Code lesen und daraus lernen, ihn verändern, eigene Versionen bauen und kostenlos weitergeben. Auch gemeinnützige Organisationen, Schulen, Vereine und Hochschulen dürfen es nutzen. **Bedingung:** Der Urheberhinweis „Copyright (c) 2026 tobwil“ und der Lizenztext (oder der Link darauf) müssen in allen Kopien und abgeleiteten Versionen erhalten bleiben.
 
-**Name und Logo sind von der MIT-Lizenz ausgenommen.** Der Name „Hallen-Legenden“ und das Logo (der Schriftzug des Spiels) gehören nicht zum lizenzierten Code und bleiben tobwil vorbehalten. Das gilt auch für andere Schreibweisen und verwechselbare Abwandlungen, zum Beispiel „Hallenlegenden“, „Hallen Legenden“, „Legenden der Halle“, „Hall Legends“ oder „Hallen-Legenden 2“, und für die Domain hallenlegenden.de.
+**Nicht erlaubt** ist jede kommerzielle Nutzung, zum Beispiel das Spiel oder eine darauf basierende Version zu verkaufen, in einem App-Store gegen Geld oder mit Werbung und In-App-Käufen anzubieten oder in ein kommerzielles Produkt einzubauen. Wer das vorhat, braucht eine eigene Lizenz von tobwil (Kontakt über das [Impressum](https://hallenlegenden.de/impressum.html)).
+
+Versionen bis einschließlich v8.11 wurden unter der MIT-Lizenz veröffentlicht. Für Kopien dieser älteren Versionen gilt weiterhin die MIT-Lizenz, für alle späteren Versionen gilt die PolyForm Noncommercial License.
+
+**Name und Logo sind von der Lizenz ausgenommen.** Der Name „Hallen-Legenden“ und das Logo (der Schriftzug des Spiels) gehören nicht zum lizenzierten Code und bleiben tobwil vorbehalten. Das gilt auch für andere Schreibweisen und verwechselbare Abwandlungen, zum Beispiel „Hallenlegenden“, „Hallen Legenden“, „Legenden der Halle“, „Hall Legends“ oder „Hallen-Legenden 2“, und für die Domain hallenlegenden.de.
 
 Wer eine veränderte Version veröffentlicht (zum Beispiel als Website, App oder Download):
 - muss ihr einen anderen Namen geben, der sich klar von „Hallen-Legenden“ unterscheidet,
@@ -291,7 +295,7 @@ docs/LANDINGPAGE.md   landing page, form and custom domain setup (German)
 docs/ARCHITEKTUR.md   code architecture, data model, storage keys (German)
 docs/ENTWICKLUNG.md   development history: requests, decisions, tests (German)
 CHANGELOG.md          versions (German)
-LICENSE               MIT license
+LICENSE               license (PolyForm Noncommercial 1.0.0)
 ```
 
 #### Building
@@ -331,11 +335,15 @@ The old address [tobwil.github.io/HallenLegenden](https://tobwil.github.io/Halle
 
 ### License, name and attribution
 
-The code is licensed under the [MIT License](LICENSE), © 2026 [tobwil](https://github.com/tobwil).
+The code is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE), © 2026 [tobwil](https://github.com/tobwil). The source code is openly available, but the game is not licensed for commercial use.
 
-You are free to use, modify, share and include the game in your own projects. **Condition:** the copyright notice "Copyright (c) 2026 tobwil" and the license text must be kept in all copies and derived versions.
+**Allowed** is anything non-commercial: playing the game, reading and learning from the code, modifying it, building your own versions and sharing them free of charge. Charities, schools, clubs and universities may use it as well. **Condition:** the copyright notice "Copyright (c) 2026 tobwil" and the license text (or a link to it) must be kept in all copies and derived versions.
 
-**The name and logo are not covered by the MIT License.** The name "Hallen-Legenden" and the logo (the game's wordmark) are not part of the licensed code and remain reserved to tobwil. This also applies to other spellings and confusingly similar variations, such as "Hallenlegenden", "Hallen Legenden", "Legenden der Halle", "Hall Legends" or "Hallen-Legenden 2", and to the domain hallenlegenden.de.
+**Not allowed** is any commercial use, for example selling the game or a version based on it, offering it in an app store for money or with ads and in-app purchases, or including it in a commercial product. If you plan to do that, you need a separate license from tobwil (contact via the [imprint](https://hallenlegenden.de/impressum.html)).
+
+Versions up to and including v8.11 were published under the MIT License. Copies of those earlier versions remain under the MIT License; all later versions are under the PolyForm Noncommercial License.
+
+**The name and logo are not covered by the license.** The name "Hallen-Legenden" and the logo (the game's wordmark) are not part of the licensed code and remain reserved to tobwil. This also applies to other spellings and confusingly similar variations, such as "Hallenlegenden", "Hallen Legenden", "Legenden der Halle", "Hall Legends" or "Hallen-Legenden 2", and to the domain hallenlegenden.de.
 
 If you publish a modified version (for example as a website, app or download), you:
 - must give it a different name that is clearly distinct from "Hallen-Legenden",
