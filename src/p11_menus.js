@@ -101,7 +101,7 @@ const ACT = {
       <button data-act="editor">EDITOR <i>Vereine, Farben, Spieler</i></button>
       <button data-act="help">STEUERUNG <i>& Regeln</i></button>
       <button data-act="options">OPTIONEN <i>Lautstärke, Hallensprecher</i></button>
-      ${PLATFORM.quit ? '<button data-act="exitGame">BEENDEN</button>' : ''}</div></div>`);
+      ${PLATFORM.quit ? '<button data-act="exitGame">BEENDEN <i>zurück zum Desktop</i></button>' : ''}</div></div>`);
   },
   exitGame() { if (PLATFORM.quit) PLATFORM.quit(); },
   quick() {
