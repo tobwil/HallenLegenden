@@ -57,6 +57,7 @@ const INV = `window.__inv = (wo) => {
       if (p.form < -3 || p.form > 3) add(t.k + ' ' + p.name + ' Form ' + p.form);
       if (p.age < 15 || p.age > 45) add(t.k + ' ' + p.name + ' Alter ' + p.age);
       if (nums.has(p.num)) add(t.k + ' Rückennummer doppelt ' + p.num); nums.add(p.num);
+      for (const w of ['s', 'k']) { const x = statOf(p, w); if (x.g > x.sh || x.g7 > x.s7 || x.g7 > x.g || x.fb > x.g || x.sv7 > x.f7 || STK.some(k => !isFinite(x[k]) || x[k] < 0)) { add(t.k + ' ' + p.name + ' Statistik ' + w + ' ' + JSON.stringify(x)); break; } }
     }
   }
   for (const p of CAREER.free || []) if (pids.has(p.pid)) add('Spieler zugleich vereinslos und im Kader: ' + p.name);

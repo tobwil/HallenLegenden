@@ -2,6 +2,17 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.18: Spielerkarte und Handball-Statistik
+- **Neue Spielerkarte im Karriere-Kader** (Idee aus Retro Bowl, auf Handball zugeschnitten): Porträt, ausgeschriebene Position, Sterne für Stärke und Potenzial, Zustand (frisch bis erschöpft), Form, Vertrag, Marktwert und Aufgaben (Startsieben, Kapitän, 7-Meter-Schütze). Rechts die Werte mit kurzer Erklärung oder per STATISTIK die Zahlen. Knopfleiste: AUFSTELLEN / AUF DIE BANK, STATISTIK, 7-METER-SCHÜTZE, KAPITÄN, SOFORTVERKAUF.
+- **Handball-Statistik je Spieler**, für die Saison und die ganze Karriere (Liga, Pokal und Europapokal zusammen): Spiele, Spielminuten, Tore und Würfe mit Wurfquote, Tore pro Spiel, 7-Meter, Tempogegenstoß-Tore, Torvorlagen, Ballgewinne, Zeitstrafen, Spieler des Spiels. Torhüter: Paraden, Gegentore, Fangquote, gehaltene 7-Meter.
+  - Selbst gespielte Spiele zählen genau mit (Würfe, 7-Meter, Tempogegenstöße nach Ballgewinn, Vorlage durch den letzten Pass, Zeitstrafen, Gegentore des Torhüters).
+  - Simulierte Spiele erzeugen dieselben Zahlen passend zu Position und Werten (ligaweit etwa 60 % Wurfquote, drei von vier 7-Metern verwandelt, Vorlage bei jedem zweiten Tor). Dafür gibt es einen eigenen Zufall: Ergebnisse und Tabelle bleiben dieselben wie ohne Statistik.
+- **7-Meter-Schütze wählbar:** Er wirft die 7-Meter in selbst gespielten und simulierten Spielen (in der Simulation bekommt er die verwandelten 7-Meter-Tore). Ohne Wahl wirft wie bisher der beste Werfer auf dem Feld.
+- **Kapitän** wählbar, mit Abzeichen „C“ in Kader und Spielerkarte (die Wirkung auf die Stimmung kommt mit der nächsten Stufe).
+- **AUF DIE BANK:** Der beste gesunde Ersatz auf derselben Position rückt in die Startsieben.
+- Laufende Karrieren: Die Statistik zählt ab dem Update, die Karte zeigt, ab wann.
+- README mit Screenshot der Spielerkarte. 1 neuer Regressionstest (simulierte und gespielte Partie stimmig, ligaweite Quoten plausibel, 7-Meter-Schütze wirkt, Karte, Bank, Saisonwechsel), insgesamt 39; der Dauerlauf prüft die Statistik jedes Spielers nach jedem Spieltag
+
 ## v8.17: Editor sicher verlassen, jedes Menüfeld mit dem Gamepad erreichbar
 - **Behoben (#32): ESC, Rücktaste und B im Editor setzten den Verein zurück.** Statt ZURÜCK wurde ZURÜCKSETZEN ausgelöst, alle gespeicherten Änderungen am gerade gewählten Verein waren ohne Nachfrage weg. Das gab es seit der ersten Version. Jetzt verlassen ESC, Rücktaste und B den Editor. ZURÜCKSETZEN fragt beim ersten Druck nach („WIRKLICH ZURÜCKSETZEN?“).
 - **Behoben (#33): Trikotfarben per Gamepad erreichbar.** Die Menüsteuerung misst jetzt von Rand zu Rand statt von Mitte zu Mitte: Ein schmales Feld direkt unter einem breiten liegt „darunter“, und „rechts“ ist nur, was wirklich rechts beginnt (vorher führte rechts vom Vereinsnamen auf die Vereinsliste darüber, wo rechts dann den Verein wechselte). Trikotfarben werden wie in Konsolen-Menüs mit A bearbeitet: links/rechts wechseln das Feld, nach A ändern sie die Farbe (gelber Rahmen), A oder B beenden. Mit der Tastatur wechseln die Pfeile auf Farbfeldern ebenfalls das Feld, Enter öffnet den Farbwähler.

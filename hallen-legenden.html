@@ -182,6 +182,23 @@ a.btn-a{font-family:var(--pix);font-size:clamp(9px,1.4vw,12px);color:#1a1205;bac
 .inj{font-family:var(--pix);font-size:7px;color:#fff;background:var(--hot);padding:1px 3px}
 .gkc{text-align:center!important;color:var(--dim)}
 .pdet{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+/* Spielerkarte: Kopf mit Porträt, zwei Kästen (Spieler | Werte oder Statistik), Knopfleiste */
+.pcard{display:flex;flex-direction:column;gap:10px}
+.pchead{display:flex;gap:14px;align-items:center}
+.pchead canvas{width:96px;height:96px;image-rendering:pixelated;border:3px solid #000;box-shadow:4px 4px 0 #000;flex:none}
+.pchead h2{margin:0}
+.pchead p{margin:4px 0 0}
+.pcgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:760px){.pcgrid{grid-template-columns:1fr}}
+.pcbox{border:3px solid var(--ink);padding:8px 12px 10px;min-width:0}
+.pcbox h3{margin:-20px 0 6px;display:inline-block;background:var(--panel,#120f1c);padding:0 6px;font-size:10px}
+.pcbox dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:18px;align-items:center}
+.pcbox dt{color:var(--dim)}
+.pcbox dd{margin:0;min-width:0}
+.pcinfo{margin:6px 0 0;font-size:15px;line-height:1.3}
+.pcst{display:inline-flex;gap:1px;vertical-align:-1px}
+.cbadge{display:inline-block;font-family:var(--pix);font-size:8px;line-height:1;padding:3px 4px 2px;background:var(--gold);color:#000;vertical-align:2px;margin-left:4px}
+table.pcstat td.lbl{color:var(--dim)}
 .pdet canvas{width:120px;height:120px;image-rendering:pixelated;border:3px solid #000;box-shadow:4px 4px 0 #000;flex:none}
 .pdet-info{flex:1;min-width:240px;display:flex;flex-direction:column;gap:8px}
 /* Zeitung */
@@ -1108,7 +1125,7 @@ function newMatch(ta, tb, o = {}) {
   const kits = o.kits || makeKits(ta, tb, o.kitA, o.kitB);
   G = {
     tid: [ta, tb], kits, human: o.human ?? -1, diff: o.diff ?? 1, halfLen: o.halfLen ?? 180, lg: TEAMS[ta].lg,
-    career: !!o.career, cup: !!o.cup, euro: o.euro || null, event: o.event || null, demo: !!o.demo, label: o.label || '', lineupPids: o.lineups ? o.lineups.map(l => l.map(r => r.pid)) : null,
+    career: !!o.career, cup: !!o.cup, euro: o.euro || null, event: o.event || null, demo: !!o.demo, label: o.label || '', lineupPids: o.lineups ? o.lineups.map(l => l.map(r => r.pid)) : null, seven: o.career && CAREER ? [ta, tb].map(t => t === CAREER.team ? CAREER.seven || null : null) : null,
     score: [0, 0], half: 1, clock: 0, swap: false, phase: o.demo ? 'kickoff' : 'intro', phaseT: 0, t: 0, introT: 0,
     players: [], ctrl: null, poss: -1, possT: 0, starter: 0, pending: null, passiveWarn: false,
     banner: null, cut: null, ticker: { txt: '', t: 0 }, shake: 0, flash: 0, slow: 1, slowT: 0, excite: 0, wave: 0,
@@ -1186,9 +1203,10 @@ function place(p, x, y) { Object.assign(p, { x, y, z: 0, vx: 0, vy: 0, vz: 0, ch
 function giveBall(p, quiet) {
   const b = G.ball;
   if (G.kempa && p !== G.kempa.to) G.kempa = null;
+  p.assistFrom = b.passer && b.passer !== p && b.passer.team === p.team ? b.passer : null; b.passer = null;   // für die Torvorlage
   b.owner = p; b.state = 'held'; b.passTo = null; b.shot = null; b.last = p; b.vz = 0; b.lob = false;
   p.hold = 0; p.patience = rnd(0.7, 2.0); p.dec = rnd(0.08, 0.2);
-  if (G.poss !== p.team) { G.poss = p.team; G.possT = 0; G.passiveWarn = false; }
+  if (G.poss !== p.team) { G.poss = p.team; G.possT = 0; G.passiveWarn = false; G.possSrc = 'live'; }   // Ballgewinn im laufenden Spiel (Tempogegenstoß möglich)
   if (G.human === p.team && p.role !== 'TW') G.ctrl = p;   // Torwart wirft automatisch ab
   if (!quiet) AU.catch();
 }
@@ -1213,7 +1231,7 @@ function setupKickoff(team, full, quick = false) {
       else { const s = sgn(team); if ((p.x - 20) * s > -1) p.x = 20 - s * rnd(1.5, 4); p.z = 0; p.vz = 0; p.lie = 0; }
     }
   }
-  place(k, 20, 10); giveBall(k, true); G.poss = team; G.possT = 0;
+  place(k, 20, 10); giveBall(k, true); G.poss = team; G.possT = 0; G.possSrc = 'restart';
   if (G.human >= 0) G.ctrl = G.human === team ? k : nearestTo(G.human, 20, 10);
 }
 function setupRestart(team, x, y, type, who) {
@@ -1230,13 +1248,15 @@ function setupRestart(team, x, y, type, who) {
     p.vx = p.vy = 0; p.charge = 0; p.charging = false;
     if (p.role !== 'TW') pushOut(p);
   }
-  place(t, x, y); giveBall(t, true); G.poss = team; if (type !== 'frei') G.possT = 0;
+  place(t, x, y); giveBall(t, true); G.poss = team; if (type !== 'frei') { G.possT = 0; G.possSrc = 'restart'; }
   if (G.human >= 0) G.ctrl = G.human === team ? t : nearestTo(G.human, x, y);
 }
 function setupPenalty(team, pick) {
   G.phase = 'penalty'; G.phaseT = 1.0; if (!G.shootout) G.stats.seven[team]++;
   const s = sgn(team), gx = goalX(team);
-  const shooter = pick || G.players.filter(p => p.team === team && !p.out && p.role !== 'TW').sort((a, b) => b.att - a.att)[0];
+  // Schütze: festgelegter 7-Meter-Schütze (Karriere), sonst der beste Werfer auf dem Feld
+  const onCourt = G.players.filter(p => p.team === team && !p.out && !p.injured && p.role !== 'TW'), set = G.seven && onCourt.find(p => p.pid && p.pid === G.seven[team]);
+  const shooter = pick || set || onCourt.sort((a, b) => b.att - a.att)[0];
   for (const p of G.players) {
     if (p.out) continue;
     if (p === shooter) place(p, gx - s * 7.1, 10);
@@ -1244,7 +1264,7 @@ function setupPenalty(team, pick) {
     else if (p.role === 'TW') place(p, ownX(p.team) + s * 1.2, 10);
     else { const a = (p.i - 3.5) * 0.27 + (p.team === team ? 0 : 0.13), r = 10.5 + (p.team === team ? 0.9 : 0); place(p, gx - s * r * Math.cos(a), clamp(10 + r * Math.sin(a), 1, 19)); }
   }
-  giveBall(shooter, true); G.poss = team; G.possT = 0;
+  giveBall(shooter, true); G.poss = team; G.possT = 0; G.possSrc = 'restart';
   G.pen = { aim: 0, aiT: rnd(1.0, 1.7), gkGuess: 0, shooter };
   if (G.human >= 0) G.ctrl = G.human === team ? shooter : G.goalie[G.human];
   say(`Siebenmeter! ${shooter.name} gegen ${G.goalie[1 - team].name}.`);
@@ -1297,13 +1317,13 @@ function readInput(dt) {
 function clearEdges() { IN.pa = IN.pb = IN.pc = IN.ra = IN.rb = IN.rc = IN.any = false; }
 
 // ================= Spielerdaten, Bank & Wechsel =================
-const DATA_KEYS = ['name', 'num', 'role', 'star', 'trait', 'att', 'pas', 'df', 'gk', 'sp', 'sta', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'musc', 'pid', 'fitMul', 'energy', 'goals', 'shots', 'saves', 'stealsN', 'fouls', 'look', 'mins', 'injured'];
+const DATA_KEYS = ['name', 'num', 'role', 'star', 'trait', 'att', 'pas', 'df', 'gk', 'sp', 'sta', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'musc', 'pid', 'fitMul', 'energy', 'goals', 'shots', 'saves', 'stealsN', 'fouls', 'look', 'mins', 'injured', 'g7', 's7', 'fb', 'as', 'zs', 'ga', 'sv7', 'f7'];
 function matchData(r, boost) {
   const f = r.form !== undefined ? r.form - Math.max(0, 75 - (r.fit ?? 100)) * 0.2 : 0;   // Form & Fitness aus der Karriere
   const fitMul = r.fit !== undefined ? r.fit / 100 : 1;
   return { name: r.name, num: r.num, role: r.role, star: r.star, trait: r.trait, skin: r.skin, hair: r.hair, style: r.style, beard: r.beard, band: r.band, tall: r.tall, musc: r.musc, pid: r.pid,
     att: r.att + boost + f, pas: r.pas + boost + f, df: r.def + boost + f, gk: r.gk + boost + f, sp: r.spd + boost * 0.5 + f * 0.5, sta: r.sta ?? 80,
-    fitMul, energy: fitMul, goals: 0, shots: 0, saves: 0, stealsN: 0, fouls: 0, mins: 0, injured: false, look: null };
+    fitMul, energy: fitMul, goals: 0, shots: 0, saves: 0, stealsN: 0, fouls: 0, mins: 0, injured: false, look: null, g7: 0, s7: 0, fb: 0, as: 0, zs: 0, ga: 0, sv7: 0, f7: 0 };
 }
 // Ersatzbank für Spiele ohne Karriere: je Position ein etwas schwächerer Spieler
 function quickBench(tid) {
@@ -1370,7 +1390,7 @@ function pass(p, q) {
   const tp = { x: clamp(q.x + q.vx * t * 0.85, 0.3, CW - 0.3), y: clamp(q.y + q.vy * t * 0.85, 0.3, CH - 0.3) };
   pushOut(tp, 6.4); const tx = tp.x, ty = tp.y;
   launch(p.x + p.face * 0.3, p.y, p.z + 1.5, tx, ty, 1.3, sp);
-  b.passTo = q; b.shot = null; b.nc = p; b.ncT = 0.25; b.last = p; p.throwT = 0.22; p.hold = 0;
+  b.passTo = q; b.shot = null; b.nc = p; b.ncT = 0.25; b.last = p; b.passer = p; p.throwT = 0.22; p.hold = 0;
   q.tx = tx; q.ty = ty;
   if (G.human === p.team) { G.ctrl = q; G.recvLock = { p: q, x: IN.x, y: IN.y }; }   // beim Pass gehaltene Richtung steuert den Empfänger nicht
   AU.pass();
@@ -1382,7 +1402,7 @@ function kempa(p) {
   const q = cands[0]; if (!q) return pass(p, choosePass(p, 0, 0));
   const cy = clamp(q.y, GY1 - 3, GY2 + 3), ly = lerp(q.y, 10, 0.35), lx = gx - s * Math.max(3.6, Math.min(4.8, Math.abs(q.x - gx) * 0.6));
   launch(p.x, p.y, p.z + 1.8, lx, ly, 2.6, 9.5);
-  const b = G.ball; b.passTo = q; b.lob = true; b.nc = p; b.ncT = 0.4; b.last = p; p.throwT = 0.25;
+  const b = G.ball; b.passTo = q; b.lob = true; b.nc = p; b.ncT = 0.4; b.last = p; b.passer = p; p.throwT = 0.25;
   q.tx = lx - s * 1.2; q.ty = ly; q.kempaRun = true;
   G.kempa = { by: p, to: q };
   if (G.human === p.team) G.ctrl = q;
@@ -1411,7 +1431,10 @@ function shoot(p, aimY, charge, lob = false) {
   launch(p.x + s * 0.3, p.y, p.z + 2.1, gx + s * 0.15, ty, tz, speed);
   b.shot = { by: p, team: p.team, speed, d, gkDone: false, lob, react: rnd(0.08, 0.2) * (1.3 - gk.gk / 200) * (G.human === gk.team ? 1 : DIFF[G.diff].react) * (lob ? 2.2 : 1), blocked: new Set() };
   if (d > 12) b.shot.react *= 0.45;
-  b.passTo = null; b.nc = p; b.ncT = 0.4; b.last = p; p.throwT = 0.32; p.charge = 0; p.charging = false; p.shots++;
+  // Statistik: 7-Meter, Tempogegenstoß (kurz nach Ballgewinn im laufenden Spiel), Vorlage (letzter Pass eines Mitspielers)
+  b.shot.pen = !!(G.pen && G.pen.shooter === p && !G.shootout); b.shot.fb = !G.pen && G.possSrc === 'live' && G.possT < 4.5; b.shot.assist = p.assistFrom || null;
+  if (b.shot.pen) { p.s7 = (p.s7 || 0) + 1; const gk7 = G.goalie[1 - p.team]; if (gk7) gk7.f7 = (gk7.f7 || 0) + 1; }
+  b.passTo = null; b.nc = p; b.ncT = 0.4; b.last = p; p.throwT = 0.32; p.charge = 0; p.charging = false; if (!G.shootout) p.shots++;
   G.stats.shots[p.team]++; G.possT = 0; G.excite = Math.max(G.excite, 0.6);
   AU.shot(charge); AU.crowd(0.13, 0.3); if (p.team === G.human) buzz(20);
   for (const o of fieldOpps(p)) {
@@ -1450,7 +1473,7 @@ function foul(d, c) {
   if (dd < 8.6 && (c.x - gx) * -s > 0) seven = fieldOpps(c).filter(o => o !== d && segDist(o.x, o.y, c.x, c.y, gx, 10) < 1.0).length === 0;
   const suspend = Math.random() < (seven ? 0.35 : 0.11) || d.fouls >= 4;
   if (suspend) {
-    d.out = 120 * G.halfLen / 1800; d.fouls = 0; G.stats.susp[d.team]++;
+    d.out = 120 * G.halfLen / 1800; d.fouls = 0; G.stats.susp[d.team]++; d.zs = (d.zs || 0) + 1;
     if (G.ctrl === d) G.ctrl = null;
     G.cut = { kind: 'card', p: d, t: 0, dur: 2.2, title: '2 MINUTEN', col: '#ff4f3a' };
     say(`Zwei Minuten für ${d.name}. ${TEAMS[G.tid[c.team]].short} in Überzahl!`);
@@ -1803,7 +1826,7 @@ function save(g) {
   const b = G.ball, sh = b.shot; G.stats.saves[g.team]++; g.saves++;
   banner('GEHALTEN!', '#ffc83a', g.name, 1, true); AU.save(); AU.crowd(0.22, 0.4); G.shake = 0.15; G.slowT = 0.45; G.flash = 0.25;
   G.parts.push(...burst(b.x, b.y, b.z, '#ffffff', 14, 4));
-  if (G.pen) G.cut = { kind: 'card', p: g, t: 0, dur: 2, title: '7-METER PARIERT', col: '#ffc83a' };
+  if (G.pen) { G.cut = { kind: 'card', p: g, t: 0, dur: 2, title: '7-METER PARIERT', col: '#ffc83a' }; if (sh && sh.pen) g.sv7 = (g.sv7 || 0) + 1; }
   say(pick([`Was für eine Parade von ${g.name}!`, `${g.name} ist zur Stelle!`, `Glanztat! ${g.name} hält.`, `${sh.by.name} scheitert am Keeper.`]));
   G.pen = null;
   if (sh.speed < 21 && Math.random() < 0.5) { giveBall(g); return; }
@@ -1811,12 +1834,17 @@ function save(g) {
 }
 function scoreGoal(team, gx) {
   if (G.shootout) { AU.net(); G.netKick[gx === 0 ? 0 : 1] = 1; G.ball.shot = null; G.ball.vx *= 0.2; return soResolve(true); }
-  const b = G.ball, sc = b.last && b.last.team === team ? b.last : null;
+  const b = G.ball, sc = b.last && b.last.team === team ? b.last : null, shot = b.shot;
   G.score[team]++; G.stats.goals[team]++; G.phase = 'goal'; G.phaseT = 0; G.lastScorer = sc; G.lastConcede = 1 - team;
   G.replay = G.rec.slice(); G.rec = []; G.replayMeta = { scorer: sc, kempa: G.kempa && G.kempa.to === sc };
   b.shot = null; b.vx *= 0.25; b.vy *= 0.3; G.netKick[gx === 0 ? 0 : 1] = 1;
   const k = kit(team), wasPen = !!G.pen; G.pen = null;
   if (sc) sc.goals++;
+  // Statistik: 7-Meter, Tempogegenstoß, Vorlage, Gegentor des Torhüters
+  if (sc && wasPen && shot && shot.pen) sc.g7 = (sc.g7 || 0) + 1;
+  if (sc && shot && shot.fb) sc.fb = (sc.fb || 0) + 1;
+  if (sc && shot && shot.assist && shot.assist !== sc && shot.assist.team === team) shot.assist.as = (shot.assist.as || 0) + 1;
+  const gkC = G.goalie[1 - team]; if (gkC) gkC.ga = (gkC.ga || 0) + 1;
   const kempaGoal = G.kempa && G.kempa.to === sc; G.kempa = null;
   const title = !sc ? 'EIGENTOR' : kempaGoal ? 'KEMPA-TOR!' : wasPen ? 'VERWANDELT!' : 'TOR!';
   banner(title, k.c1, sc ? `#${sc.num} ${sc.name}` : TEAMS[G.tid[team]].n, 2.1, true);
@@ -2610,10 +2638,10 @@ function showTactics() {
 }
 
 const allMatchPlayers = () => G.players.concat(G.bench[0].map(b => ({ ...b, team: 0 })), G.bench[1].map(b => ({ ...b, team: 1 })));
-function potm() {
-  const all = allMatchPlayers().filter(p => p.mins > 0 || p.goals || p.saves);
+function potm(list = allMatchPlayers()) {
+  const all = list.filter(p => p.mins > 0 || p.goals || p.saves);
   const score = p => p.goals * 3 + p.saves * 1.6 + p.stealsN * 1.5 + (G.score[p.team] > G.score[1 - p.team] ? 2 : 0);
-  return all.sort((a, b) => score(b) - score(a))[0] || allMatchPlayers()[0];   // Abpfiff ohne Einsatzminuten (nur theoretisch): irgendein Spieler
+  return all.sort((a, b) => score(b) - score(a))[0] || list[0];   // Abpfiff ohne Einsatzminuten (nur theoretisch): irgendein Spieler
 }
 function endMatch() {
   const T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]], st = G.stats;
@@ -2826,7 +2854,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
-    aiTransfers, aiMoney: {}, offers: [], legends: LEGENDS_VER, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
+    aiTransfers, aiMoney: {}, offers: [], legends: LEGENDS_VER, statFrom: { year: 2026, round: 0 }, seven: null, capt: null, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
   TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 2 ? 12000 : 25000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
@@ -2890,9 +2918,58 @@ function simMatch(a, b, neutral) {   // neutral: kein Heimvorteil (Final Four)
   share(A, ga); share(B, gb);
   const sv = S => Math.max(1, Math.round((rnd(6, 13) + (S.gk - 80) / 4) * sc));
   stats[A.L[0].pid].sv = sv(A); stats[B.L[0].pid].sv = sv(B);
-  return { a, b, ga, gb, stats, La: A.L, Lb: B.L };
+  const res = { a, b, ga, gb, stats, La: A.L, Lb: B.L }; simExtras(res, a, b);
+  return res;
 }
 // Ergebnis auf Tabelle, Spieler (Tore, Form, Fitness) anwenden
+// ---------- Handball-Statistik pro Spieler: Saison (p.s) und Karriere (p.k), als kompakte Zahlenreihe ----------
+// sp Spiele · min Minuten · g Tore · sh Würfe · g7/s7 7-Meter Tore/Würfe · fb Tempogegenstoß-Tore · as Torvorlagen · bg Ballgewinne
+// zs Zeitstrafen · potm Spieler des Spiels · sv Paraden · ga Gegentore · sv7/f7 gehaltene/erlebte 7-Meter (Torhüter)
+const STK = ['sp', 'min', 'g', 'sh', 'g7', 's7', 'fb', 'as', 'bg', 'zs', 'potm', 'sv', 'ga', 'sv7', 'f7'];
+const statOf = (p, which = 's') => { const a = p[which] || [], o = {}; STK.forEach((k, i) => o[k] = a[i] || 0); return o; };
+function addStats(p, st) {
+  for (const w of ['s', 'k']) { const a = p[w] || (p[w] = STK.map(() => 0)); STK.forEach((k, i) => { a[i] = (a[i] || 0) + (k === 'sp' ? 1 : Math.round(st[k] || 0)); }); }
+}
+// 7-Meter-Schütze und Kapitän: eigener Verein frei wählbar, sonst (und bei CPU-Vereinen) der beste Werfer auf dem Feld
+const sevenPick = (tid, L) => { const f = L.filter(p => p.role !== 'TW'), own = tid === CAREER.team && CAREER.seven && f.find(p => p.pid === CAREER.seven); return own || f.slice().sort((a, b) => b.att - a.att)[0]; };
+const isCapt = p => CAREER.capt === p.pid;
+// Handball-Zahlen für simulierte Spiele (Würfe, 7-Meter, Tempogegenstöße, Vorlagen, Ballgewinne, Zeitstrafen, Torhüter).
+// Eigener Zufall aus Paarung und Spieltag: Ergebnis, Torschützen-Zufall und alles andere bleiben genau wie ohne Statistik.
+function simExtras(r, tA, tB) {
+  const R = seeded(hashStr(`${CAREER.year}|${CAREER.season.round}|${r.a}|${r.b}|${r.ga}|${r.gb}`)), st = r.stats;
+  const n = x => Math.max(0, Math.round(x + R() - 0.5));
+  const wpick = (list, w) => { let x = R() * w.reduce((s, v) => s + v, 0); for (let i = 0; i < list.length; i++) if ((x -= w[i]) <= 0) return list[i]; return list[list.length - 1]; };
+  const side = [];
+  for (const [L, goals, tid] of [[r.La, r.ga, tA], [r.Lb, r.gb, tB]]) {
+    L.forEach(p => Object.assign(st[p.pid] || (st[p.pid] = { g: 0, sv: 0 }), { min: 60, sh: 0, g7: 0, s7: 0, fb: 0, as: 0, bg: 0, zs: 0, ga: 0, sv7: 0, f7: 0 }));
+    const f = L.filter(p => p.role !== 'TW'); if (!f.length) { side.push({ s7: 0, g7: 0, miss: 0 }); continue; }
+    // 7-Meter: etwa jedes siebte Tor, der Schütze bekommt die verwandelten (aus den Toren der Mitspieler)
+    const sh7 = sevenPick(tid, L), s7 = Math.min(n(goals * 0.15), goals + 2), conv = clamp(0.6 + (sh7.att - 75) / 100, 0.5, 0.9);
+    let g7 = 0; for (let i = 0; i < s7; i++) if (R() < conv) g7++; g7 = Math.min(goals, g7);   // jeder 7-Meter einzeln: etwa drei von vier sitzen
+    while (st[sh7.pid].g < g7) { const d = f.filter(p => p !== sh7 && st[p.pid].g > 0); if (!d.length) break; st[wpick(d, d.map(p => st[p.pid].g)).pid].g--; st[sh7.pid].g++; }
+    Object.assign(st[sh7.pid], { g7: Math.min(g7, st[sh7.pid].g), s7 });
+    // Tempogegenstöße: vor allem Außen und schnelle Spieler
+    for (let i = n(goals * 0.15); i > 0; i--) { const c = f.filter(p => st[p.pid].g - st[p.pid].g7 - st[p.pid].fb > 0); if (!c.length) break; st[wpick(c, c.map(p => (p.role === 'LA' || p.role === 'RA' ? 3 : 1) * p.spd / 80)).pid].fb++; }
+    // Würfe aus Trefferquote nach Position und Wurfstärke (7-Meter zählen mit)
+    let miss = 0;
+    for (const p of f) { const x = st[p.pid], q = clamp(({ LA: 0.66, RA: 0.66, KM: 0.7, RL: 0.52, RR: 0.52, RM: 0.55 }[p.role] || 0.58) + (p.att - 80) / 250, 0.35, 0.85), op = x.g - x.g7;
+      const m = n(op * (1 - q) / q); x.sh = op + m + x.s7; miss += m + x.s7 - x.g7; }
+    // Torvorlagen: gut jedes zweite Tor aus dem Spiel heraus, vor allem vom Rückraum
+    for (const p of f) for (let i = st[p.pid].g - st[p.pid].g7; i > 0; i--) if (R() < 0.55) { const c = f.filter(q => q !== p); if (c.length) st[wpick(c, c.map(q => q.pas * ({ RM: 2, RL: 1.3, RR: 1.3 }[q.role] || 0.6))).pid].as++; }
+    for (let i = n(goals * 0.22); i > 0; i--) st[wpick(f, f.map(p => p.def * p.spd / 6400 * (p.role === 'KM' ? 1.3 : 1))).pid].bg++;
+    for (let i = n(goals * 0.1); i > 0; i--) st[wpick(f, f.map(p => p.def / 80 * ({ KM: 1.4, RM: 1.2 }[p.role] || 1))).pid].zs++;
+    side.push({ s7, g7, miss, f });
+  }
+  // Torhüter: Gegentore, erlebte und gehaltene 7-Meter; Paraden stammen aus der Simulation (nie mehr als Fehlwürfe des Gegners)
+  [[r.La, 1, r.gb], [r.Lb, 0, r.ga]].forEach(([L, o, conceded]) => { const gk = L.find(p => p.role === 'TW'); if (!gk) return; const x = st[gk.pid], os = side[o];
+    x.ga = conceded; x.f7 = os.s7; x.sv7 = Math.round((os.s7 - os.g7) * 0.75);
+    // mehr Paraden als Fehlwürfe geht nicht: dann haben die Werfer entsprechend öfter verworfen (vor allem der Rückraum)
+    for (let d = x.sv - os.miss; d > 0 && os.f; d--) st[wpick(os.f, os.f.map(p => ({ RL: 2, RR: 2, RM: 1.6 }[p.role] || 1))).pid].sh++; });
+  // Spieler des Spiels wie nach einem gespielten Spiel (Tore, Paraden, Ballgewinne, Vorlagen, Sieg)
+  let best = null, bs = -1;
+  for (const [L, w] of [[r.La, r.ga > r.gb], [r.Lb, r.gb > r.ga]]) for (const p of L) { const x = st[p.pid], v = x.g * 3 + x.sv * 1.6 + x.bg * 1.5 + x.as * 1.2 + (w ? 2 : 0); if (v > bs) { bs = v; best = x; } }
+  if (best) best.potm = 1;
+}
 // Form (letzte 5 Spiele aller Wettbewerbe) und letztes direktes Duell, für den Vergleich vor dem Spiel
 function noteResult(a, b, ga, gb, comp) {
   const F = CAREER.formAll ??= {};
@@ -2913,7 +2990,7 @@ function applyPlayers(res, league) {
         const st = stats[p.pid] || { g: 0, sv: 0 };
         const perf = p.role === 'TW' ? (st.sv - 9) * 0.09 : (st.g - my / 6) * 0.22;
         p.form = clamp(p.form * 0.65 + r + perf + rnd(-0.4, 0.4), -3, 3);     // starke Rückkehr zur Mitte: keine Siegesspirale
-        p.fit = clamp(p.fit - rnd(9, 15) * (1.3 - (p.sta || 75) / 200), 20, 100); p.apps++; p.tg += st.g;
+        p.fit = clamp(p.fit - rnd(9, 15) * (1.3 - (p.sta || 75) / 200), 20, 100); p.apps++; p.tg += st.g; addStats(p, st);
         if (league) { p.sg += st.g; p.ss += st.sv; }
         // Verletzungsrisiko: höher bei müden Spielern, sicher bei Verletzung im Spiel
         if (st.inj || Math.random() < 0.018 + (p.fit < 55 ? 0.03 : 0)) {
@@ -2966,7 +3043,10 @@ function ownFixture() { const S = CAREER.season; return S.done ? null : S.fixtur
 function careerSimOwn() { if (ownCupTie()) return cupSimOwn(); if (ownEuroTie()) return euroSimOwn(); const fx = ownFixture(); if (!fx) return; coachPrep(); playRound(simMatch(fx[0], fx[1])); }
 function careerAfterPlayed(g) {
   const stats = {}, all = allMatchPlayers(), played = [[], []];
-  all.forEach(p => { if (!p.pid) return; stats[p.pid] = { g: p.goals, sv: p.saves, min: p.mins, inj: p.injured }; if (p.mins > 0.5 || g.lineupPids[p.team].includes(p.pid)) played[p.team].push(p.pid); });
+  const best = potm(all);
+  all.forEach(p => { if (!p.pid) return;
+    stats[p.pid] = { g: p.goals, sv: p.saves, min: p.mins * 30 / g.halfLen, inj: p.injured, sh: p.shots, g7: p.g7 || 0, s7: p.s7 || 0, fb: p.fb || 0, as: p.as || 0, bg: p.stealsN || 0, zs: p.zs || 0, ga: p.ga || 0, sv7: p.sv7 || 0, f7: p.f7 || 0, potm: p === best ? 1 : 0 };
+    if (p.mins > 0.5 || g.lineupPids[p.team].includes(p.pid)) played[p.team].push(p.pid); });
   const La = played[0].map(id => findCareerPlayer(g.tid[0], id)).filter(Boolean), Lb = played[1].map(id => findCareerPlayer(g.tid[1], id)).filter(Boolean);
   if (g.euro) return playEuroRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb, so: g.soWinner !== undefined, win: g.soWinner !== undefined ? g.tid[g.soWinner] : undefined });
   if (g.cup) return playCupRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb, so: g.soWinner !== undefined, win: g.soWinner !== undefined ? g.tid[g.soWinner] : g.tid[g.score[0] > g.score[1] ? 0 : 1] });
@@ -3069,7 +3149,7 @@ function careerEndSeason() {
         sq.splice(i, 1); sq.push(finalize(genPlayer(p.role, t.r - 9 + r() * 4, r, 18, 20)));
         continue;
       }
-      Object.assign(p, { form: 0, fit: 100, sg: 0, ss: 0, apps: 0, inj: 0 });
+      Object.assign(p, { form: 0, fit: 100, sg: 0, ss: 0, apps: 0, inj: 0 }); delete p.s;
       // Verträge: ein Jahr weniger; ausgelaufene Spieler gehen (KI-Vereine verlängern meist)
       p.vt = (p.vt ?? 2) - 1;
       if (p.vt <= 0) {
@@ -3185,6 +3265,7 @@ function headline() {
 // alte Spielstände ergänzen
 if (CAREER) {
   CAREER.aiTransfers ??= false; CAREER.coach ??= { lineup: false, training: false };
+  CAREER.statFrom ??= { year: CAREER.year, round: CAREER.season.round };   // Spieler-Statistik zählt ab diesem Update
   TEAMS.forEach(t => (CAREER.squads[t.id] || []).forEach(p => { p.sta ??= 75; p.inj ??= 0; p.vt ??= 1 + ((Math.random() * 3) | 0); p.sal ??= salaryFor(p); })); CAREER.offers ??= []; CAREER.streak ??= 0; CAREER.lastMatch ??= null; CAREER.issue ??= 1;
   if (!CAREER.aiMoney) { CAREER.aiMoney = {}; TEAMS.forEach(t => CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 20000) + 50000); }
   TEAMS.forEach(t => { if (CAREER.squads[t.id]) return; CAREER.squads[t.id] = makeSquad(t.id); CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 25000) + 50000; });   // später hinzugekommene Vereine (international)
@@ -3728,7 +3809,7 @@ Object.assign(ACT, {
 });
 if (CAREER) erfolgeInit();
 // ================= Karriere-Bildschirme: Zeitung, Kader, Transfers =================
-let CTAB = 'home', CMSG = '', CDEL = false, CSEL = null, CSELL = null;
+let CTAB = 'home', CMSG = '', CDEL = false, CSEL = null, CSELL = null, CSTAT = false;
 const seasonName = y => `${y}/${String(y + 1).slice(2)}`;
 const euroS = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + ' M' : Math.round(v / 1000) + ' T';
 function careerEntry() { SEASON_PICK = false; if (CAREER) careerHub('home'); else careerNewScreen(); }
@@ -3814,21 +3895,55 @@ function paper() {
     <div class="np-news">${CAREER.news.slice(0, 8).map(n => `<p>${esc(n)}</p>`).join('')}</div>
   </div>`;
 }
-// ---------- Spieler-Detail ----------
+// ---------- Spieler-Detail: Spielerkarte (Spieler | Werte oder Statistik) und Knopfleiste ----------
+const starsOf = v => clamp(Math.round((v - 58) / 7.5), 1, 5);   // Gesamtwert in Sterne: 65 ≈ 1, 73 ≈ 2, 80 ≈ 3, 88 ≈ 4, 95 ≈ 5
+const stars = (n, col) => `<b class="pcst" aria-label="${n} von 5 Sternen">${[1, 2, 3, 4, 5].map(i => `<svg viewBox="0 0 7 7" width="12" height="12" aria-hidden="true"><path d="M3 0h1v2h3v1h-1v1h1v3h-2v-1h-3v1h-2v-3h1v-1h-1v-1h3z" fill="${i <= n ? col : '#3a2f4d'}"/></svg>`).join('')}</b>`;
+const ATTR_INFO = { Wurf: 'Torgefahr und Wurfhärte', Pass: 'Genauigkeit, Vorlagen', Abwehr: 'Zweikampf, Ballgewinne', Tempo: 'Laufen, Tempogegenstoß', Torwart: 'Reaktion und Stellungsspiel', Ausdauer: 'wie schnell er müde wird' };
+const pct = (a, b) => b ? Math.round(100 * a / b) + ' %' : '–';
+function statSince(which) {   // Statistik gibt es erst seit dem Update: Hinweis, ab wann gezählt wird
+  const f = CAREER.statFrom; if (!f) return '';
+  if (which === 's' && f.year === CAREER.year && f.round > 0) return `ab ${f.round + 1}. Spieltag`;
+  if (which === 'k' && (f.year > (CAREER.history[0] ? CAREER.history[0].year : CAREER.year) || f.round > 0)) return `seit ${f.year}/${String(f.year + 1).slice(2)}`;
+  return '';
+}
+function statTable(p) {
+  const S = statOf(p, 's'), K = statOf(p, 'k'), gk = p.role === 'TW';
+  const rows = gk ? [['Spiele', x => x.sp], ['Spielminuten', x => Math.round(x.min)], ['Paraden', x => x.sv], ['Gegentore', x => x.ga], ['Fangquote', x => pct(x.sv, x.sv + x.ga)], ['7-Meter gehalten', x => `${x.sv7} / ${x.f7}`], ['Spieler des Spiels', x => x.potm]]
+    : [['Spiele', x => x.sp], ['Spielminuten', x => Math.round(x.min)], ['Tore / Würfe', x => `${x.g} / ${x.sh}`], ['Wurfquote', x => pct(x.g, x.sh)], ['Tore pro Spiel', x => x.sp ? (x.g / x.sp).toFixed(1).replace('.', ',') : '–'],
+      ['7-Meter', x => `${x.g7} / ${x.s7}`], ['Tempogegenstoß-Tore', x => x.fb], ['Torvorlagen', x => x.as], ['Ballgewinne', x => x.bg], ['Zeitstrafen', x => x.zs], ['Spieler des Spiels', x => x.potm]];
+  const ss = statSince('s'), ks = statSince('k');
+  return `<table class="sqt stt pcstat"><thead><tr><th></th><th class="num">SAISON</th><th class="num">KARRIERE</th></tr></thead><tbody>${rows.map(([l, f]) => `<tr><td class="lbl">${l}</td><td class="num">${f(S)}</td><td class="num">${f(K)}</td></tr>`).join('')}</tbody></table>
+    <p class="muted" style="margin:4px 0 0">Liga, Pokal und Europapokal zusammen${ss || ks ? ` · gezählt ${[ss && 'Saison ' + ss, ks && 'Karriere ' + ks].filter(Boolean).join(', ')}` : ''}</p>`;
+}
 function playerDetail(p) {
   const attrs = (p.role === 'TW' ? [['Torwart', p.gk], ['Tempo', p.spd]] : [['Wurf', p.att], ['Pass', p.pas], ['Abwehr', p.def], ['Tempo', p.spd]]).concat([['Ausdauer', p.sta ?? 75]]);
-  const sellP = quickSalePrice(p), locked = isLocked(p);
-  return `<div class="pdet"><canvas id="pdC" width="40" height="40"></canvas>
-    <div class="pdet-info"><h2>#${p.num} ${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''}</h2>
-      <p class="muted">${ROLE_LONG[p.role]} · ${p.age} Jahre · Gesamt <b style="color:var(--gold)">${ovr(p)}</b> · Potenzial <b style="color:var(--cyan)">${potOf(p)}</b> (${POT_TXT[potTrend(p)]}${potTrend(p) === 'up' ? `, noch etwa +${potOf(p) - ovr(p)}` : ''})${p.trait ? ` · ${esc(p.trait)}` : ''}</p>
-      <div class="bars">${attrs.map(([l, v]) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}</span>`).join('')}</div>
-      ${p.inj ? `<p style="margin:0;color:var(--hot)">Verletzt: fällt noch ${p.inj === 1 ? 'einen Spieltag' : `${p.inj} Spieltage`} aus.</p>` : ''}
-      <p class="muted">Vertrag: ${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · Gehalt ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</p>
-      ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p) * REF_LEN)} pro Saison, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
-      <p class="muted">Form ${formTxt(p.form)} · Fitness ${fitBar(Math.round(p.fit), 60)} ${Math.round(p.fit)} %<br>Saison: ${p.apps} Spiele, ${p.role === 'TW' ? `${p.ss} Paraden` : `${p.sg} Tore`} · Karriere: ${p.tg} Tore · Marktwert ${euro(pValue(p))}</p>
-      <div class="row">${p.start ? '<span class="tag" style="color:var(--gold)">IN DER STARTSIEBEN</span>' : p.inj ? '<span class="tag" style="color:var(--hot)">VERLETZT</span>' : `<button class="main" data-act="cStart" data-v="${p.pid}">AUFSTELLEN</button>`}
-        ${locked ? `<span class="tag">NEUZUGANG · VERKAUF AB SPIELTAG ${p.lock.r + 1}</span>` : `<button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : `SOFORTVERKAUF (${euro(sellP)})`}</button>`}<button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
-    </div></div>`;
+  const sellP = quickSalePrice(p), locked = isLocked(p), sq = CAREER.squads[CAREER.team], seven = sevenPick(CAREER.team, sq.filter(x => x.start)), capt = isCapt(p);
+  const isSeven = CAREER.seven === p.pid, autoSeven = !CAREER.seven && seven && seven.pid === p.pid;
+  const fit = Math.round(p.fit), zust = fit >= 85 ? 'frisch' : fit >= 65 ? 'gut' : fit >= 45 ? 'müde' : 'erschöpft';
+  const badges = `${capt ? '<span class="cbadge">C</span>' : ''}${isSeven || autoSeven ? '<span class="cbadge">7M</span>' : ''}`;
+  const info = `<section class="pcbox"><h3>SPIELER</h3><dl>
+      <dt>Stärke</dt><dd>${stars(starsOf(ovr(p)), 'var(--gold)')} <b style="color:var(--gold)">${ovr(p)}</b></dd>
+      <dt>Potenzial</dt><dd>${stars(starsOf(potOf(p)), 'var(--cyan)')} <b style="color:var(--cyan)">${potOf(p)}</b> <span class="muted">${POT_TXT[potTrend(p)]}</span></dd>
+      <dt>Zustand</dt><dd>${fitBar(fit, 60)} ${fit} % · ${zust}</dd>
+      <dt>Form</dt><dd>${formTxt(p.form)}</dd>
+      <dt>Vertrag</dt><dd>${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</dd>
+      <dt>Marktwert</dt><dd>${euro(pValue(p))}</dd>
+      <dt>Aufgaben</dt><dd>${[p.start ? 'Startsieben' : 'Bank', capt && 'Kapitän', isSeven ? '7-Meter-Schütze' : autoSeven ? '7-Meter-Schütze (automatisch)' : ''].filter(Boolean).join(' · ')}</dd>
+    </dl>${p.inj ? `<p style="margin:6px 0 0;color:var(--hot)">Verletzt: fällt noch ${p.inj === 1 ? 'einen Spieltag' : `${p.inj} Spieltage`} aus.</p>` : ''}</section>`;
+  const right = CSTAT ? `<section class="pcbox"><h3>STATISTIK</h3>${statTable(p)}</section>`
+    : `<section class="pcbox"><h3>WERTE</h3><div class="bars">${attrs.map(([l, v]) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}</span>`).join('')}</div>
+      <p class="muted pcinfo">${attrs.map(([l]) => `<b>${l}:</b> ${ATTR_INFO[l]}`).join(' · ')}</p></section>`;
+  const startBtn = p.start ? `<button data-act="cBench" data-v="${p.pid}">AUF DIE BANK</button>` : p.inj ? '<span class="tag" style="color:var(--hot)">VERLETZT</span>' : `<button class="main" data-act="cStart" data-v="${p.pid}">AUFSTELLEN</button>`;
+  return `<div class="pcard"><div class="pchead"><canvas id="pdC" width="40" height="40"></canvas><div>
+      <h2>#${p.num} ${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''} ${badges}</h2>
+      <p class="muted">${ROLE_LONG[p.role].toUpperCase()} · ${p.age} Jahre${p.trait ? ` · ${esc(p.trait)}` : ''}</p></div></div>
+    <div class="pcgrid">${info}${right}</div>
+    ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p) * REF_LEN)} pro Saison, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
+    <div class="row">${startBtn}<button data-act="cStat">${CSTAT ? 'WERTE' : 'STATISTIK'}</button>
+      ${p.role === 'TW' ? '' : `<button data-act="cSeven" data-v="${p.pid}">${isSeven ? '7-METER: AUTOMATISCH' : '7-METER-SCHÜTZE'}</button>`}
+      <button data-act="cCapt" data-v="${p.pid}">${capt ? 'KEIN KAPITÄN' : 'KAPITÄN'}</button>
+      ${locked ? `<span class="tag">NEUZUGANG · VERKAUF AB SPIELTAG ${p.lock.r + 1}</span>` : `<button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : `SOFORTVERKAUF (${euro(sellP)})`}</button>`}<button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
+  </div>`;
 }
 // ---------- Statistik: Kennzahlen, Platz-Verlauf, Torjäger, eigener Kader ----------
 function statsView() {
@@ -3944,7 +4059,7 @@ function careerHub(tab) {
       const sq = CAREER.squads[CAREER.team].slice().sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role) || b.start - a.start || ovr(b) - ovr(a));
       body = `<p class="muted">Gelb = Startsieben. Tippe auf einen Namen für Details, Aufstellung und Verkauf. POT ist das Potenzial: ↗ wächst noch, ↘ baut ab. FIT ist die aktuelle Frische: Wer müde ist, spielt schwächer und läuft langsamer. AUS (Ausdauer) bestimmt, wie schnell ein Spieler ermüdet und sich erholt.${CAREER.coach.lineup ? ' <b style="color:var(--cyan)">Der Co-Trainer stellt vor jedem Spiel auf.</b>' : ''}</p>
       <table class="sqt cards"><thead><tr><th>POS</th><th>NAME</th><th>GES</th><th title="Potenzial: Höchstwert, den der Spieler erreichen kann">POT</th><th>WUR</th><th>PAS</th><th>ABW</th><th>TEM</th><th>AUS</th><th>FORM</th><th>FIT</th><th>TORE</th><th>VTR</th><th>WERT</th></tr></thead><tbody>${
-        sq.map(p => `<tr class="${p.start ? 'me' : ''}"><td data-l="POS">${p.role}</td><td class="c-name"><button class="link" data-act="cPick" data-v="${p.pid}">${esc(p.name)}</button><span class="age">${p.age}</span>${p.star ? ' ★' : ''}${p.age <= 21 && p.pot - ovr(p) > 8 ? ' <span class="tal">TALENT</span>' : ''}${p.inj ? ` <span class="inj">VERL. ${p.inj}</span>` : ''}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${potCell(p)}</td>
+        sq.map(p => `<tr class="${p.start ? 'me' : ''}"><td data-l="POS">${p.role}</td><td class="c-name"><button class="link" data-act="cPick" data-v="${p.pid}">${esc(p.name)}</button><span class="age">${p.age}</span>${p.star ? ' ★' : ''}${isCapt(p) ? ' <span class="cbadge">C</span>' : ''}${CAREER.seven === p.pid ? ' <span class="cbadge">7M</span>' : ''}${p.age <= 21 && p.pot - ovr(p) > 8 ? ' <span class="tal">TALENT</span>' : ''}${p.inj ? ` <span class="inj">VERL. ${p.inj}</span>` : ''}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${potCell(p)}</td>
           ${p.role === 'TW' ? `<td colspan="3" class="gkc">TOR ${p.gk}</td>` : `<td data-l="WUR">${p.att}</td><td data-l="PAS">${p.pas}</td><td data-l="ABW">${p.def}</td>`}<td data-l="TEM">${p.spd}</td><td data-l="AUS">${p.sta ?? 75}</td>
           <td data-l="FORM">${formTxt(p.form)}</td><td data-l="FIT">${fitBar(Math.round(p.fit))}</td><td data-l="${p.role === 'TW' ? 'PAR' : 'TORE'}">${p.role === 'TW' ? p.ss : p.sg}</td><td data-l="VTR" style="${p.vt <= 1 ? 'color:var(--hot)' : ''}">${p.vt}J</td><td data-l="WERT">${euroS(pValue(p))}</td></tr>`).join('')}</tbody></table>`;
     }
@@ -4023,6 +4138,16 @@ Object.assign(ACT, {
   },
   cExt(v) { const [pid, y] = v.split(':').map(Number); CMSG = extendContract(pid, y); careerHub(); },
   cSim() { careerSimOwn(); track('karriere-simuliert'); careerHub('home'); },
+  cStat() { CSTAT = !CSTAT; careerHub(); },
+  cBench(v) {   // auf die Bank: der beste gesunde Ersatz auf derselben Position rückt in die Startsieben
+    const sq = CAREER.squads[CAREER.team], p = sq.find(x => x.pid === +v); if (!p) return careerHub();
+    const alt = sq.filter(x => x.role === p.role && x !== p && !x.inj).sort((a, b) => effOvr(b) - effOvr(a))[0];
+    if (!alt) { CMSG = `Kein gesunder Ersatz für ${p.name} auf dieser Position.`; return careerHub(); }
+    p.start = false; alt.start = true; if (CAREER.coach.lineup) { CAREER.coach.lineup = false; CMSG = `${alt.name} spielt für ${p.name}. Du stellst jetzt selbst auf.`; } else CMSG = `${alt.name} spielt für ${p.name}.`;
+    saveCareer(); careerHub();
+  },
+  cSeven(v) { const p = CAREER.squads[CAREER.team].find(x => x.pid === +v); if (!p) return careerHub(); CAREER.seven = CAREER.seven === p.pid ? null : p.pid; CMSG = CAREER.seven ? `${p.name} wirft ab jetzt die 7-Meter.` : 'Die 7-Meter wirft wieder der beste Werfer auf dem Feld.'; if (CAREER.seven) news(CMSG); saveCareer(); careerHub(); },
+  cCapt(v) { const p = CAREER.squads[CAREER.team].find(x => x.pid === +v); if (!p) return careerHub(); CAREER.capt = CAREER.capt === p.pid ? null : p.pid; CMSG = CAREER.capt ? `${p.name} ist neuer Kapitän.` : `${p.name} gibt die Kapitänsbinde ab.`; if (CAREER.capt) news(`${p.name} ist neuer Kapitän und führt die Mannschaft aufs Feld.`); saveCareer(); careerHub(); },
   cStart(v) {
     const sq = CAREER.squads[CAREER.team], p = sq.find(x => x.pid === +v);
     if (p && p.inj) { CMSG = `${p.name} ist verletzt und kann nicht spielen.`; return careerHub(); }
