@@ -239,7 +239,9 @@ function quickBench(tid) {
       style: (r() * 6) | 0, beard: r() < 0.35, band: r() < 0.2, tall: role === 'KM' || role === 'RL' || role === 'RR', star: false, trait: '' };
   });
 }
-function canSub(p) { return !p.out && G.ball.owner !== p && p.z <= 0 && !(G.ball.passTo === p); }
+function canSub(p) {   // nicht wechseln, solange Wurf oder Pass des Spielers noch unterwegs ist: sonst bekäme der Eingewechselte Tor oder Vorlage
+  const b = G.ball; return !p.out && b.owner !== p && p.z <= 0 && b.passTo !== p && !(b.state !== 'held' && b.last === p) && !(b.shot && (b.shot.by === p || b.shot.assist === p)) && !(b.owner && b.owner.assistFrom === p);
+}
 function doSub(p, bi, quiet) {
   const t = p.team, b = G.bench[t][bi]; if (!b || !canSub(p)) return false;
   const old = {}; for (const k of DATA_KEYS) old[k] = p[k];

@@ -283,7 +283,8 @@ body.padin #pad{display:none!important}
   .ctabs::-webkit-scrollbar{display:none}
   .ctabs button{flex:none}
   .csticky .row.spread > div:last-child .tag{display:none}
-  .csticky{position:sticky;top:46px;z-index:2;background:var(--panel);display:flex;flex-direction:column;gap:8px;padding-bottom:6px;margin:-4px 0 0}
+  .csticky{position:sticky;top:0;z-index:2;background:var(--panel);display:flex;flex-direction:column;gap:8px;padding-bottom:6px;margin:-4px 0 0}
+  body.touch .csticky{top:46px}   /* unter der ZURÜCK-Leiste, die es nur bei Touch gibt; sonst lag die Kopfzeile im schmalen Fenster über dem Inhalt */
 }
 body.touch .tag{font-size:10px}
 body.touch h2{font-size:13px}

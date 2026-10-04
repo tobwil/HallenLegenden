@@ -26,8 +26,10 @@ Actual browser gameplay and menus. Click any image to view it at full size.
 | [![Vor dem Spiel: Kiel gegen Berlin mit Tabellenplatz, Form der letzten fünf Spiele, Sternen für Angriff, Abwehr und Tor, Topwerfer und Hinspiel](docs/screenshots/prematch.jpg)](docs/screenshots/prematch.jpg) | [![Tab Erfolge: Trophäenschrank mit Meisterschaft, Pokal und Europapokal, darunter die Rekorde der Karriere](docs/screenshots/career-trophies.jpg)](docs/screenshots/career-trophies.jpg) |
 | **Kader mit Potenzial · Squad with potential** | **Karriere als Bild teilen · Share your career** |
 | [![Kader mit Gesamtwert, Potenzial und Trend, Einzelwerten, Form, Fitness, Toren, Vertrag und Marktwert](docs/screenshots/career-squad.jpg)](docs/screenshots/career-squad.jpg) | [![Teilen-Bild der Karriere: drei Titel in fünf Saisons, beste Saison, höchster Sieg, Torjäger und Vereinslegende](docs/screenshots/share-card.jpg)](docs/screenshots/share-card.jpg) |
-| **Handy quer · Phone landscape** | **Spielerkarte · Player card** |
-| [![Spiel auf dem Handy im Querformat: Spielfeld über die volle Breite, Stick links, durchscheinende Knöpfe für Pass, Wurf und Finte](docs/screenshots/mobile.jpg)](docs/screenshots/mobile.jpg) | [![Spielerkarte mit Sternen für Stärke und Potenzial, Zustand, Vertrag, Aufgaben (Kapitän, 7-Meter-Schütze) und Handball-Statistik für Saison und Karriere](docs/screenshots/player-card.jpg)](docs/screenshots/player-card.jpg) |
+| **Spielerkarte · Player card** | **Scouting-Karte · Scouting card** |
+| [![Spielerkarte mit Sternen für Stärke und Potenzial, Zustand, Vertrag, Aufgaben (Kapitän, 7-Meter-Schütze) und Handball-Statistik für Saison und Karriere](docs/screenshots/player-card.jpg)](docs/screenshots/player-card.jpg) | [![Scouting-Karte aus der Transferliste: Sterne, Vertrag beim jetzigen Verein, Ablöse, Gehalt, Vergleich mit dem eigenen Stammspieler und Werte mit Abstand](docs/screenshots/transfer-scout.jpg)](docs/screenshots/transfer-scout.jpg) |
+| **Handy quer · Phone landscape** | |
+| [![Spiel auf dem Handy im Querformat: Spielfeld über die volle Breite, Stick links, durchscheinende Knöpfe für Pass, Wurf und Finte](docs/screenshots/mobile.jpg)](docs/screenshots/mobile.jpg) | |
 
 ---
 
@@ -67,7 +69,7 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
 - **Karriere** über beliebig viele Saisons:
   - 6, 17 oder 34 Spieltage, Auf- und Abstieg zwischen beiden Ligen
   - 14er-Kader mit Werten für Wurf, Pass, Abwehr, Tempo, Torwart und Ausdauer, dazu Alter, Potenzial, Form und Fitness. Kader und Transferliste zeigen das Potenzial jedes Spielers mit Trend (↗ wächst noch, ↘ baut ab)
-  - Spielerkarte mit Sternen für Stärke und Potenzial, Zustand, Vertrag und Aufgaben. Handball-Statistik je Spieler für Saison und Karriere: Tore und Würfe mit Wurfquote, 7-Meter, Tempogegenstoß-Tore, Torvorlagen, Ballgewinne, Zeitstrafen, Spieler des Spiels, bei Torhütern Paraden, Fangquote und gehaltene 7-Meter. 7-Meter-Schütze und Kapitän frei wählbar
+  - Spielerkarte mit Sternen für Stärke und Potenzial, Zustand, Vertrag und Aufgaben. Handball-Statistik je Spieler für Saison und Karriere: Tore und Würfe mit Wurfquote, 7-Meter, Tempogegenstoß-Tore, Torvorlagen, Ballgewinne, Zeitstrafen, Spieler des Spiels, bei Torhütern Paraden, Fangquote und gehaltene 7-Meter. 7-Meter-Schütze und Kapitän frei wählbar. Scouting-Karte für jeden Spieler der Transferliste: Vertrag beim jetzigen Verein, Ablöse, Gehalt bei dir, Statistik und Vergleich mit deinem Stammspieler auf der Position, Kauf direkt von der Karte
   - Training mit sechs Schwerpunkten, Spielerentwicklung und Karriereende, Jugendspieler rücken nach
   - Transfermarkt, Gehälter, Verträge mit Laufzeit und Verlängerung, Angebote anderer Vereine. Neuzugänge sind ein Drittel der Saison gesperrt, ein Sofortverkauf bringt 55 % des Marktwerts
   - Finanzen: Zuschauereinnahmen bei Heimspielen (Hallengröße, Tabellenplatz, Form, Gegner, Pokal), Sponsoren, TV-Geld nach Platz. Alles ist auf eine Saison geeicht, die Saisonlänge verändert die Bilanz nicht. Die CPU-Vereine wirtschaften nach denselben Regeln
@@ -167,7 +169,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Si
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 39 Tests, etwa eine Minute
+npm test                             # alle 41 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 9 tiefe Tests, etwa drei Minuten (vor größeren Versionen)
@@ -250,7 +252,7 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
 - **Career** over as many seasons as you like:
   - 6, 17 or 34 matchdays, promotion and relegation between both leagues
   - 14-player squad with ratings for shooting, passing, defence, pace, goalkeeping and stamina, plus age, potential, form and fitness. Squad and transfer list show every player's potential with a trend (↗ still improving, ↘ declining)
-  - Player card with stars for rating and potential, condition, contract and roles. Handball stats per player for the season and the career: goals and shots with shooting percentage, penalties, fast-break goals, assists, steals, two-minute suspensions, player of the match, and for goalkeepers saves, save percentage and saved penalties. Penalty taker and captain can be chosen freely
+  - Player card with stars for rating and potential, condition, contract and roles. Handball stats per player for the season and the career: goals and shots with shooting percentage, penalties, fast-break goals, assists, steals, two-minute suspensions, player of the match, and for goalkeepers saves, save percentage and saved penalties. Penalty taker and captain can be chosen freely. Scouting card for every player on the transfer list: contract at his current club, transfer fee, his wage with you, stats and a comparison with your starter in that position, buy straight from the card
   - Training with six focus areas, player development and retirement, youth players move up
   - Transfer market, salaries, contracts with length and extensions, offers from other clubs. New signings are locked for a third of the season, a quick sale brings 55 % of the market value
   - Finances: gate receipts for home games (arena size, table position, form, opponent, cup), sponsors, TV money by position. Everything is calibrated per season, so the season length does not change the balance. CPU clubs follow the same rules
@@ -350,7 +352,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). They 
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 39 tests, about one minute
+npm test                             # all 41 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 9 deep tests, about three minutes (before bigger releases)

@@ -1,5 +1,5 @@
 /* Nimmt Standbilder für README und Landingpage auf (PNG, 1280 × 720, Handy 1278 × 590): Teamauswahl, Karriere
-   (Zeitung, Statistik, Pokal, Europapokal, Kader, Spielerkarte, Erfolge), Vor dem Spiel, Teilen-Bild und Handy im Querformat.
+   (Zeitung, Statistik, Pokal, Europapokal, Kader, Spielerkarte, Scouting-Karte, Erfolge), Vor dem Spiel, Teilen-Bild und Handy im Querformat.
    Aufruf: node bilder.js <Ausgabeordner> [Basis-URL]
    Fester Zufall: die Menübilder sind bei jedem Aufruf gleich (das Handybild läuft in Echtzeit und kann leicht abweichen). promo.sh wandelt sie in JPG für docs/screenshots/ um.
    Benötigt Playwright (npm i playwright) und eine laufende lokale Seite, siehe promo.sh. */
@@ -51,6 +51,9 @@ const SEED = s => { window.__seed = s => { let x = s; Math.random = () => (x = (
     await p.evaluate(() => { __seed(20); for (let i = 0; i < 8; i++) ACT.cSim(); ACT.cTab('squad'); document.activeElement.blur(); }); await shot(p, 'career-squad');
     await p.evaluate(() => { const sq = CAREER.squads[CAREER.team], w = sq.find(q => q.name === 'Weidenhammer') || sq.find(q => q.start && q.role !== 'TW'); ACT.cCapt(w.pid); ACT.cPick(w.pid); CSTAT = false; ACT.cStat(); document.activeElement.blur(); }); await shot(p, 'player-card');
     await p.evaluate(() => { CSTAT = false; ACT.cPick(); });
+    // Scouting-Karte: Feldspieler eines Ligavereins mit den meisten Spielen, Werte mit Abstand zum eigenen Stammspieler
+    await p.evaluate(() => { ACT.cTab('market'); const m = CAREER.market.filter(x => x.from >= 0 && marketPlayer(x).role !== 'TW').sort((a, b) => statOf(marketPlayer(b), 'k').sp - statOf(marketPlayer(a), 'k').sp)[0] || CAREER.market[0]; ACT.cScout(m.pid); document.activeElement.blur(); }); await shot(p, 'transfer-scout');
+    await p.evaluate(() => ACT.cTab('squad'));
     await p.evaluate(() => { __seed(21); return shareCard('career'); }); await p.waitForSelector('#menu img.sharecard'); await p.waitForTimeout(300);
     await shot(p, 'share-card'); await ctx.close(); }
 

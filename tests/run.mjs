@@ -369,6 +369,25 @@ test('Abwehr: Wechseltaste geht zum Ballnächsten, dann der Nähe nach weiter', 
 });
 
 // ---------------------------------------------------------------- Spielablauf
+test('Wechsel: Werfer und Passgeber bleiben auf dem Feld, bis Wurf oder Pass angekommen ist (Tor und Vorlage für den Richtigen)', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 41);
+  const r = await page.evaluate(() => {
+    hideMenu(); newMatch(0, 1, { human: -1, halfLen: 120 }); G.demo = false; G.paused = true; G.introT = 99; G.phase = 'play';
+    const T = G.players.filter(p => p.team === 0), A = T.find(p => p.role === 'RL'), B = T.find(p => p.role === 'RM'), O = G.players.find(p => p.team === 1 && p.role === 'RM');
+    const bi = G.bench[0].findIndex(b => b.role === 'RL'), o = {};
+    giveBall(A, true); shoot(A, 0, 0.9); o.shot = doSub(A, bi, true);                       // Wurf unterwegs
+    giveBall(A, true); pass(A, B); o.pass = doSub(A, bi, true);                              // Pass unterwegs
+    giveBall(B, true); B.assistFrom = A; o.held = doSub(A, bi, true);                        // Mitspieler hat den Ball, Vorlage möglich
+    giveBall(O, true); o.after = doSub(A, bi, true);                                         // Gegner hat den Ball: jetzt geht der Wechsel
+    return o;
+  });
+  // ältere Spielstände mit so einem Tor ohne Wurf: beim Laden repariert
+  const qpid = await page.evaluate(() => { careerCreate(TEAM_BASE.findIndex(b => b[0] === 'KIE'), 1, 1, 1); const q = CAREER.squads[CAREER.team][3]; q.s = STK.map(() => 0); q.s[2] = 3; q.s[3] = 1; q.s[4] = 2; q.k = q.s.slice(); saveCareer(); return q.pid; });
+  await page.reload(); await page.waitForTimeout(500);
+  const fix = await page.evaluate(pid => { const q = CAREER.squads[CAREER.team].find(x => x.pid === pid); return [statOf(q, 's'), statOf(q, 'k')].map(x => `${x.g}/${x.sh} ${x.g7}/${x.s7}`).join(' '); }, qpid);
+  ok(!r.shot && !r.pass && !r.held && r.after, 'Wechsel: ' + JSON.stringify(r)); ok(fix === '3/3 2/2 3/3 2/2', 'Reparatur beim Laden: ' + fix); ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Komplettes CPU-Spiel bis Abpfiff, Co-Trainer wechselt', async () => {
   const { page, ctx, errors } = await open({ viewport: { width: 800, height: 450 } }, 99);
   const r = await page.evaluate(() => {
@@ -718,6 +737,50 @@ test('Spielerkarte: Handball-Statistik aus Simulation und Spiel stimmig, 7-Meter
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Scouting-Karte: Transferliste mit Ablöse, Gehalt, Vergleich und Statistik, Kauf von der Karte, Angebot auf der Spielerkarte', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 23);
+  const r = await page.evaluate(() => {
+    G = null; careerCreate(TEAM_BASE.findIndex(b => b[0] === 'KIE'), 1, 1, 1); for (let i = 0; i < 6; i++) ACT.cSim();
+    CAREER.money = 9e6; ACT.cTab('market');
+    const rows = CAREER.market.length, links = menu.querySelectorAll('[data-act="cScout"]').length;
+    const m = CAREER.market.filter(x => x.from >= 0).sort((a, b) => statOf(marketPlayer(b), 'k').sp - statOf(marketPlayer(a), 'k').sp)[0], p = marketPlayer(m);
+    menu.querySelector(`[data-act="cScout"][data-v="${p.pid}"]`).click();
+    const sq = CAREER.squads[CAREER.team], best = sq.filter(x => x.role === p.role).sort((a, b) => ovr(b) - ovr(a))[0], t = menu.innerText;
+    const card = { stars: menu.querySelectorAll('.pcard .pcst').length, club: t.includes(TEAMS[m.from].n), price: t.includes(euro(m.price)), sal: t.includes(euro(newSalary(p) * REF_LEN)), cmp: t.includes(best.name), buy: !!menu.querySelector('.pcard [data-act="cBuy"]'), foc: document.activeElement.dataset.act };
+    ACT.cStat(); const sp = statOf(p, 'k').sp, row = [...menu.querySelectorAll('table.pcstat tr')].find(tr => tr.cells[0] && tr.cells[0].textContent === 'Spiele'); card.stat = sp > 0 && row && row.cells[2].textContent === String(sp); ACT.cStat();
+    // vereinslos: ohne Nummer, Hinweis statt Zahlen
+    const f = CAREER.market.find(x => x.from < 0), fp = marketPlayer(f); ACT.cScout(fp.pid); CSTAT = true; careerHub();
+    const free = { club: menu.querySelector('.pchead p').textContent.includes('vereinslos'), num: menu.querySelector('.pchead h2').textContent.includes('#'), note: menu.innerText.includes('Vereinslos: in dieser Karriere noch kein Spiel') };
+    CSTAT = false; ACT.cScout(p.pid);
+    return { rows, links, card, free, pid: p.pid, price: m.price, money: CAREER.money, n: sq.length };
+  });
+  // Tastatur: Enter auf STATISTIK hält den Fokus, Escape führt zur Transferliste
+  await page.evaluate(() => menu.querySelector('.pcard [data-act="cStat"]').focus()); await page.keyboard.press('Enter');
+  const foc = await page.evaluate(() => document.activeElement.dataset.act); await page.keyboard.press('Escape');
+  const back = await page.evaluate(() => ({ tab: CTAB, card: !!menu.querySelector('.pcard'), list: !!menu.querySelector('[data-act="cScout"]') }));
+  // Kauf von der Karte, danach zu wenig Geld: Grund statt Knopf; veraltete Karte fällt auf die Liste zurück
+  await page.evaluate(pid => { CSTAT = false; ACT.cScout(pid); }, r.pid); await page.click('.pcard [data-act="cBuy"]');
+  const buy = await page.evaluate(([pid, price, money, n]) => { const sq = CAREER.squads[CAREER.team]; const o = { inSquad: sq.some(x => x.pid === pid), paid: money - CAREER.money === price, n: sq.length === n + 1, msg: menu.innerText.includes('gehört jetzt zu deinem Kader'), card: !!menu.querySelector('.pcard') };
+    CAREER.money = 0; const m = CAREER.market[0]; ACT.cScout(m.pid); o.why = menu.innerText.includes('DAFÜR REICHT DAS BUDGET NICHT') && !menu.querySelector('.pcard [data-act="cBuy"]');
+    CAREER.market = CAREER.market.filter(x => x !== m); careerHub(); o.stale = !menu.querySelector('.pcard') && !!menu.querySelector('[data-act="cScout"]'); return o; }, [r.pid, r.price, r.money, r.n]);
+  // Angebot für einen eigenen Spieler: Name führt zur Spielerkarte, dort ABLEHNEN, die Karte bleibt offen
+  const off = await page.evaluate(() => { const sq = CAREER.squads[CAREER.team], q = sq.find(x => x.start && x.role !== 'TW'); CAREER.offers = [{ pid: q.pid, from: TEAMS.find(t => t.id !== CAREER.team).id, price: 1235000, exp: CAREER.season.round + 2 }];
+    ACT.cTab('market'); menu.querySelector(`[data-act="cPick"][data-v="${q.pid}"]`).click(); const o = { card: CSEL === q.pid && menu.innerText.includes('ANGEBOT:') && !!menu.querySelector('.pcard [data-act="cOffer"]') };
+    menu.querySelector(`.pcard [data-act="cOffer"][data-v="${q.pid}:0"]`).click(); o.after = CTAB === 'squad' && CSEL === q.pid && !CAREER.offers.length && !!menu.querySelector('.pcard'); return o; });
+  // schmales Fenster ohne Touch: die feste Kopfzeile liegt nicht über der Karte, nichts ragt heraus
+  await page.setViewportSize({ width: 390, height: 844 });
+  const narrow = await page.evaluate(() => { CAREER.money = 9e6; const m = CAREER.market[0]; ACT.cScout(m.pid); const st = menu.querySelector('.csticky').getBoundingClientRect(), h = menu.querySelector('.pchead').getBoundingClientRect(), W = document.documentElement.clientWidth;
+    return { gap: Math.round(h.top - st.bottom), out: [...menu.querySelectorAll('.pcard *')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > W + 1; }).length }; });
+  ok(r.rows > 0 && r.links === r.rows, `Transferliste: ${r.links} von ${r.rows} Namen klickbar`);
+  ok(r.card.stars === 2 && r.card.club && r.card.price && r.card.sal && r.card.cmp && r.card.buy && r.card.foc === 'cBuy' && r.card.stat, 'Scouting-Karte: ' + JSON.stringify(r.card));
+  ok(r.free.club && !r.free.num && r.free.note, 'Vereinsloser Spieler: ' + JSON.stringify(r.free));
+  ok(foc === 'cStat' && back.tab === 'market' && !back.card && back.list, `Tastatur: Fokus ${foc}, Escape ${JSON.stringify(back)}`);
+  ok(buy.inSquad && buy.paid && buy.n && buy.msg && !buy.card && buy.why && buy.stale, 'Kauf von der Karte: ' + JSON.stringify(buy));
+  ok(off.card && off.after, 'Angebot auf der Spielerkarte: ' + JSON.stringify(off));
+  ok(narrow.gap >= 0 && !narrow.out, 'Schmales Fenster: ' + JSON.stringify(narrow));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Karriere: Potenzial in Kader, Transferliste und Spielerprofil', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 21);
   const r = await page.evaluate(() => {
@@ -805,6 +868,8 @@ test('Vor dem Spiel: Sterne, Form, Bilanz, Topwerfer, Hinspiel und SIMULIEREN', 
     // Freundschaftsspiel: Sterne und Topwerfer, keine Form, kein SIMULIEREN
     ACT.kick(); const quick = { sides: read(), sim: !!menu.querySelector('[data-act="pmSim"]'), vs: menu.querySelector('.vs').innerText.trim() };
     // Karriere: bis in die Rückrunde simulieren, dann das nächste Ligaspiel ansehen
+    // fester Zufall ab hier: das Demo-Spiel im Hintergrund verbraucht je nach Timing Zufallszahlen, sonst ist das letzte Duell mal ein Pokalspiel
+    G.paused = true; { let x = 4711; Math.random = () => (x = (x * 16807) % 2147483647) / 2147483647; }
     careerCreate(3, 2, 1, 1); let g = 0; while ((CAREER.season.round < 18 || cupDue() || euroDue()) && g++ < 80) ACT.cSim();
     careerHub('home'); ACT.cPlay(); const S = CAREER.season, me = CAREER.team, opp = PM.a === me ? PM.b : PM.a, key = Math.min(me, opp) + '-' + Math.max(me, opp), m = S.meet[key];
     const sides = read(), prev = (menu.querySelector('.pvprev') || {}).innerText || '', mine = sides[PM.a === me ? 0 : 1], T = S.table[me];
