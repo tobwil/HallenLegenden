@@ -123,11 +123,11 @@ function menuAdjust(el, d, wrap) {
   }
   return false;
 }
-// Pfeil links/rechts auf einer Trikotfarbe oder Auswahlliste: Wert ändern wie mit dem Gamepad (Regler kann der Browser selbst,
-// hoch/runter auf der Liste bleibt beim Browser)
+// Pfeil links/rechts auf einer Auswahlliste: Eintrag wechseln wie mit dem Gamepad (Regler kann der Browser selbst, hoch/runter auf
+// der Liste bleibt beim Browser). Auf Trikotfarben bewegen die Pfeile den Fokus, Enter öffnet den Farbwähler.
 addEventListener('keydown', e => {
   const el = document.activeElement;
-  if (menu.hidden || !el || !['color', 'select-one'].includes(el.type) || !['ArrowLeft', 'ArrowRight'].includes(e.code)) return;
+  if (menu.hidden || !el || el.type !== 'select-one' || !['ArrowLeft', 'ArrowRight'].includes(e.code)) return;
   e.preventDefault(); e.stopImmediatePropagation(); menuAdjust(el, e.code === 'ArrowLeft' ? -1 : 1);
 }, true);
 function menuPad() {
@@ -141,11 +141,15 @@ function menuPad() {
     if (menu.hidden) { for (const k in st) PADM[k] = st[k] ? Infinity : false; return; }
     for (const k in st) {
       if (!st[k]) { PADM[k] = false; continue; }
-      const el = document.activeElement, adj = (k === 'left' || k === 'right') && el && menu.contains(el) && (el.tagName === 'SELECT' || el.type === 'range' || el.type === 'color');
+      const el = document.activeElement, inMenu = el && menu.contains(el);
+      if (COLOREDIT && COLOREDIT !== el) colorEdit(null);   // Fokus woanders: Bearbeiten beendet
+      // Regler und Liste ändern sich direkt mit links/rechts, eine Trikotfarbe erst nach A (sonst käme man in der Farbreihe nicht weiter)
+      const adj = (k === 'left' || k === 'right') && inMenu && (el.tagName === 'SELECT' || el.type === 'range' || (el.type === 'color' && COLOREDIT === el));
       // neu gedrückt; links/rechts beim Wertändern wiederholen sich beim Halten (nach 0,35 s alle 0,08 s)
       if (PADM[k]) { if (!adj || now < PADM[k]) continue; PADM[k] = now + 80; } else PADM[k] = now + 350;
-      if (k === 'a') { if (el && menu.contains(el) && (el.tagName === 'SELECT' || el.type === 'color')) menuAdjust(el, 1, true); else if (el && menu.contains(el) && el.type === 'range') menuMove('down'); else if (el && menu.contains(el)) el.click(); else menuMove('down'); }
-      else if (k === 'b') menuBack();
+      if (k === 'a') { if (inMenu && el.type === 'color') colorEdit(COLOREDIT === el ? null : el); else if (inMenu && el.tagName === 'SELECT') menuAdjust(el, 1, true); else if (inMenu && el.type === 'range') menuMove('down'); else if (inMenu) el.click(); else menuMove('down'); }
+      else if (k === 'b') { if (COLOREDIT) colorEdit(null); else menuBack(); }
+      else if (COLOREDIT && (k === 'up' || k === 'down')) { colorEdit(null); menuMove(k); }
       else if (adj) menuAdjust(el, k === 'left' ? -1 : 1);
       else menuMove(k);
     }

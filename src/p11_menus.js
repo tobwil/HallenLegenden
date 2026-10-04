@@ -12,7 +12,15 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 // Zuletzt benutzte Eingabe ('key', 'pad' oder 'touch'): danach richten sich die Hinweise in Menü und Spiel
 let LASTIN = TOUCHDEV ? 'touch' : 'key';
 const usePad = () => LASTIN === 'pad';
-const navText = () => usePad() ? `STEUERKREUZ wählen · A bestätigen · B zurück${menu.querySelector('select, input[type=range], input[type=color]') ? ' · LINKS/RECHTS ändern' : ''}` : 'PFEILE wählen · ENTER bestätigen · ESC zurück';
+const navText = () => !usePad() ? 'PFEILE wählen · ENTER bestätigen · ESC zurück'
+  : COLOREDIT ? 'LINKS/RECHTS Farbe wählen · A oder B fertig'
+  : `STEUERKREUZ wählen · A bestätigen · B zurück${menu.querySelector('select, input[type=range]') ? ' · LINKS/RECHTS ändern' : ''}${menu.querySelector('input[type=color]') ? ' · A auf Farbe: ändern' : ''}`;
+let COLOREDIT = null;   // Trikotfarbe, die gerade per Gamepad bearbeitet wird (A startet, A oder B beendet)
+function colorEdit(el) {
+  if (COLOREDIT) COLOREDIT.classList.remove('editing');
+  COLOREDIT = el; if (el) el.classList.add('editing');
+  const h = menu.querySelector('.navhint'); if (h) h.textContent = navText();
+}
 function setInput(m) {
   if (m === LASTIN) return; LASTIN = m; document.body.classList.toggle('padin', m === 'pad');
   const h = menu.querySelector('.navhint'); if (h) h.textContent = navText();
@@ -21,7 +29,7 @@ function setInput(m) {
 addEventListener('keydown', () => setInput('key'), true); addEventListener('touchstart', () => setInput('touch'), { capture: true, passive: true });
 function showMenu(html, clear = false) {
   if (!document.body.classList.contains('touch') || usePad()) html += `<p class="navhint">${usePad() ? '' : navText()}</p>`;
-  menu.innerHTML = html; menu.hidden = false; document.body.classList.add('menuopen'); menu.scrollTop = 0;
+  COLOREDIT = null; menu.innerHTML = html; menu.hidden = false; document.body.classList.add('menuopen'); menu.scrollTop = 0;
   if (usePad()) { const h = menu.querySelector('.navhint'); if (h) h.textContent = navText(); }
   if (document.body.classList.contains('touch') && !['title', 'main'].includes(SCREEN) && !(G && !G.demo && G.paused && SCREEN === 'pause')) {
     const t = menu.querySelector('h2'), bar = document.createElement('div'); bar.className = 'mbar';
@@ -46,7 +54,9 @@ function menuMove(dir) {
     if (el === cur) continue;
     const q = el.getBoundingClientRect(), ex = q.left + q.width / 2, ey = q.top + q.height / 2, vx = ex - cx, vy = ey - cy;
     const along = vx * dx + vy * dy; if (along <= 4) continue;
-    const across = Math.abs(vx * dy - vy * dx), sc = along + across * 2.5;
+    // seitlicher Abstand zwischen den Rändern, nicht den Mitten: ein schmales Feld direkt unter einem breiten liegt „darunter“
+    const gap = dx ? Math.max(0, q.top - r.bottom, r.top - q.bottom) : Math.max(0, q.left - r.right, r.left - q.right);
+    const across = Math.abs(vx * dy - vy * dx), sc = along + gap * 2.5 + across * 0.15;
     if (sc < bs) { bs = sc; best = el; }
   }
   if (!best && (dir === 'down' || dir === 'up')) best = dir === 'down' ? els[0] : els[els.length - 1];   // am Ende umbrechen
@@ -54,7 +64,7 @@ function menuMove(dir) {
 }
 function backTarget() {
   const btns = [...menu.querySelectorAll('button:not(.mback)')];
-  return btns.find(x => /^(ZURÜCK|NEIN)/.test(x.textContent.trim())) || menu.querySelector('[data-back]') || menu.querySelector('button[data-act="main"]');
+  return btns.find(x => /^(ZURÜCK|NEIN)(\s|$)/.test(x.textContent.trim())) || menu.querySelector('[data-back]') || menu.querySelector('button[data-act="main"]');   // nur das ganze Wort: ZURÜCKSETZEN ist kein Zurück
 }
 function menuBack() {
   if (menu.hidden) return;
@@ -67,7 +77,7 @@ addEventListener('keydown', e => {
   const el = document.activeElement, tag = el && el.tagName, type = el && el.type;
   if (e.code === 'Escape' || (e.code === 'Backspace' && tag !== 'INPUT')) { e.preventDefault(); if (tag === 'INPUT' || tag === 'SELECT') el.blur(); menuBack(); return; }
   const dir = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }[e.code]; if (!dir) return;
-  if (tag === 'INPUT' && (type === 'range' || type === 'text' || type === 'color' || !type) && (dir === 'left' || dir === 'right')) return;
+  if (tag === 'INPUT' && (type === 'range' || type === 'text' || !type) && (dir === 'left' || dir === 'right')) return;   // Farbfelder: Pfeile wechseln das Feld
   if (tag === 'SELECT' && (dir === 'up' || dir === 'down')) return;
   e.preventDefault(); menuMove(dir);
 });
@@ -153,7 +163,7 @@ const ACT = {
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
-      <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler, Listen und Farben</span>
+      <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler und Listen, Trikotfarbe: A, dann links/rechts</span>
       <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
@@ -236,7 +246,10 @@ const ACT = {
     const csq = CAREER && CAREER.squads[T.id];
     if (csq) { csq.forEach((p, i) => { if (!menu.querySelector(`#edC${i}N`)) return; const e = rd('edC' + i); if (e.name) p.name = e.name; p.num = e.num; }); fixNumbers(csq); saveCareer(); } ACT.editor(SEL.edit); const h = menu.querySelector('h2'); if (h) h.textContent = 'KADER GESPEICHERT';
   },
-  edReset() { const id = SEL.edit; delete ROSTER_EDIT[id]; delete TEAM_EDIT[id]; store.set(ROSTER_KEY, ROSTER_EDIT); store.set(TEAM_KEY, TEAM_EDIT); applyTeam(TEAMS[id]); ICONS.clear(); ACT.editor(id); },
+  edReset() {   // erst nachfragen: löscht alle Änderungen an diesem Verein (Knopftext ändert sich, eingegebene Werte bleiben stehen)
+    const bt = menu.querySelector('[data-act="edReset"]');
+    if (bt && !bt.dataset.sure) { bt.dataset.sure = '1'; bt.textContent = 'WIRKLICH ZURÜCKSETZEN?'; bt.style.color = 'var(--hot)'; return; }
+    const id = SEL.edit; delete ROSTER_EDIT[id]; delete TEAM_EDIT[id]; store.set(ROSTER_KEY, ROSTER_EDIT); store.set(TEAM_KEY, TEAM_EDIT); applyTeam(TEAMS[id]); ICONS.clear(); ACT.editor(id); },
 };
 let SEASON_PICK = false;
 function startMatch(a, b, o) { AU.stopMusic(); newMatch(a, b, o); G.tact[o.human] = SEL.def; G.tact[1 - o.human] = (Math.random() * 3) | 0; hideMenu(); track('spiel-start', { modus: G.career ? 'karriere' : 'schnelles-spiel' }); }
