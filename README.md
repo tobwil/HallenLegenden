@@ -169,13 +169,15 @@ npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
 npm test                             # alle 36 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
-npm run tief                         # 8 tiefe Tests, etwa zweieinhalb Minuten (vor größeren Versionen)
+npm run tief                         # 9 tiefe Tests, etwa drei Minuten (vor größeren Versionen)
+ALT=pfad/zur/alten/index.html npm run tief -- update   # Update-Test gegen eine bestimmte Vorversion
 ```
 
 Die tiefen Tests (`tests/tief.mjs`) prüfen, was in kurzen Tests nicht auffällt:
 - Dauerlauf über 18 Saisons mit Transfers, Auf- und Abstieg und Entlassung. Nach jedem Spieltag wird der ganze Spielstand auf Widersprüche geprüft (Kader, Tabelle, Geld, Werte), nach jeder Saison Speichern und Laden.
 - Laufende Spiele speichern und nach dem Neuladen fortsetzen, ohne dass ein Ergebnis doppelt zählt.
 - Zufallsklicks durch alle Menüs und Spiele, eine Saison wirklich gespielt, 11 Bildschirmgrößen von 320 px bis Full HD, beschädigte Spielstände und das Tempo pro Bild.
+- Update von der Vorversion: Spielstände entstehen in der bisherigen Version (`origin/main`, oder `ALT=` Datei bzw. URL) und werden in der neuen weitergespielt, wie bei Spielern nach einem Deploy: laufendes Spiel, inzwischen simuliertes Pokalspiel, Karriere und Einstellungen.
 
 Die `package.json` liegt bewusst nur in `tests/`, damit Netlify beim Veröffentlichen nichts installiert.
 
@@ -349,13 +351,15 @@ npx playwright-core install chromium # once, if Chromium is not installed yet
 npm test                             # all 36 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
-npm run tief                         # 8 deep tests, about two and a half minutes (before bigger releases)
+npm run tief                         # 9 deep tests, about three minutes (before bigger releases)
+ALT=path/to/old/index.html npm run tief -- update     # update test against a specific previous version
 ```
 
 The deep tests (`tests/tief.mjs`) cover what short tests miss:
 - A long run over 18 seasons with transfers, promotion, relegation and getting sacked. After every matchday the whole save is checked for contradictions (squads, table, money, ratings), after every season it is saved and reloaded.
 - Saving matches in progress and resuming them after a reload without any result counting twice.
 - Random clicks through all menus and matches, a season actually played, 11 screen sizes from 320 px to full HD, damaged save games and the time per frame.
+- Updating from the previous version: saves are created in the current release (`origin/main`, or `ALT=` file or URL) and continued in the new one, as players experience a deploy: a match in progress, a cup match simulated in the meantime, a career and settings.
 
 The `package.json` deliberately lives only in `tests/` so Netlify does not install anything when deploying.
 

@@ -82,7 +82,7 @@ test('Plattform-Schnittstelle: eigener Speicher, Ereignisse, BEENDEN und Copyrig
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
-test('Gamepad allein: Regler, Vereinsliste und Trikotfarben bedienbar, Hinweise zeigen Controller-Tasten', async () => {
+test('Gamepad allein: Regler, Vereinsliste und Trikotfarben bedienbar, Hinweise zeigen Controller-Tasten; Pfeiltasten auf Liste und Farbe', async () => {
   // simuliertes Gamepad wie im Steam-Deck-Test: 17 Knöpfe, A=0, B=1, Start=9, Steuerkreuz 12 bis 15
   const ctx = await browser.newContext(DESKTOP);
   await ctx.addInitScript(() => {
@@ -121,6 +121,8 @@ test('Gamepad allein: Regler, Vereinsliste und Trikotfarben bedienbar, Hinweise 
   await ev(() => { ACT.editor(2); menu.querySelector('#edA1').focus(); });
   const k0 = await ev(() => menu.querySelector('#edA1').value);
   await page.keyboard.press('ArrowRight'); const k1 = await ev(() => ({ v: menu.querySelector('#edA1').value, focus: document.activeElement.id, hint: menu.querySelector('.navhint').textContent }));
+  await ev(() => menu.querySelector('#edTeam').focus()); await page.keyboard.press('ArrowRight'); await page.waitForTimeout(100);
+  const k2 = await ev(() => ({ edit: SEL.edit, focus: document.activeElement.id })); await page.keyboard.press('ArrowLeft'); await page.waitForTimeout(100); const k3 = await ev(() => SEL.edit);
   // im Spiel gehaltenes A löst im gerade geöffneten Menü nichts aus; Hinweise im Spiel zeigen Controller-Tasten
   await ev(() => { hideMenu(); startMatch(2, 5, { human: 0, halfLen: 180 }); G.introT = 99; });
   await press(LEFT); await btn(A, true); await page.waitForTimeout(150);
@@ -135,6 +137,7 @@ test('Gamepad allein: Regler, Vereinsliste und Trikotfarben bedienbar, Hinweise 
   ok(c1 !== c0 && c2 !== c1 && c3.v === c1 && c3.inPal && c3.open && c3.n >= 16 && c3.gap >= 40, 'Trikotfarbe: ' + JSON.stringify({ c0, c1, c2, c3 }));
   ok(saved === c1, 'Farbe nicht gespeichert: ' + saved + ' statt ' + c1); ok(i1 !== i0, 'Trikot-Vorschau ändert sich nicht mit der Farbe');
   ok(k1.v !== k0 && k1.focus === 'edA1' && k1.hint.includes('PFEILE'), 'Tastatur auf Farbe: ' + JSON.stringify({ k0, k1 }));
+  ok(k2.edit === 3 && k2.focus === 'edTeam' && k3 === 2, 'Tastatur auf Vereinsliste: ' + JSON.stringify({ k2, k3 }));
   ok(p1.screen === 'pause' && !p1.hidden && p1.pad && p1.padin, 'Gehaltenes A im Pausenmenü: ' + JSON.stringify(p1));
   ok(p2.hidden, 'B im Pausenmenü sollte weiterspielen');
   ok(!errors.length, errors.join('; ')); await ctx.close();

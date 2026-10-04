@@ -8,7 +8,9 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
 - **Hinweise passend zur Eingabe:** Wer zuletzt das Gamepad benutzt hat, sieht „STEUERKREUZ wählen · A bestätigen · B zurück“ im Menü und im Spiel „A = WEITER“, „B=HEBER“ und die Gamepad-Belegung in der Laufschrift beim Anwurf. Mit Tastatur oder Touch bleibt alles wie bisher.
 - Mit Gamepad gespielt blendet das Spiel die Touch-Knöpfe aus (Geräte mit Touchscreen wie das Steam Deck).
 - Ein im Spiel gehaltener Knopf löst im gerade geöffneten Menü nichts mehr aus (zum Beispiel A beim Abpfiff).
-- 1 neuer Regressionstest mit simuliertem Gamepad, insgesamt 36
+- Mit der Tastatur schalten Pfeil links/rechts auf der Vereinsliste und den Trikotfarben im Editor ebenfalls weiter.
+- 1 neuer Regressionstest mit simuliertem Gamepad (und Pfeiltasten auf Liste und Farbe), insgesamt 36
+- **Neuer tiefer Test „Update von der Vorversion“:** Spielstände aus der bisherigen Version (aus git oder `ALT=…`) werden in der neuen weitergespielt: laufendes Spiel, inzwischen simuliertes Pokalspiel, Karriere mit Rekorden und Titeln, Einstellungen. Ersetzt die Prüfskripte, die bisher bei jedem Preview-Test nebenher liefen. Tiefe Suite jetzt 9 Tests
 
 ## v8.15: Datenschutzerklärung vollständig
 - Die Liste der anonym gezählten Ereignisse nennt jetzt alle: zusätzlich Klicks auf „Feature wünschen“, simulierte Spiele, gewonnene Titel (nur die Art, neu seit v8.14) und geteilte Bilder.

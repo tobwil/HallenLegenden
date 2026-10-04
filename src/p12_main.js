@@ -123,10 +123,11 @@ function menuAdjust(el, d, wrap) {
   }
   return false;
 }
-// Pfeil links/rechts auf einer Trikotfarbe: Palette durchschalten (Regler und Listen kann der Browser selbst)
+// Pfeil links/rechts auf einer Trikotfarbe oder Auswahlliste: Wert ändern wie mit dem Gamepad (Regler kann der Browser selbst,
+// hoch/runter auf der Liste bleibt beim Browser)
 addEventListener('keydown', e => {
   const el = document.activeElement;
-  if (menu.hidden || !el || el.type !== 'color' || !['ArrowLeft', 'ArrowRight'].includes(e.code)) return;
+  if (menu.hidden || !el || !['color', 'select-one'].includes(el.type) || !['ArrowLeft', 'ArrowRight'].includes(e.code)) return;
   e.preventDefault(); e.stopImmediatePropagation(); menuAdjust(el, e.code === 'ArrowLeft' ? -1 : 1);
 }, true);
 function menuPad() {
