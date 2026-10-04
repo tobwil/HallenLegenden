@@ -115,7 +115,7 @@ function playerDetail(p) {
       <dt>Stärke</dt><dd>${stars(starsOf(ovr(p)), 'var(--gold)')} <b style="color:var(--gold)">${ovr(p)}</b></dd>
       <dt>Potenzial</dt><dd>${stars(starsOf(potOf(p)), 'var(--cyan)')} <b style="color:var(--cyan)">${potOf(p)}</b> <span class="muted">${POT_TXT[potTrend(p)]}</span></dd>
       <dt>Zustand</dt><dd>${fitBar(fit, 60)} ${fit} % · ${zust}</dd>
-      <dt>Form</dt><dd>${formTxt(p.form)}</dd>
+      <dt>Form</dt><dd>${formTxt(p.form)} · ${['in der Krise', 'schwach', 'etwas schwach', 'normal', 'gut drauf', 'stark', 'in Topform'][Math.round(p.form) + 3]}</dd>
       <dt>Vertrag</dt><dd>${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</dd>
       <dt>Marktwert</dt><dd>${euro(pValue(p))}</dd>
       <dt>Aufgaben</dt><dd>${[p.start ? 'Startsieben' : 'Bank', capt && 'Kapitän', isSeven ? '7-Meter-Schütze' : autoSeven ? '7-Meter-Schütze (automatisch)' : ''].filter(Boolean).join(' · ')}</dd>
@@ -283,9 +283,12 @@ function careerHub(tab) {
       CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="EUROPA" style="${h.euro === CAREER.team ? 'color:var(--gold)' : ''}">${h.euro !== null && h.euro !== undefined ? esc(TEAMS[h.euro].short) : '–'}${h.euroMy && h.euro !== CAREER.team ? ` <span class="muted">(${esc(h.euroMy)})</span>` : ''}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
   }
+  // Auf der Spielerkarte bleibt der Fokus auf dem gedrückten Knopf (STATISTIK, 7-METER, KAPITÄN, BANK), sonst springt er bei Pad und Tastatur nach oben
+  const ae = document.activeElement, keep = CSEL && ae && ae.closest && ae.closest('.pcard') && ae.dataset.act !== 'cSell' ? [ae.dataset.act, ae.dataset.v || ''] : null;
   showMenu(`<div class="panel wide"><div class="csticky">${head}${tabs()}</div>${CMSG ? `<p style="margin:0;color:var(--hot)">${esc(CMSG)}</p>` : ''}${body}<div class="row"><button data-act="main">HAUPTMENÜ</button></div></div>`);
   const c = menu.querySelector('#pdC'); if (c && CSEL) { const p = CAREER.squads[CAREER.team].find(x => x.pid === CSEL); if (p) c.getContext('2d').drawImage(portrait(p, { c1: me.home.c1, c2: me.home.c2, gk: me.gkc }), 0, 0); }
   const on = menu.querySelector('.ctabs .on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  if (keep) { const same = a => a === keep[0] || (/^c(Bench|Start)$/.test(a) && /^c(Bench|Start)$/.test(keep[0])), k = [...menu.querySelectorAll('.pcard [data-act]')].find(b => same(b.dataset.act) && (b.dataset.v || '') === keep[1]); if (k) k.focus({ preventScroll: true }); }
   CMSG = ''; if (CTAB !== 'hist') CDEL = false;
 }
 function seasonSummary() {

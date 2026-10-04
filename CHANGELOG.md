@@ -11,7 +11,9 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
 - **Kapitän** wählbar, mit Abzeichen „C“ in Kader und Spielerkarte (die Wirkung auf die Stimmung kommt mit der nächsten Stufe).
 - **AUF DIE BANK:** Der beste gesunde Ersatz auf derselben Position rückt in die Startsieben.
 - Laufende Karrieren: Die Statistik zählt ab dem Update, die Karte zeigt, ab wann.
-- README mit Screenshot der Spielerkarte. 1 neuer Regressionstest (simulierte und gespielte Partie stimmig, ligaweite Quoten plausibel, 7-Meter-Schütze wirkt, Karte, Bank, Saisonwechsel), insgesamt 39; der Dauerlauf prüft die Statistik jedes Spielers nach jedem Spieltag
+- Verlässt der Kapitän den Verein (Verkauf, Vertragsende, Karriereende), wird die Binde frei, und die Zeitung erinnert daran. Geht der 7-Meter-Schütze, wirft wieder der beste Werfer auf dem Feld.
+- Mit Gamepad und Tastatur bleibt der Fokus auf dem gedrückten Kartenknopf (STATISTIK, 7-METER, KAPITÄN, BANK), statt nach oben zu den Reitern zu springen. Die Form steht mit Wort da („normal“, „in Topform“ …).
+- README mit Screenshot der Spielerkarte. 1 neuer Regressionstest (simulierte und gespielte Partie stimmig, ligaweite Quoten plausibel, 7-Meter-Schütze wirkt, Karte, Bank, Saisonwechsel, Fokus, Verkauf), insgesamt 39; der Dauerlauf prüft die Statistik jedes Spielers nach jedem Spieltag
 
 ## v8.17: Editor sicher verlassen, jedes Menüfeld mit dem Gamepad erreichbar
 - **Behoben (#32): ESC, Rücktaste und B im Editor setzten den Verein zurück.** Statt ZURÜCK wurde ZURÜCKSETZEN ausgelöst, alle gespeicherten Änderungen am gerade gewählten Verein waren ohne Nachfrage weg. Das gab es seit der ersten Version. Jetzt verlassen ESC, Rücktaste und B den Editor. ZURÜCKSETZEN fragt beim ersten Druck nach („WIRKLICH ZURÜCKSETZEN?“).

@@ -658,7 +658,7 @@ test('Hallen-Legenden: Weidenhammer, Schülein, Richardson und Schörner im Kade
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
-test('Spielerkarte: Handball-Statistik aus Simulation und Spiel stimmig, 7-Meter-Schütze wirkt, Kapitän, Bank, Saisonwechsel', async () => {
+test('Spielerkarte: Handball-Statistik aus Simulation und Spiel stimmig, 7-Meter-Schütze wirkt, Kapitän, Bank, Saisonwechsel, Verkauf', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 17);
   await page.evaluate(STEP);
   const r = await page.evaluate(() => {
@@ -702,12 +702,19 @@ test('Spielerkarte: Handball-Statistik aus Simulation und Spiel stimmig, 7-Meter
   });
   // Saisonwechsel: Saisonzahlen leer, Karriere bleibt
   const nx = await page.evaluate(() => { const q = CAREER.squads[CAREER.team].find(x => statOf(x, 'k').sp > 0), k0 = statOf(q, 'k').sp; let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 60) ACT.cSim(); const k1 = statOf(q, 'k').sp; ACT.cEnd(); ACT.cNext(); return { s: statOf(q).sp, k: statOf(q, 'k').sp, k1, k0 }; });
+  // Pad und Tastatur: der Fokus bleibt auf dem gedrückten Kartenknopf. Verkauf macht Kapitänsamt und 7-Meter frei
+  await page.evaluate(() => { ACT.cTab('squad'); const sq = CAREER.squads[CAREER.team], q = sq.filter(x => x.start && x.role !== 'TW' && !isLocked(x) && x.pid !== CAREER.capt && x.pid !== CAREER.seven && sq.filter(y => y.role === x.role).length > 1).sort((a, b) => pValue(a) - pValue(b))[0]; window.__q = q.pid; ACT.cPick(q.pid); });
+  const foc = [];
+  for (const a of ['cStat', 'cCapt', 'cSeven']) { await page.evaluate(a => menu.querySelector(`.pcard [data-act="${a}"]`).focus(), a); await page.keyboard.press('Enter'); foc.push(await page.evaluate(() => document.activeElement.dataset.act)); }
+  const sold = await page.evaluate(() => { const sq = CAREER.squads[CAREER.team]; while (sq.length < 14) sq.push(finalize(genPlayer('RA', 60, Math.random, 18, 20))); fixNumbers(sq); const was = [CAREER.capt === __q, CAREER.seven === __q], m = sellPlayer(__q); return { was, m, capt: CAREER.capt, seven: CAREER.seven, news: CAREER.news[0] }; });
   ok(r.sim.ok, 'Simulierte Partie: ' + JSON.stringify(r.sim)); ok(!r.bad.length, 'Widersprüchliche Zahlen: ' + r.bad.join(' | '));
   ok(r.league.quote > 0.5 && r.league.quote < 0.7 && r.league.q7 > 0.6 && r.league.q7 < 0.88 && r.league.fang > 0.18 && r.league.fang < 0.4 && r.league.vorl > 0.3 && r.league.vorl < 0.7, 'Ligaweit unplausibel: ' + JSON.stringify(r.league));
   ok(r.seven && r.ps.s7 > 0 && r.ps.s7 >= r.mine7 * 0.8, `7-Meter-Schütze ${r.pick} wirft nicht die 7-Meter: ${r.ps.s7} von ${r.mine7}`);
   ok(r.card.stars === 2 && r.card.capt && r.card.stat && r.card.badges === '7M,C', 'Karte: ' + JSON.stringify(r.card)); ok(r.bench.out && r.bench.inn, 'Bank: ' + JSON.stringify(r.bench));
   ok(p.shooter === p.seven && p.g === p.my && p.ga === p.th && p.sh >= p.g && p.s7 >= 1 && Math.abs(p.min - 7 * 60) < 15, 'Gespieltes Spiel: ' + JSON.stringify(p));
   ok(nx.s === 0 && nx.k === nx.k1 && nx.k1 > nx.k0, 'Saisonwechsel: ' + JSON.stringify(nx));
+  ok(foc.join() === 'cStat,cCapt,cSeven', 'Fokus springt von der Spielerkarte weg: ' + foc);
+  ok(sold.was.every(Boolean) && !sold.m && sold.capt === null && sold.seven === null && /Kapitänsbinde/.test(sold.news), 'Verkauf von Kapitän und 7-Meter-Schütze: ' + JSON.stringify(sold));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 

@@ -6,7 +6,12 @@ if (CAREER && CAREER.v !== 1) CAREER = null;
 if (CAREER && !(CAREER.squads && typeof CAREER.squads === 'object' && CAREER.lgOf && CAREER.season && CAREER.season.table && Array.isArray(CAREER.season.fixtures) && TEAMS[CAREER.team] && CAREER.squads[CAREER.team])) {
   store.set(CAREER_KEY + '_defekt', CAREER); store.del(CAREER_KEY); CAREER = null;
 }
-function saveCareer() { if (CAREER) store.set(CAREER_KEY, CAREER); }
+function saveCareer() { if (CAREER) { dropGoneRoles(); store.set(CAREER_KEY, CAREER); } }
+function dropGoneRoles() {   // Kapitän oder 7-Meter-Schütze hat den Verein verlassen (Verkauf, Vertragsende, Karriereende): Amt wird frei
+  const sq = CAREER.squads[CAREER.team], gone = pid => pid && !sq.some(p => p.pid === pid), c = gone(CAREER.capt), s = gone(CAREER.seven);
+  if (c) { CAREER.capt = null; news('Die Kapitänsbinde ist frei: Bestimme im Kader einen neuen Kapitän.'); }
+  if (s) CAREER.seven = null;   // die 7-Meter wirft wieder der beste Werfer auf dem Feld
+}
 const careerStamp = () => CAREER ? `${CAREER.year}-${CAREER.season.round}` : '';
 const SEASON_LENS = [{ n: 'KURZ · 6', v: 6 }, { n: 'HINRUNDE · 17', v: 17 }, { n: 'VOLL · 34', v: 34 }];
 const TRAINING = [
