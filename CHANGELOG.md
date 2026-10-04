@@ -2,6 +2,11 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.17: Editor sicher verlassen, jedes Menüfeld mit dem Gamepad erreichbar
+- **Behoben (#32): ESC, Rücktaste und B im Editor setzten den Verein zurück.** Statt ZURÜCK wurde ZURÜCKSETZEN ausgelöst, alle gespeicherten Änderungen am gerade gewählten Verein waren ohne Nachfrage weg. Das gab es seit der ersten Version. Jetzt verlassen ESC, Rücktaste und B den Editor. ZURÜCKSETZEN fragt beim ersten Druck nach („WIRKLICH ZURÜCKSETZEN?“).
+- **Behoben (#33): Trikotfarben per Gamepad erreichbar.** Die Menüsteuerung misst jetzt von Rand zu Rand statt von Mitte zu Mitte: Ein schmales Feld direkt unter einem breiten liegt „darunter“, und „rechts“ ist nur, was wirklich rechts beginnt (vorher führte rechts vom Vereinsnamen auf die Vereinsliste darüber, wo rechts dann den Verein wechselte). Trikotfarben werden wie in Konsolen-Menüs mit A bearbeitet: links/rechts wechseln das Feld, nach A ändern sie die Farbe (gelber Rahmen), A oder B beenden. Mit der Tastatur wechseln die Pfeile auf Farbfeldern ebenfalls das Feld, Enter öffnet den Farbwähler.
+- 2 neue Regressionstests: Breitensuche nur mit dem Steuerkreuz über alle Menüs in drei Auflösungen (jedes Element erreichbar, im Editor zusätzlich natürliche Wege: rechts vom Namen das Kürzel, Farbreihe der Reihe nach), Editor mit ESC, Rücktaste und Gamepad-B. Insgesamt 38
+
 ## v8.16: Komplett mit dem Gamepad (Steam Deck)
 - **Regler, Vereinsliste und Trikotfarben per Gamepad:** Links/rechts ändern den Wert statt zum nächsten Feld zu springen. Lautstärke in 5er-Schritten, Vereine einzeln, gehalten wiederholt es sich. A auf einer Auswahlliste oder Farbe schaltet weiter. Gefunden beim Steam-Deck-Test (#30).
 - **Trikotfarben ohne System-Farbwähler:** Gamepad und Pfeiltasten schalten durch 22 Trikotfarben (alle Vereinsfarben des Spiels und ein paar weitere). Mit Maus oder Touch bleibt der freie Farbwähler. Die Trikot-Vorschau im Editor zeigt jede Änderung sofort.

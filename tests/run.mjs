@@ -82,7 +82,7 @@ test('Plattform-Schnittstelle: eigener Speicher, Ereignisse, BEENDEN und Copyrig
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
-test('Gamepad allein: Regler, Vereinsliste und Trikotfarben bedienbar, Hinweise zeigen Controller-Tasten; Pfeiltasten auf Liste und Farbe', async () => {
+test('Gamepad allein: Regler, Vereinsliste und Trikotfarben (mit A bearbeiten) bedienbar, Hinweise zeigen Controller-Tasten; Pfeiltasten auf Liste und Farbe', async () => {
   // simuliertes Gamepad wie im Steam-Deck-Test: 17 Knöpfe, A=0, B=1, Start=9, Steuerkreuz 12 bis 15
   const ctx = await browser.newContext(DESKTOP);
   await ctx.addInitScript(() => {
@@ -113,9 +113,13 @@ test('Gamepad allein: Regler, Vereinsliste und Trikotfarben bedienbar, Hinweise 
   await ev(() => { ACT.editor(2); menu.querySelector('#edH1').focus(); });
   const c0 = await ev(() => menu.querySelector('#edH1').value);
   const i0 = await ev(() => menu.querySelector('#edHi').src);
-  await press(A); const c1 = await ev(() => menu.querySelector('#edH1').value), i1 = await ev(() => menu.querySelector('#edHi').src);
+  // A startet das Bearbeiten (Farbe bleibt), rechts ändert, links zurück, B beendet (Editor bleibt offen)
+  await press(A); const e0 = await ev(() => ({ v: menu.querySelector('#edH1').value, edit: COLOREDIT && COLOREDIT.id, hint: menu.querySelector('.navhint').textContent }));
+  await press(RIGHT); const c1 = await ev(() => menu.querySelector('#edH1').value), i1 = await ev(() => menu.querySelector('#edHi').src);
   await press(RIGHT); const c2 = await ev(() => menu.querySelector('#edH1').value);
-  await press(LEFT); const c3 = await ev(() => ({ v: menu.querySelector('#edH1').value, inPal: KIT_PALETTE.includes(menu.querySelector('#edH1').value), open: !!menu.querySelector('#edH1'), n: KIT_PALETTE.length, gap: Math.min(...KIT_PALETTE.flatMap((a, i) => KIT_PALETTE.slice(i + 1).map(b => colDist(a, b)))) }));
+  await press(LEFT); await press(B); const e1 = await ev(() => ({ edit: COLOREDIT, focus: document.activeElement.id, open: !!menu.querySelector('#edH1') }));
+  await press(RIGHT); const e2 = await ev(() => ({ v: menu.querySelector('#edH1').value, focus: document.activeElement.id }));
+  await ev(() => menu.querySelector('#edH1').focus()); const c3 = await ev(() => ({ v: menu.querySelector('#edH1').value, inPal: KIT_PALETTE.includes(menu.querySelector('#edH1').value), open: !!menu.querySelector('#edH1'), n: KIT_PALETTE.length, gap: Math.min(...KIT_PALETTE.flatMap((a, i) => KIT_PALETTE.slice(i + 1).map(b => colDist(a, b)))) }));
   const saved = await ev(() => { ACT.edSave(); return TEAM_EDIT[2] && TEAM_EDIT[2].h1; });
   // Tastatur: Pfeil rechts auf einer Farbe schaltet die Palette, Hinweis wieder für Tastatur
   await ev(() => { ACT.editor(2); menu.querySelector('#edA1').focus(); });
@@ -134,12 +138,76 @@ test('Gamepad allein: Regler, Vereinsliste und Trikotfarben bedienbar, Hinweise 
   ok(v2 <= v1.v - 15 && v3 === v2 + 5, 'Regler gehalten/zurück: ' + JSON.stringify({ v1, v2, v3 }));
   ok(t1.edit === 1 && t1.sel === 1 && t1.name === t1.team && t1.focus === 'edTeam', 'Vereinsliste: ' + JSON.stringify(t1));
   ok(t2.edit >= 4 && t2.focus === 'edTeam' && t3 === t2.edit - 1, 'Vereinsliste gehalten: ' + JSON.stringify({ t2, t3 }));
+  ok(e0.v === c0 && e0.edit === 'edH1' && e0.hint.includes('LINKS/RECHTS Farbe'), 'A auf Farbe: ' + JSON.stringify(e0));
+  ok(!e1.edit && e1.focus === 'edH1' && e1.open && e2.v === c1 && e2.focus === 'edH2', 'B beendet, rechts wechselt danach das Feld: ' + JSON.stringify({ e1, e2 }));
   ok(c1 !== c0 && c2 !== c1 && c3.v === c1 && c3.inPal && c3.open && c3.n >= 16 && c3.gap >= 40, 'Trikotfarbe: ' + JSON.stringify({ c0, c1, c2, c3 }));
   ok(saved === c1, 'Farbe nicht gespeichert: ' + saved + ' statt ' + c1); ok(i1 !== i0, 'Trikot-Vorschau ändert sich nicht mit der Farbe');
-  ok(k1.v !== k0 && k1.focus === 'edA1' && k1.hint.includes('PFEILE'), 'Tastatur auf Farbe: ' + JSON.stringify({ k0, k1 }));
+  ok(k1.v === k0 && k1.focus === 'edA2' && k1.hint.includes('PFEILE'), 'Tastatur auf Farbe: Pfeil rechts geht zum nächsten Feld: ' + JSON.stringify({ k0, k1 }));
   ok(k2.edit === 3 && k2.focus === 'edTeam' && k3 === 2, 'Tastatur auf Vereinsliste: ' + JSON.stringify({ k2, k3 }));
   ok(p1.screen === 'pause' && !p1.hidden && p1.pad && p1.padin, 'Gehaltenes A im Pausenmenü: ' + JSON.stringify(p1));
   ok(p2.hidden, 'B im Pausenmenü sollte weiterspielen');
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Gamepad: jedes Element in jedem Menü nur mit dem Steuerkreuz erreichbar (1280 × 800, 1440 × 900, 1920 × 1080)', async () => {
+  const bad = [];
+  for (const vp of [[1280, 800], [1440, 900], [1920, 1080]]) {
+    const { page, ctx, errors } = await open({ viewport: { width: vp[0], height: vp[1] } }, 12);
+    const r = await page.evaluate(async () => {
+      // Breitensuche über menuMove; auf Regler und Liste sind links/rechts mit „Wert ändern“ belegt, zählen also nicht als Weg
+      const reach = () => {
+        const els = focusables(); if (!els.length) return [];
+        const start = menu.querySelector('button.main') || els[0], seen = new Set([start]), q = [start];
+        const adj = e => e.tagName === 'SELECT' || e.type === 'range' || (e.type === 'color' && typeof colorEdit !== 'function');   // ältere Fassung: Farben änderten sich direkt
+        while (q.length) { const e = q.shift(); for (const d of ['up', 'down', 'left', 'right']) { if ((d === 'left' || d === 'right') && adj(e)) continue; e.focus(); menuMove(d); const n = document.activeElement; if (els.includes(n) && !seen.has(n)) { seen.add(n); q.push(n); } } }
+        return els.filter(e => !seen.has(e)).map(e => e.id || (e.dataset.act || e.tagName) + (e.dataset.v !== undefined ? ':' + e.dataset.v : ''));
+      };
+      const out = [], chk = name => { const miss = reach(); if (miss.length) out.push(`${name}: ${miss.slice(0, 4).join(', ')}${miss.length > 4 ? ' …' : ''}`); };
+      ACT.main(); chk('Hauptmenü'); ACT.quick(); chk('Schnelles Spiel'); ACT.lg(3); chk('Europa-Auswahl'); ACT.lg(1);
+      ACT.kick(); chk('Vor dem Spiel'); ACT.options(); chk('Optionen'); ACT.help(); chk('Steuerung'); ACT.editor(2); chk('Editor');
+      ACT.career(); chk('Karriere anlegen');
+      careerCreate(TEAM_BASE.findIndex(b => b[0] === 'KIE'), 1, 1, 1); ACT.editor(2); chk('Editor mit Karriere-Kader');
+      for (let i = 0; i < 9; i++) ACT.cSim();
+      for (const t of ['home', 'squad', 'train', 'market', 'table', 'cup', 'euro', 'stats', 'trophy', 'hist']) { ACT.cTab(t); chk('Karriere ' + t); }
+      ACT.cTab('squad'); ACT.cPick(CAREER.squads[CAREER.team][3].pid); chk('Spielerprofil');
+      careerHub('home'); ACT.cPlay(); chk('Vor dem Karriere-Spiel');
+      ACT.pmGo(); G.introT = 99; G.paused = true; ACT.pause(); chk('Pause'); ACT.subs(); chk('Wechsel'); G.paused = false; hideMenu();
+      window.__run = n => { for (let i = 0; i < n; i++) { readInput(1 / 60); step(1 / 60); } }; __run(300); endMatch(); chk('Spielende');
+      ACT.afterMatch(); let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 60) ACT.cSim(); ACT.cEnd(); chk('Saisonabschluss');
+      await shareCard('season'); chk('Teilen'); ACT.cShareBack(); ACT.cNext(); ACT.cTab('hist'); ACT.cDel(); chk('Karriere löschen?');
+      // natürliche Wege im Editor: rechts vom Namen das Kürzel, die Farbreihe der Reihe nach, rechts davon nicht zurück auf Name oder Liste
+      ACT.editor(2); const go = (id, d) => { menu.querySelector('#' + id).focus(); menuMove(d); return document.activeElement.id || document.activeElement.dataset.act; };
+      const row = ['edH1', 'edH2', 'edA1', 'edA2'], seq = row.slice(0, 3).map((id, i) => go(id, 'right') === row[i + 1]);
+      const nat = { nameRechts: go('edTn', 'right'), reihe: seq.every(Boolean), zurueck: row.slice(1).map((id, i) => go(id, 'left') === row[i]).every(Boolean), nameRunter: go('edTn', 'down'), ausReiheRechts: go('edA2', 'right') };
+      if (nat.nameRechts !== 'edTk' || !nat.reihe || !nat.zurueck || !row.includes(nat.nameRunter) || ['edTn', 'edTeam'].includes(nat.ausReiheRechts)) out.push('Editor-Wege: ' + JSON.stringify(nat));
+      return out;
+    });
+    bad.push(...r.map(x => `${vp.join('×')} ${x}`), ...errors.map(e => `${vp.join('×')} Fehler ${e}`));
+    await ctx.close();
+  }
+  ok(!bad.length, 'nicht erreichbar:\n      ' + bad.slice(0, 14).join('\n      '));
+});
+
+test('Editor: ESC, Rücktaste und Gamepad-B verlassen den Editor, ZURÜCKSETZEN fragt nach', async () => {
+  const ctx = await browser.newContext(DESKTOP);
+  await ctx.addInitScript(() => {
+    window.__gp = { id: 'Test-Pad', index: 0, connected: true, mapping: 'standard', axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+    Object.defineProperty(navigator, 'getGamepads', { value: () => [window.__gp], configurable: true });
+  });
+  const page = await ctx.newPage(), errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto(GAME); await page.waitForTimeout(700);
+  const save = () => page.evaluate(() => { ACT.main(); ACT.editor(2); menu.querySelector('#edTn').value = 'Mein Herzensverein'; ACT.edSave(); ACT.main(); ACT.editor(2); menu.querySelector('#edTeam').focus(); });
+  const state = () => page.evaluate(() => ({ screen: SCREEN, editor: !!menu.querySelector('#edTn'), name: TEAMS[2].n, saved: !!(TEAM_EDIT[2] && TEAM_EDIT[2].n) }));
+  const res = {};
+  await save(); await page.keyboard.press('Escape'); res.esc = await state();
+  await save(); await page.evaluate(() => document.activeElement.blur()); await page.keyboard.press('Backspace'); res.back = await state();
+  await save(); await page.evaluate(() => { __gp.buttons[1].pressed = true; }); await page.waitForTimeout(120); await page.evaluate(() => { __gp.buttons[1].pressed = false; }); await page.waitForTimeout(120); res.padB = await state();
+  // ZURÜCKSETZEN: erster Druck fragt, eingegebener Text bleibt stehen; zweiter Druck setzt zurück
+  await save(); const r1 = await page.evaluate(() => { menu.querySelector('#edTk').value = 'XYZ'; menu.querySelector('[data-act="edReset"]').click(); return { btn: menu.querySelector('[data-act="edReset"]').textContent, kurz: menu.querySelector('#edTk').value, saved: !!(TEAM_EDIT[2] && TEAM_EDIT[2].n) }; });
+  const r2 = await page.evaluate(() => { menu.querySelector('[data-act="edReset"]').click(); return { name: TEAMS[2].n, saved: !!(TEAM_EDIT[2] && TEAM_EDIT[2].n), editor: !!menu.querySelector('#edTn') }; });
+  for (const [k, v] of Object.entries(res)) ok(v.screen === 'main' && !v.editor && v.name === 'Mein Herzensverein' && v.saved, `${k}: ` + JSON.stringify(v));
+  ok(r1.btn.includes('WIRKLICH') && r1.kurz === 'XYZ' && r1.saved, 'Rückfrage: ' + JSON.stringify(r1));
+  ok(!r2.saved && r2.name !== 'Mein Herzensverein' && r2.editor, 'Zurücksetzen nach Rückfrage: ' + JSON.stringify(r2));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
