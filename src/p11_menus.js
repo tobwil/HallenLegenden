@@ -90,7 +90,7 @@ const ACT = {
     showMenu(`<div class="title"><p class="logo">HALLEN-<br>LEGENDEN<span>HANDBALL 26/27</span></p>
       <button class="press" data-act="main" autofocus>DRÜCKE START</button>
       <p class="legal">Inoffizielles Fan-Spiel. Vereinsnamen nur zur Zuordnung, ohne Logos und ohne Verbindung zu Liga oder Vereinen.</p>
-      <p class="legal">© 2026 tobwil · Quellcode offen, nicht kommerziell · github.com/tobwil/HallenLegenden</p></div>`, true);
+      <p class="legal">${esc(PLATFORM.legal || '© 2026 tobwil · Quellcode offen, nicht kommerziell · github.com/tobwil/HallenLegenden')}</p></div>`, true);
   },
   main() {
     SCREEN = 'main'; AU.startMusic();
@@ -100,8 +100,10 @@ const ACT = {
       <button data-act="career">KARRIERE <i>${CAREER ? `${esc(TEAMS[CAREER.team].k)} · ${CAREER.season.lg}. Liga · ${CAREER.year}/${String(CAREER.year + 1).slice(2)}` : 'Manager & Liga'}</i></button>
       <button data-act="editor">EDITOR <i>Vereine, Farben, Spieler</i></button>
       <button data-act="help">STEUERUNG <i>& Regeln</i></button>
-      <button data-act="options">OPTIONEN <i>Lautstärke, Hallensprecher</i></button></div></div>`);
+      <button data-act="options">OPTIONEN <i>Lautstärke, Hallensprecher</i></button>
+      ${PLATFORM.quit ? '<button data-act="exitGame">BEENDEN <i>zurück zum Desktop</i></button>' : ''}</div></div>`);
   },
+  exitGame() { if (PLATFORM.quit) PLATFORM.quit(); },
   quick() {
     SCREEN = 'quick'; SEASON_PICK = false;
     showMenu(`<div class="panel"><div class="row spread"><h2>SCHNELLES SPIEL</h2>${leagueTabs()}</div>

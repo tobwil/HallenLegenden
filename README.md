@@ -146,6 +146,18 @@ sh src/build.sh
 
 Das erzeugt `game/index.html` und `hallen-legenden.html`. Die Landingpage `index.html` wird von Hand gepflegt. Es gibt keinen Bundler und keine Paketabhängigkeiten. Für einen Syntax-Check reicht `node --check` auf die zusammengefügten JS-Dateien.
 
+#### Plattform-Schnittstelle
+
+Im Browser speichert das Spiel in `localStorage`. Eine Hülle wie eine Desktop-Version kann vor dem Spiel `window.HL_PLATFORM` setzen und damit Folgendes ersetzen oder ergänzen (alles optional, siehe `src/p01_core.js`):
+
+| Feld | Zweck |
+|---|---|
+| `name` | Name der Plattform, im Browser `'web'` |
+| `storage` | Speicher mit `getItem`, `setItem`, `removeItem`, synchron wie `localStorage` |
+| `event(name, data)` | bekommt dieselben Ereignisse wie die Statistik, zum Beispiel `spiel-ende` mit `{ ergebnis }` und `titel` mit `{ art }` (`meister`, `pokal`, `euro`, `meister2`, `aufstieg`) |
+| `quit()` | zeigt BEENDEN im Hauptmenü |
+| `legal` | ersetzt die Copyright-Zeile auf dem Titelbildschirm |
+
 #### Tests
 
 Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere mit Pokal und Europapokal, Finanzen, Potenzial, Erfolge und Teilen-Bild, Vergleich vor dem Spiel, Editor, Menüfenster, Handy-Steuerung und Darstellung auf breiten Bildschirmen. Nach `sh src/build.sh` und vor jedem Merge:
@@ -154,7 +166,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Si
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 34 Tests, etwa eine Minute
+npm test                             # alle 35 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 8 tiefe Tests, etwa zweieinhalb Minuten (vor größeren Versionen)
@@ -314,6 +326,18 @@ sh src/build.sh
 
 This generates `game/index.html` and `hallen-legenden.html`. The landing page `index.html` is maintained by hand. There is no bundler and there are no package dependencies. For a syntax check, `node --check` on the concatenated JS is enough.
 
+#### Platform interface
+
+In the browser the game saves to `localStorage`. A wrapper such as a desktop version can set `window.HL_PLATFORM` before the game loads to replace or add the following (all optional, see `src/p01_core.js`):
+
+| Field | Purpose |
+|---|---|
+| `name` | platform name, `'web'` in the browser |
+| `storage` | storage with `getItem`, `setItem`, `removeItem`, synchronous like `localStorage` |
+| `event(name, data)` | receives the same events as the analytics, for example `spiel-ende` with `{ ergebnis }` and `titel` with `{ art }` (`meister`, `pokal`, `euro`, `meister2`, `aufstieg`) |
+| `quit()` | shows QUIT (BEENDEN) in the main menu |
+| `legal` | replaces the copyright line on the title screen |
+
 #### Tests
 
 Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career with cup and European cup, finances, potential, achievements and share image, pre-match comparison, editor, menu windows, touch controls and wide-screen layout, among others. After `sh src/build.sh` and before every merge:
@@ -322,7 +346,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). They 
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 34 tests, about one minute
+npm test                             # all 35 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 8 deep tests, about two and a half minutes (before bigger releases)
