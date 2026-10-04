@@ -26,7 +26,7 @@ function newMatch(ta, tb, o = {}) {
   const kits = o.kits || makeKits(ta, tb, o.kitA, o.kitB);
   G = {
     tid: [ta, tb], kits, human: o.human ?? -1, diff: o.diff ?? 1, halfLen: o.halfLen ?? 180, lg: TEAMS[ta].lg,
-    career: !!o.career, cup: !!o.cup, euro: o.euro || null, event: o.event || null, demo: !!o.demo, label: o.label || '', lineupPids: o.lineups ? o.lineups.map(l => l.map(r => r.pid)) : null,
+    career: !!o.career, cup: !!o.cup, euro: o.euro || null, event: o.event || null, demo: !!o.demo, label: o.label || '', lineupPids: o.lineups ? o.lineups.map(l => l.map(r => r.pid)) : null, seven: o.career && CAREER ? [ta, tb].map(t => t === CAREER.team ? CAREER.seven || null : null) : null,
     score: [0, 0], half: 1, clock: 0, swap: false, phase: o.demo ? 'kickoff' : 'intro', phaseT: 0, t: 0, introT: 0,
     players: [], ctrl: null, poss: -1, possT: 0, starter: 0, pending: null, passiveWarn: false,
     banner: null, cut: null, ticker: { txt: '', t: 0 }, shake: 0, flash: 0, slow: 1, slowT: 0, excite: 0, wave: 0,
@@ -104,9 +104,10 @@ function place(p, x, y) { Object.assign(p, { x, y, z: 0, vx: 0, vy: 0, vz: 0, ch
 function giveBall(p, quiet) {
   const b = G.ball;
   if (G.kempa && p !== G.kempa.to) G.kempa = null;
+  p.assistFrom = b.passer && b.passer !== p && b.passer.team === p.team ? b.passer : null; b.passer = null;   // für die Torvorlage
   b.owner = p; b.state = 'held'; b.passTo = null; b.shot = null; b.last = p; b.vz = 0; b.lob = false;
   p.hold = 0; p.patience = rnd(0.7, 2.0); p.dec = rnd(0.08, 0.2);
-  if (G.poss !== p.team) { G.poss = p.team; G.possT = 0; G.passiveWarn = false; }
+  if (G.poss !== p.team) { G.poss = p.team; G.possT = 0; G.passiveWarn = false; G.possSrc = 'live'; }   // Ballgewinn im laufenden Spiel (Tempogegenstoß möglich)
   if (G.human === p.team && p.role !== 'TW') G.ctrl = p;   // Torwart wirft automatisch ab
   if (!quiet) AU.catch();
 }
@@ -131,7 +132,7 @@ function setupKickoff(team, full, quick = false) {
       else { const s = sgn(team); if ((p.x - 20) * s > -1) p.x = 20 - s * rnd(1.5, 4); p.z = 0; p.vz = 0; p.lie = 0; }
     }
   }
-  place(k, 20, 10); giveBall(k, true); G.poss = team; G.possT = 0;
+  place(k, 20, 10); giveBall(k, true); G.poss = team; G.possT = 0; G.possSrc = 'restart';
   if (G.human >= 0) G.ctrl = G.human === team ? k : nearestTo(G.human, 20, 10);
 }
 function setupRestart(team, x, y, type, who) {
@@ -148,13 +149,15 @@ function setupRestart(team, x, y, type, who) {
     p.vx = p.vy = 0; p.charge = 0; p.charging = false;
     if (p.role !== 'TW') pushOut(p);
   }
-  place(t, x, y); giveBall(t, true); G.poss = team; if (type !== 'frei') G.possT = 0;
+  place(t, x, y); giveBall(t, true); G.poss = team; if (type !== 'frei') { G.possT = 0; G.possSrc = 'restart'; }
   if (G.human >= 0) G.ctrl = G.human === team ? t : nearestTo(G.human, x, y);
 }
 function setupPenalty(team, pick) {
   G.phase = 'penalty'; G.phaseT = 1.0; if (!G.shootout) G.stats.seven[team]++;
   const s = sgn(team), gx = goalX(team);
-  const shooter = pick || G.players.filter(p => p.team === team && !p.out && p.role !== 'TW').sort((a, b) => b.att - a.att)[0];
+  // Schütze: festgelegter 7-Meter-Schütze (Karriere), sonst der beste Werfer auf dem Feld
+  const onCourt = G.players.filter(p => p.team === team && !p.out && !p.injured && p.role !== 'TW'), set = G.seven && onCourt.find(p => p.pid && p.pid === G.seven[team]);
+  const shooter = pick || set || onCourt.sort((a, b) => b.att - a.att)[0];
   for (const p of G.players) {
     if (p.out) continue;
     if (p === shooter) place(p, gx - s * 7.1, 10);
@@ -162,7 +165,7 @@ function setupPenalty(team, pick) {
     else if (p.role === 'TW') place(p, ownX(p.team) + s * 1.2, 10);
     else { const a = (p.i - 3.5) * 0.27 + (p.team === team ? 0 : 0.13), r = 10.5 + (p.team === team ? 0.9 : 0); place(p, gx - s * r * Math.cos(a), clamp(10 + r * Math.sin(a), 1, 19)); }
   }
-  giveBall(shooter, true); G.poss = team; G.possT = 0;
+  giveBall(shooter, true); G.poss = team; G.possT = 0; G.possSrc = 'restart';
   G.pen = { aim: 0, aiT: rnd(1.0, 1.7), gkGuess: 0, shooter };
   if (G.human >= 0) G.ctrl = G.human === team ? shooter : G.goalie[G.human];
   say(`Siebenmeter! ${shooter.name} gegen ${G.goalie[1 - team].name}.`);
@@ -215,13 +218,13 @@ function readInput(dt) {
 function clearEdges() { IN.pa = IN.pb = IN.pc = IN.ra = IN.rb = IN.rc = IN.any = false; }
 
 // ================= Spielerdaten, Bank & Wechsel =================
-const DATA_KEYS = ['name', 'num', 'role', 'star', 'trait', 'att', 'pas', 'df', 'gk', 'sp', 'sta', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'musc', 'pid', 'fitMul', 'energy', 'goals', 'shots', 'saves', 'stealsN', 'fouls', 'look', 'mins', 'injured'];
+const DATA_KEYS = ['name', 'num', 'role', 'star', 'trait', 'att', 'pas', 'df', 'gk', 'sp', 'sta', 'skin', 'hair', 'style', 'beard', 'band', 'tall', 'musc', 'pid', 'fitMul', 'energy', 'goals', 'shots', 'saves', 'stealsN', 'fouls', 'look', 'mins', 'injured', 'g7', 's7', 'fb', 'as', 'zs', 'ga', 'sv7', 'f7'];
 function matchData(r, boost) {
   const f = r.form !== undefined ? r.form - Math.max(0, 75 - (r.fit ?? 100)) * 0.2 : 0;   // Form & Fitness aus der Karriere
   const fitMul = r.fit !== undefined ? r.fit / 100 : 1;
   return { name: r.name, num: r.num, role: r.role, star: r.star, trait: r.trait, skin: r.skin, hair: r.hair, style: r.style, beard: r.beard, band: r.band, tall: r.tall, musc: r.musc, pid: r.pid,
     att: r.att + boost + f, pas: r.pas + boost + f, df: r.def + boost + f, gk: r.gk + boost + f, sp: r.spd + boost * 0.5 + f * 0.5, sta: r.sta ?? 80,
-    fitMul, energy: fitMul, goals: 0, shots: 0, saves: 0, stealsN: 0, fouls: 0, mins: 0, injured: false, look: null };
+    fitMul, energy: fitMul, goals: 0, shots: 0, saves: 0, stealsN: 0, fouls: 0, mins: 0, injured: false, look: null, g7: 0, s7: 0, fb: 0, as: 0, zs: 0, ga: 0, sv7: 0, f7: 0 };
 }
 // Ersatzbank für Spiele ohne Karriere: je Position ein etwas schwächerer Spieler
 function quickBench(tid) {

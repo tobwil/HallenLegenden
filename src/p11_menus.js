@@ -262,10 +262,10 @@ function showTactics() {
 }
 
 const allMatchPlayers = () => G.players.concat(G.bench[0].map(b => ({ ...b, team: 0 })), G.bench[1].map(b => ({ ...b, team: 1 })));
-function potm() {
-  const all = allMatchPlayers().filter(p => p.mins > 0 || p.goals || p.saves);
+function potm(list = allMatchPlayers()) {
+  const all = list.filter(p => p.mins > 0 || p.goals || p.saves);
   const score = p => p.goals * 3 + p.saves * 1.6 + p.stealsN * 1.5 + (G.score[p.team] > G.score[1 - p.team] ? 2 : 0);
-  return all.sort((a, b) => score(b) - score(a))[0] || allMatchPlayers()[0];   // Abpfiff ohne Einsatzminuten (nur theoretisch): irgendein Spieler
+  return all.sort((a, b) => score(b) - score(a))[0] || list[0];   // Abpfiff ohne Einsatzminuten (nur theoretisch): irgendein Spieler
 }
 function endMatch() {
   const T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]], st = G.stats;

@@ -6,7 +6,12 @@ if (CAREER && CAREER.v !== 1) CAREER = null;
 if (CAREER && !(CAREER.squads && typeof CAREER.squads === 'object' && CAREER.lgOf && CAREER.season && CAREER.season.table && Array.isArray(CAREER.season.fixtures) && TEAMS[CAREER.team] && CAREER.squads[CAREER.team])) {
   store.set(CAREER_KEY + '_defekt', CAREER); store.del(CAREER_KEY); CAREER = null;
 }
-function saveCareer() { if (CAREER) store.set(CAREER_KEY, CAREER); }
+function saveCareer() { if (CAREER) { dropGoneRoles(); store.set(CAREER_KEY, CAREER); } }
+function dropGoneRoles() {   // Kapitän oder 7-Meter-Schütze hat den Verein verlassen (Verkauf, Vertragsende, Karriereende): Amt wird frei
+  const sq = CAREER.squads[CAREER.team], gone = pid => pid && !sq.some(p => p.pid === pid), c = gone(CAREER.capt), s = gone(CAREER.seven);
+  if (c) { CAREER.capt = null; news('Die Kapitänsbinde ist frei: Bestimme im Kader einen neuen Kapitän.'); }
+  if (s) CAREER.seven = null;   // die 7-Meter wirft wieder der beste Werfer auf dem Feld
+}
 const careerStamp = () => CAREER ? `${CAREER.year}-${CAREER.season.round}` : '';
 const SEASON_LENS = [{ n: 'KURZ · 6', v: 6 }, { n: 'HINRUNDE · 17', v: 17 }, { n: 'VOLL · 34', v: 34 }];
 const TRAINING = [
@@ -87,7 +92,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
-    aiTransfers, aiMoney: {}, offers: [], legends: LEGENDS_VER, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
+    aiTransfers, aiMoney: {}, offers: [], legends: LEGENDS_VER, statFrom: { year: 2026, round: 0 }, seven: null, capt: null, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
   TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 2 ? 12000 : 25000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
@@ -151,9 +156,58 @@ function simMatch(a, b, neutral) {   // neutral: kein Heimvorteil (Final Four)
   share(A, ga); share(B, gb);
   const sv = S => Math.max(1, Math.round((rnd(6, 13) + (S.gk - 80) / 4) * sc));
   stats[A.L[0].pid].sv = sv(A); stats[B.L[0].pid].sv = sv(B);
-  return { a, b, ga, gb, stats, La: A.L, Lb: B.L };
+  const res = { a, b, ga, gb, stats, La: A.L, Lb: B.L }; simExtras(res, a, b);
+  return res;
 }
 // Ergebnis auf Tabelle, Spieler (Tore, Form, Fitness) anwenden
+// ---------- Handball-Statistik pro Spieler: Saison (p.s) und Karriere (p.k), als kompakte Zahlenreihe ----------
+// sp Spiele · min Minuten · g Tore · sh Würfe · g7/s7 7-Meter Tore/Würfe · fb Tempogegenstoß-Tore · as Torvorlagen · bg Ballgewinne
+// zs Zeitstrafen · potm Spieler des Spiels · sv Paraden · ga Gegentore · sv7/f7 gehaltene/erlebte 7-Meter (Torhüter)
+const STK = ['sp', 'min', 'g', 'sh', 'g7', 's7', 'fb', 'as', 'bg', 'zs', 'potm', 'sv', 'ga', 'sv7', 'f7'];
+const statOf = (p, which = 's') => { const a = p[which] || [], o = {}; STK.forEach((k, i) => o[k] = a[i] || 0); return o; };
+function addStats(p, st) {
+  for (const w of ['s', 'k']) { const a = p[w] || (p[w] = STK.map(() => 0)); STK.forEach((k, i) => { a[i] = (a[i] || 0) + (k === 'sp' ? 1 : Math.round(st[k] || 0)); }); }
+}
+// 7-Meter-Schütze und Kapitän: eigener Verein frei wählbar, sonst (und bei CPU-Vereinen) der beste Werfer auf dem Feld
+const sevenPick = (tid, L) => { const f = L.filter(p => p.role !== 'TW'), own = tid === CAREER.team && CAREER.seven && f.find(p => p.pid === CAREER.seven); return own || f.slice().sort((a, b) => b.att - a.att)[0]; };
+const isCapt = p => CAREER.capt === p.pid;
+// Handball-Zahlen für simulierte Spiele (Würfe, 7-Meter, Tempogegenstöße, Vorlagen, Ballgewinne, Zeitstrafen, Torhüter).
+// Eigener Zufall aus Paarung und Spieltag: Ergebnis, Torschützen-Zufall und alles andere bleiben genau wie ohne Statistik.
+function simExtras(r, tA, tB) {
+  const R = seeded(hashStr(`${CAREER.year}|${CAREER.season.round}|${r.a}|${r.b}|${r.ga}|${r.gb}`)), st = r.stats;
+  const n = x => Math.max(0, Math.round(x + R() - 0.5));
+  const wpick = (list, w) => { let x = R() * w.reduce((s, v) => s + v, 0); for (let i = 0; i < list.length; i++) if ((x -= w[i]) <= 0) return list[i]; return list[list.length - 1]; };
+  const side = [];
+  for (const [L, goals, tid] of [[r.La, r.ga, tA], [r.Lb, r.gb, tB]]) {
+    L.forEach(p => Object.assign(st[p.pid] || (st[p.pid] = { g: 0, sv: 0 }), { min: 60, sh: 0, g7: 0, s7: 0, fb: 0, as: 0, bg: 0, zs: 0, ga: 0, sv7: 0, f7: 0 }));
+    const f = L.filter(p => p.role !== 'TW'); if (!f.length) { side.push({ s7: 0, g7: 0, miss: 0 }); continue; }
+    // 7-Meter: etwa jedes siebte Tor, der Schütze bekommt die verwandelten (aus den Toren der Mitspieler)
+    const sh7 = sevenPick(tid, L), s7 = Math.min(n(goals * 0.15), goals + 2), conv = clamp(0.6 + (sh7.att - 75) / 100, 0.5, 0.9);
+    let g7 = 0; for (let i = 0; i < s7; i++) if (R() < conv) g7++; g7 = Math.min(goals, g7);   // jeder 7-Meter einzeln: etwa drei von vier sitzen
+    while (st[sh7.pid].g < g7) { const d = f.filter(p => p !== sh7 && st[p.pid].g > 0); if (!d.length) break; st[wpick(d, d.map(p => st[p.pid].g)).pid].g--; st[sh7.pid].g++; }
+    Object.assign(st[sh7.pid], { g7: Math.min(g7, st[sh7.pid].g), s7 });
+    // Tempogegenstöße: vor allem Außen und schnelle Spieler
+    for (let i = n(goals * 0.15); i > 0; i--) { const c = f.filter(p => st[p.pid].g - st[p.pid].g7 - st[p.pid].fb > 0); if (!c.length) break; st[wpick(c, c.map(p => (p.role === 'LA' || p.role === 'RA' ? 3 : 1) * p.spd / 80)).pid].fb++; }
+    // Würfe aus Trefferquote nach Position und Wurfstärke (7-Meter zählen mit)
+    let miss = 0;
+    for (const p of f) { const x = st[p.pid], q = clamp(({ LA: 0.66, RA: 0.66, KM: 0.7, RL: 0.52, RR: 0.52, RM: 0.55 }[p.role] || 0.58) + (p.att - 80) / 250, 0.35, 0.85), op = x.g - x.g7;
+      const m = n(op * (1 - q) / q); x.sh = op + m + x.s7; miss += m + x.s7 - x.g7; }
+    // Torvorlagen: gut jedes zweite Tor aus dem Spiel heraus, vor allem vom Rückraum
+    for (const p of f) for (let i = st[p.pid].g - st[p.pid].g7; i > 0; i--) if (R() < 0.55) { const c = f.filter(q => q !== p); if (c.length) st[wpick(c, c.map(q => q.pas * ({ RM: 2, RL: 1.3, RR: 1.3 }[q.role] || 0.6))).pid].as++; }
+    for (let i = n(goals * 0.22); i > 0; i--) st[wpick(f, f.map(p => p.def * p.spd / 6400 * (p.role === 'KM' ? 1.3 : 1))).pid].bg++;
+    for (let i = n(goals * 0.1); i > 0; i--) st[wpick(f, f.map(p => p.def / 80 * ({ KM: 1.4, RM: 1.2 }[p.role] || 1))).pid].zs++;
+    side.push({ s7, g7, miss, f });
+  }
+  // Torhüter: Gegentore, erlebte und gehaltene 7-Meter; Paraden stammen aus der Simulation (nie mehr als Fehlwürfe des Gegners)
+  [[r.La, 1, r.gb], [r.Lb, 0, r.ga]].forEach(([L, o, conceded]) => { const gk = L.find(p => p.role === 'TW'); if (!gk) return; const x = st[gk.pid], os = side[o];
+    x.ga = conceded; x.f7 = os.s7; x.sv7 = Math.round((os.s7 - os.g7) * 0.75);
+    // mehr Paraden als Fehlwürfe geht nicht: dann haben die Werfer entsprechend öfter verworfen (vor allem der Rückraum)
+    for (let d = x.sv - os.miss; d > 0 && os.f; d--) st[wpick(os.f, os.f.map(p => ({ RL: 2, RR: 2, RM: 1.6 }[p.role] || 1))).pid].sh++; });
+  // Spieler des Spiels wie nach einem gespielten Spiel (Tore, Paraden, Ballgewinne, Vorlagen, Sieg)
+  let best = null, bs = -1;
+  for (const [L, w] of [[r.La, r.ga > r.gb], [r.Lb, r.gb > r.ga]]) for (const p of L) { const x = st[p.pid], v = x.g * 3 + x.sv * 1.6 + x.bg * 1.5 + x.as * 1.2 + (w ? 2 : 0); if (v > bs) { bs = v; best = x; } }
+  if (best) best.potm = 1;
+}
 // Form (letzte 5 Spiele aller Wettbewerbe) und letztes direktes Duell, für den Vergleich vor dem Spiel
 function noteResult(a, b, ga, gb, comp) {
   const F = CAREER.formAll ??= {};
@@ -174,7 +228,7 @@ function applyPlayers(res, league) {
         const st = stats[p.pid] || { g: 0, sv: 0 };
         const perf = p.role === 'TW' ? (st.sv - 9) * 0.09 : (st.g - my / 6) * 0.22;
         p.form = clamp(p.form * 0.65 + r + perf + rnd(-0.4, 0.4), -3, 3);     // starke Rückkehr zur Mitte: keine Siegesspirale
-        p.fit = clamp(p.fit - rnd(9, 15) * (1.3 - (p.sta || 75) / 200), 20, 100); p.apps++; p.tg += st.g;
+        p.fit = clamp(p.fit - rnd(9, 15) * (1.3 - (p.sta || 75) / 200), 20, 100); p.apps++; p.tg += st.g; addStats(p, st);
         if (league) { p.sg += st.g; p.ss += st.sv; }
         // Verletzungsrisiko: höher bei müden Spielern, sicher bei Verletzung im Spiel
         if (st.inj || Math.random() < 0.018 + (p.fit < 55 ? 0.03 : 0)) {
@@ -227,7 +281,10 @@ function ownFixture() { const S = CAREER.season; return S.done ? null : S.fixtur
 function careerSimOwn() { if (ownCupTie()) return cupSimOwn(); if (ownEuroTie()) return euroSimOwn(); const fx = ownFixture(); if (!fx) return; coachPrep(); playRound(simMatch(fx[0], fx[1])); }
 function careerAfterPlayed(g) {
   const stats = {}, all = allMatchPlayers(), played = [[], []];
-  all.forEach(p => { if (!p.pid) return; stats[p.pid] = { g: p.goals, sv: p.saves, min: p.mins, inj: p.injured }; if (p.mins > 0.5 || g.lineupPids[p.team].includes(p.pid)) played[p.team].push(p.pid); });
+  const best = potm(all);
+  all.forEach(p => { if (!p.pid) return;
+    stats[p.pid] = { g: p.goals, sv: p.saves, min: p.mins * 30 / g.halfLen, inj: p.injured, sh: p.shots, g7: p.g7 || 0, s7: p.s7 || 0, fb: p.fb || 0, as: p.as || 0, bg: p.stealsN || 0, zs: p.zs || 0, ga: p.ga || 0, sv7: p.sv7 || 0, f7: p.f7 || 0, potm: p === best ? 1 : 0 };
+    if (p.mins > 0.5 || g.lineupPids[p.team].includes(p.pid)) played[p.team].push(p.pid); });
   const La = played[0].map(id => findCareerPlayer(g.tid[0], id)).filter(Boolean), Lb = played[1].map(id => findCareerPlayer(g.tid[1], id)).filter(Boolean);
   if (g.euro) return playEuroRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb, so: g.soWinner !== undefined, win: g.soWinner !== undefined ? g.tid[g.soWinner] : undefined });
   if (g.cup) return playCupRound({ a: g.tid[0], b: g.tid[1], ga: g.score[0], gb: g.score[1], stats, La, Lb, so: g.soWinner !== undefined, win: g.soWinner !== undefined ? g.tid[g.soWinner] : g.tid[g.score[0] > g.score[1] ? 0 : 1] });
@@ -330,7 +387,7 @@ function careerEndSeason() {
         sq.splice(i, 1); sq.push(finalize(genPlayer(p.role, t.r - 9 + r() * 4, r, 18, 20)));
         continue;
       }
-      Object.assign(p, { form: 0, fit: 100, sg: 0, ss: 0, apps: 0, inj: 0 });
+      Object.assign(p, { form: 0, fit: 100, sg: 0, ss: 0, apps: 0, inj: 0 }); delete p.s;
       // Verträge: ein Jahr weniger; ausgelaufene Spieler gehen (KI-Vereine verlängern meist)
       p.vt = (p.vt ?? 2) - 1;
       if (p.vt <= 0) {
@@ -446,6 +503,7 @@ function headline() {
 // alte Spielstände ergänzen
 if (CAREER) {
   CAREER.aiTransfers ??= false; CAREER.coach ??= { lineup: false, training: false };
+  CAREER.statFrom ??= { year: CAREER.year, round: CAREER.season.round };   // Spieler-Statistik zählt ab diesem Update
   TEAMS.forEach(t => (CAREER.squads[t.id] || []).forEach(p => { p.sta ??= 75; p.inj ??= 0; p.vt ??= 1 + ((Math.random() * 3) | 0); p.sal ??= salaryFor(p); })); CAREER.offers ??= []; CAREER.streak ??= 0; CAREER.lastMatch ??= null; CAREER.issue ??= 1;
   if (!CAREER.aiMoney) { CAREER.aiMoney = {}; TEAMS.forEach(t => CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 20000) + 50000); }
   TEAMS.forEach(t => { if (CAREER.squads[t.id]) return; CAREER.squads[t.id] = makeSquad(t.id); CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 25000) + 50000; });   // später hinzugekommene Vereine (international)

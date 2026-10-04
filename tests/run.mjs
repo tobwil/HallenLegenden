@@ -513,7 +513,7 @@ test('Wirtschaft: Entlassung nach zweimal deutlich verfehltem Ziel, neuer Verein
   // mit dem neuen Verein selbst spielen: SELBST SPIELEN -> ANPFIFF -> Abpfiff -> WEITER ZUR KARRIERE
   await page.evaluate(() => careerHub('home')); await page.click('#menu button[data-act="cPlay"]'); await page.click('#menu button[data-act="pmGo"]');
   const match = await page.evaluate(() => ({ mine: G.tid[G.human] === CAREER.team, career: G.career }));
-  await page.evaluate(() => { G.paused = true; G.introT = 99; let n = 0; while (G.phase !== 'fulltime' && n++ < 90000) { readInput(1 / 60); step(1 / 60); } G.paused = false; });
+  await page.evaluate(() => { G.paused = true; G.introT = 99; let n = 0; while (G.phase !== 'fulltime' && n++ < 90000) { if (G.phase === 'penalty' && G.pen && G.human === G.pen.shooter.team && G.phaseT <= 0) { shoot(G.pen.shooter, 0.5, 0.8); G.phase = 'play'; } readInput(1 / 60); step(1 / 60); }   /* eigenen 7-Meter wirft der Test */ G.paused = false; });
   await page.waitForSelector('#menu button[data-act="afterMatch"]', { timeout: 15000 }); await page.click('#menu button[data-act="afterMatch"]');
   const rest = await page.evaluate(() => { const r1 = CAREER.season.round; let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 200) ACT.cSim(); ACT.cEnd();
     return { r1, done: g < 200, histTeam: CAREER.history.slice(-1)[0].team === CAREER.team, histOld: CAREER.history.slice(0, 2).every(h => h.team !== CAREER.team) }; });
@@ -655,6 +655,66 @@ test('Hallen-Legenden: Weidenhammer, Schülein, Richardson und Schörner im Kade
   ok(r.chk.KIE && r.chk.COB && r.chk.BER && r.chk.ERL, 'Kader: ' + JSON.stringify(r.chk)); ok(r.inCareer, 'nicht in der Karriere');
   ok(Object.values(r.looks).every(Boolean), 'Aussehen/Talent: ' + JSON.stringify(r.looks));
   ok(m0.w && m0.r && m0.s && m0.flag && m0.sch, 'Nachrüsten im alten Spielstand: ' + JSON.stringify(m0));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Spielerkarte: Handball-Statistik aus Simulation und Spiel stimmig, 7-Meter-Schütze wirkt, Kapitän, Bank, Saisonwechsel, Verkauf', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 17);
+  await page.evaluate(STEP);
+  const r = await page.evaluate(() => {
+    careerCreate(TEAM_BASE.findIndex(b => b[0] === 'KIE'), 1, 1, 1);
+    // eine simulierte Partie: Summen passen zum Ergebnis, Torhüter zu den Gegentoren, Paraden nie mehr als Fehlwürfe
+    const m = simMatch(2, 5), side = L => { const x = L.map(p => m.stats[p.pid]); const f = (k, flt = () => true) => L.filter(flt).reduce((s, p) => s + (m.stats[p.pid][k] || 0), 0); return { g: f('g'), sh: f('sh'), sv: f('sv', p => p.role === 'TW'), ga: f('ga', p => p.role === 'TW') }; };
+    const A = side(m.La), B = side(m.Lb), potm = Object.values(m.stats).filter(x => x.potm).length;
+    const sim = { ok: A.g === m.ga && B.g === m.gb && A.ga === m.gb && B.ga === m.ga && B.sv <= A.sh - A.g && A.sv <= B.sh - B.g && potm === 1, A, B, potm, score: `${m.ga}:${m.gb}` };
+    // 7-Meter-Schütze festlegen (ein Spieler, der nicht der beste Werfer ist), Saison simulieren
+    const sq = CAREER.squads[CAREER.team], best = sq.filter(p => p.start && p.role !== 'TW').sort((a, b) => b.att - a.att)[0];
+    const pick = sq.filter(p => p.start && p.role !== 'TW' && p !== best).sort((a, b) => a.att - b.att)[0];
+    ACT.cPick(pick.pid); ACT.cSeven(pick.pid); ACT.cCapt(best.pid);
+    let g = 0; while ((CAREER.season.round < 10 || cupDue() || euroDue()) && g++ < 40) { for (const p of sq) if (p.pid === pick.pid && !p.inj) { sq.filter(x => x.role === p.role).forEach(x => x.start = false); p.start = true; } ACT.cSim(); }
+    const all = TEAMS.flatMap(t => CAREER.squads[t.id]), bad = [];
+    let G7 = 0, S7 = 0, Gg = 0, Sh = 0, Sv = 0, Ga = 0, As = 0;
+    for (const p of all) for (const w of ['s', 'k']) { const x = statOf(p, w); if (x.g > x.sh || x.g7 > x.s7 || x.g7 > x.g || x.fb > x.g || x.sv7 > x.f7 || STK.some(k => !isFinite(x[k]) || x[k] < 0)) bad.push(p.name + ' ' + w + ' ' + JSON.stringify(x));
+      if (w === 's') { G7 += x.g7; S7 += x.s7; Gg += x.g; Sh += x.sh; Sv += x.sv; Ga += x.ga; As += x.as; } }
+    const ps = statOf(sq.find(p => p.pid === pick.pid)), mine7 = sq.reduce((s, p) => s + statOf(p).s7, 0);
+    const league = { quote: Gg / Sh, q7: G7 / S7, fang: Sv / (Sv + Ga), vorl: As / Gg };
+    // Karte: Sterne, Statistik-Ansicht, Abzeichen im Kader
+    ACT.cPick(best.pid); const card = { stars: menu.querySelectorAll('.pcst').length, capt: !!menu.querySelector('.pchead .cbadge') };
+    ACT.cStat(); card.stat = menu.innerText.includes('Wurfquote') && menu.innerText.includes('Tempogegenstoß-Tore'); ACT.cStat();
+    ACT.cPick(); card.badges = [...menu.querySelectorAll('.cbadge')].map(b => b.textContent).sort().join();
+    // Bank: bester Ersatz rückt nach
+    const role = best.role; ACT.cBench(best.pid); const bench = { out: !best.start, inn: sq.filter(p => p.role === role && p.start).length === 1 && !sq.find(p => p.role === role && p.start).inj };
+    return { sim, bad: bad.slice(0, 3), ps, mine7, league, card, bench, seven: CAREER.seven === pick.pid, pick: pick.name };
+  });
+  // gespieltes Spiel: der festgelegte Schütze wirft den 7-Meter, Summen passen zum Ergebnis
+  const p = await page.evaluate(() => {
+    let g = 0; while ((cupDue() || euroDue()) && g++ < 5) ACT.cSim();
+    const sq = CAREER.squads[CAREER.team], s = sq.find(x => x.pid === CAREER.seven); if (s && !s.inj) { sq.filter(x => x.role === s.role).forEach(x => x.start = false); s.start = true; }
+    careerHub('home'); ACT.cPlay(); ACT.pmGo(); G.paused = true; G.introT = 99; __run(200);
+    const me = G.human; setupPenalty(me); const shooter = G.pen && G.pen.shooter.pid; __run(80); shoot(G.pen.shooter, 0.6, 0.8); G.phase = 'play';   // 7-Meter für dich: den Wurf nimmt der Test ab
+    const before = new Map(sq.map(q => [q.pid, statOf(q, 'k')]));
+    let n = 0; while (G.phase !== 'fulltime' && n++ < 150000) { if (!menu.hidden) hideMenu(); if (G.phase === 'penalty' && G.pen && G.human === G.pen.shooter.team && G.phaseT <= 0) { shoot(G.pen.shooter, 0.5, 0.8); G.phase = 'play'; } __run(1); }
+    const h = G.human, my = G.score[h], th = G.score[1 - h]; endMatch();
+    const d = sq.map(q => { const a = statOf(q, 'k'), b0 = before.get(q.pid); const o = {}; STK.forEach(k => o[k] = a[k] - b0[k]); o.role = q.role; return o; });
+    const sum = (k, f = () => true) => d.filter(f).reduce((a, o) => a + o[k], 0);
+    ACT.afterMatch();
+    return { shooter, seven: CAREER.seven, my, th, g: sum('g'), sh: sum('sh'), ga: sum('ga', o => o.role === 'TW'), s7: sum('s7'), min: sum('min') };
+  });
+  // Saisonwechsel: Saisonzahlen leer, Karriere bleibt
+  const nx = await page.evaluate(() => { const q = CAREER.squads[CAREER.team].find(x => statOf(x, 'k').sp > 0), k0 = statOf(q, 'k').sp; let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 60) ACT.cSim(); const k1 = statOf(q, 'k').sp; ACT.cEnd(); ACT.cNext(); return { s: statOf(q).sp, k: statOf(q, 'k').sp, k1, k0 }; });
+  // Pad und Tastatur: der Fokus bleibt auf dem gedrückten Kartenknopf. Verkauf macht Kapitänsamt und 7-Meter frei
+  await page.evaluate(() => { ACT.cTab('squad'); const sq = CAREER.squads[CAREER.team], q = sq.filter(x => x.start && x.role !== 'TW' && !isLocked(x) && x.pid !== CAREER.capt && x.pid !== CAREER.seven && sq.filter(y => y.role === x.role).length > 1).sort((a, b) => pValue(a) - pValue(b))[0]; window.__q = q.pid; ACT.cPick(q.pid); });
+  const foc = [];
+  for (const a of ['cStat', 'cCapt', 'cSeven']) { await page.evaluate(a => menu.querySelector(`.pcard [data-act="${a}"]`).focus(), a); await page.keyboard.press('Enter'); foc.push(await page.evaluate(() => document.activeElement.dataset.act)); }
+  const sold = await page.evaluate(() => { const sq = CAREER.squads[CAREER.team]; while (sq.length < 14) sq.push(finalize(genPlayer('RA', 60, Math.random, 18, 20))); fixNumbers(sq); const was = [CAREER.capt === __q, CAREER.seven === __q], m = sellPlayer(__q); return { was, m, capt: CAREER.capt, seven: CAREER.seven, news: CAREER.news[0] }; });
+  ok(r.sim.ok, 'Simulierte Partie: ' + JSON.stringify(r.sim)); ok(!r.bad.length, 'Widersprüchliche Zahlen: ' + r.bad.join(' | '));
+  ok(r.league.quote > 0.5 && r.league.quote < 0.7 && r.league.q7 > 0.6 && r.league.q7 < 0.88 && r.league.fang > 0.18 && r.league.fang < 0.4 && r.league.vorl > 0.3 && r.league.vorl < 0.7, 'Ligaweit unplausibel: ' + JSON.stringify(r.league));
+  ok(r.seven && r.ps.s7 > 0 && r.ps.s7 >= r.mine7 * 0.8, `7-Meter-Schütze ${r.pick} wirft nicht die 7-Meter: ${r.ps.s7} von ${r.mine7}`);
+  ok(r.card.stars === 2 && r.card.capt && r.card.stat && r.card.badges === '7M,C', 'Karte: ' + JSON.stringify(r.card)); ok(r.bench.out && r.bench.inn, 'Bank: ' + JSON.stringify(r.bench));
+  ok(p.shooter === p.seven && p.g === p.my && p.ga === p.th && p.sh >= p.g && p.s7 >= 1 && Math.abs(p.min - 7 * 60) < 15, 'Gespieltes Spiel: ' + JSON.stringify(p));
+  ok(nx.s === 0 && nx.k === nx.k1 && nx.k1 > nx.k0, 'Saisonwechsel: ' + JSON.stringify(nx));
+  ok(foc.join() === 'cStat,cCapt,cSeven', 'Fokus springt von der Spielerkarte weg: ' + foc);
+  ok(sold.was.every(Boolean) && !sold.m && sold.capt === null && sold.seven === null && /Kapitänsbinde/.test(sold.news), 'Verkauf von Kapitän und 7-Meter-Schütze: ' + JSON.stringify(sold));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 

@@ -57,6 +57,7 @@ const INV = `window.__inv = (wo) => {
       if (p.form < -3 || p.form > 3) add(t.k + ' ' + p.name + ' Form ' + p.form);
       if (p.age < 15 || p.age > 45) add(t.k + ' ' + p.name + ' Alter ' + p.age);
       if (nums.has(p.num)) add(t.k + ' Rückennummer doppelt ' + p.num); nums.add(p.num);
+      for (const w of ['s', 'k']) { const x = statOf(p, w); if (x.g > x.sh || x.g7 > x.s7 || x.g7 > x.g || x.fb > x.g || x.sv7 > x.f7 || STK.some(k => !isFinite(x[k]) || x[k] < 0)) { add(t.k + ' ' + p.name + ' Statistik ' + w + ' ' + JSON.stringify(x)); break; } }
     }
   }
   for (const p of CAREER.free || []) if (pids.has(p.pid)) add('Spieler zugleich vereinslos und im Kader: ' + p.name);
@@ -115,7 +116,7 @@ test('Dauerlauf: 3 Karrieren × 6 Saisons mit Transfers, Auf- und Abstieg, Entla
 // ---------------------------------------------------------------- Laufendes Spiel speichern
 // bis zur Mitte der 1. Halbzeit spielen, speichern, Seite neu laden, fortsetzen, zu Ende spielen
 const toMid = `G.paused = true; G.introT = 99; { let n = 0; while (!(G.half === 1 && G.clock > G.halfLen * 0.5 && G.phase === 'play') && n++ < 60000) __run(1); }`;
-const toEnd = `G.paused = true; G.introT = 99; { let n = 0; while (G.phase !== 'fulltime' && n++ < 120000) __run(1); } G.paused = false;`;
+const toEnd = `G.paused = true; G.introT = 99; { let n = 0; while (G.phase !== 'fulltime' && n++ < 120000) { if (G.phase === 'penalty' && G.pen && G.human === G.pen.shooter.team && G.phaseT <= 0) { shoot(G.pen.shooter, 0.5, 0.8); G.phase = 'play'; } __run(1); } } G.paused = false;`;
 test('Speichern im Spiel: Schnelles Spiel und Karriere-Spiel nach Neuladen fortsetzen, Ergebnis zählt genau einmal', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 7);
   // Schnelles Spiel
@@ -325,8 +326,9 @@ function vorversion() {
     return pathToFileURL(path.join(dir, 'index.html')).href;
   } catch (e) { return null; }
 }
-const toMidS = `G.paused = true; G.introT = 99; { let n = 0; while (!(G.half === 1 && G.clock > G.halfLen * 0.5 && G.phase === 'play') && n++ < 60000) __run(1); }`;
-const toEndS = `G.paused = true; G.introT = 99; { let n = 0; while (G.phase !== 'fulltime' && n++ < 120000) __run(1); } G.paused = false;`;
+// Ohne Eingaben wartet ein eigener 7-Meter auf den Wurf: den nimmt der Test ab, sonst hängt die Partie je nach Spielverlauf
+const toMidS = `G.paused = true; G.introT = 99; { let n = 0; while (!(G.half === 1 && G.clock > G.halfLen * 0.5 && G.phase === 'play') && n++ < 60000) { if (G.phase === 'penalty' && G.pen && G.human === G.pen.shooter.team && G.phaseT <= 0) { shoot(G.pen.shooter, 0.5, 0.8); G.phase = 'play'; } __run(1); } }`;
+const toEndS = `G.paused = true; G.introT = 99; { let n = 0; while (G.phase !== 'fulltime' && n++ < 120000) { if (G.phase === 'penalty' && G.pen && G.human === G.pen.shooter.team && G.phaseT <= 0) { shoot(G.pen.shooter, 0.5, 0.8); G.phase = 'play'; } __run(1); } } G.paused = false;`;
 // eine Partie: Spielstand in der Vorversion anlegen (prep), Speicher in die neue Version übertragen, dort weiter (check)
 async function update(ALT, seed, prep, check) {
   const a = await open(DESKTOP, seed); await a.page.goto(ALT); await a.page.waitForTimeout(600); await a.page.evaluate(STEP);

@@ -1,5 +1,5 @@
 // ================= Karriere-Bildschirme: Zeitung, Kader, Transfers =================
-let CTAB = 'home', CMSG = '', CDEL = false, CSEL = null, CSELL = null;
+let CTAB = 'home', CMSG = '', CDEL = false, CSEL = null, CSELL = null, CSTAT = false;
 const seasonName = y => `${y}/${String(y + 1).slice(2)}`;
 const euroS = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + ' M' : Math.round(v / 1000) + ' T';
 function careerEntry() { SEASON_PICK = false; if (CAREER) careerHub('home'); else careerNewScreen(); }
@@ -85,21 +85,55 @@ function paper() {
     <div class="np-news">${CAREER.news.slice(0, 8).map(n => `<p>${esc(n)}</p>`).join('')}</div>
   </div>`;
 }
-// ---------- Spieler-Detail ----------
+// ---------- Spieler-Detail: Spielerkarte (Spieler | Werte oder Statistik) und Knopfleiste ----------
+const starsOf = v => clamp(Math.round((v - 58) / 7.5), 1, 5);   // Gesamtwert in Sterne: 65 ≈ 1, 73 ≈ 2, 80 ≈ 3, 88 ≈ 4, 95 ≈ 5
+const stars = (n, col) => `<b class="pcst" aria-label="${n} von 5 Sternen">${[1, 2, 3, 4, 5].map(i => `<svg viewBox="0 0 7 7" width="12" height="12" aria-hidden="true"><path d="M3 0h1v2h3v1h-1v1h1v3h-2v-1h-3v1h-2v-3h1v-1h-1v-1h3z" fill="${i <= n ? col : '#3a2f4d'}"/></svg>`).join('')}</b>`;
+const ATTR_INFO = { Wurf: 'Torgefahr und Wurfhärte', Pass: 'Genauigkeit, Vorlagen', Abwehr: 'Zweikampf, Ballgewinne', Tempo: 'Laufen, Tempogegenstoß', Torwart: 'Reaktion und Stellungsspiel', Ausdauer: 'wie schnell er müde wird' };
+const pct = (a, b) => b ? Math.round(100 * a / b) + ' %' : '–';
+function statSince(which) {   // Statistik gibt es erst seit dem Update: Hinweis, ab wann gezählt wird
+  const f = CAREER.statFrom; if (!f) return '';
+  if (which === 's' && f.year === CAREER.year && f.round > 0) return `ab ${f.round + 1}. Spieltag`;
+  if (which === 'k' && (f.year > (CAREER.history[0] ? CAREER.history[0].year : CAREER.year) || f.round > 0)) return `seit ${f.year}/${String(f.year + 1).slice(2)}`;
+  return '';
+}
+function statTable(p) {
+  const S = statOf(p, 's'), K = statOf(p, 'k'), gk = p.role === 'TW';
+  const rows = gk ? [['Spiele', x => x.sp], ['Spielminuten', x => Math.round(x.min)], ['Paraden', x => x.sv], ['Gegentore', x => x.ga], ['Fangquote', x => pct(x.sv, x.sv + x.ga)], ['7-Meter gehalten', x => `${x.sv7} / ${x.f7}`], ['Spieler des Spiels', x => x.potm]]
+    : [['Spiele', x => x.sp], ['Spielminuten', x => Math.round(x.min)], ['Tore / Würfe', x => `${x.g} / ${x.sh}`], ['Wurfquote', x => pct(x.g, x.sh)], ['Tore pro Spiel', x => x.sp ? (x.g / x.sp).toFixed(1).replace('.', ',') : '–'],
+      ['7-Meter', x => `${x.g7} / ${x.s7}`], ['Tempogegenstoß-Tore', x => x.fb], ['Torvorlagen', x => x.as], ['Ballgewinne', x => x.bg], ['Zeitstrafen', x => x.zs], ['Spieler des Spiels', x => x.potm]];
+  const ss = statSince('s'), ks = statSince('k');
+  return `<table class="sqt stt pcstat"><thead><tr><th></th><th class="num">SAISON</th><th class="num">KARRIERE</th></tr></thead><tbody>${rows.map(([l, f]) => `<tr><td class="lbl">${l}</td><td class="num">${f(S)}</td><td class="num">${f(K)}</td></tr>`).join('')}</tbody></table>
+    <p class="muted" style="margin:4px 0 0">Liga, Pokal und Europapokal zusammen${ss || ks ? ` · gezählt ${[ss && 'Saison ' + ss, ks && 'Karriere ' + ks].filter(Boolean).join(', ')}` : ''}</p>`;
+}
 function playerDetail(p) {
   const attrs = (p.role === 'TW' ? [['Torwart', p.gk], ['Tempo', p.spd]] : [['Wurf', p.att], ['Pass', p.pas], ['Abwehr', p.def], ['Tempo', p.spd]]).concat([['Ausdauer', p.sta ?? 75]]);
-  const sellP = quickSalePrice(p), locked = isLocked(p);
-  return `<div class="pdet"><canvas id="pdC" width="40" height="40"></canvas>
-    <div class="pdet-info"><h2>#${p.num} ${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''}</h2>
-      <p class="muted">${ROLE_LONG[p.role]} · ${p.age} Jahre · Gesamt <b style="color:var(--gold)">${ovr(p)}</b> · Potenzial <b style="color:var(--cyan)">${potOf(p)}</b> (${POT_TXT[potTrend(p)]}${potTrend(p) === 'up' ? `, noch etwa +${potOf(p) - ovr(p)}` : ''})${p.trait ? ` · ${esc(p.trait)}` : ''}</p>
-      <div class="bars">${attrs.map(([l, v]) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}</span>`).join('')}</div>
-      ${p.inj ? `<p style="margin:0;color:var(--hot)">Verletzt: fällt noch ${p.inj === 1 ? 'einen Spieltag' : `${p.inj} Spieltage`} aus.</p>` : ''}
-      <p class="muted">Vertrag: ${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · Gehalt ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</p>
-      ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p) * REF_LEN)} pro Saison, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
-      <p class="muted">Form ${formTxt(p.form)} · Fitness ${fitBar(Math.round(p.fit), 60)} ${Math.round(p.fit)} %<br>Saison: ${p.apps} Spiele, ${p.role === 'TW' ? `${p.ss} Paraden` : `${p.sg} Tore`} · Karriere: ${p.tg} Tore · Marktwert ${euro(pValue(p))}</p>
-      <div class="row">${p.start ? '<span class="tag" style="color:var(--gold)">IN DER STARTSIEBEN</span>' : p.inj ? '<span class="tag" style="color:var(--hot)">VERLETZT</span>' : `<button class="main" data-act="cStart" data-v="${p.pid}">AUFSTELLEN</button>`}
-        ${locked ? `<span class="tag">NEUZUGANG · VERKAUF AB SPIELTAG ${p.lock.r + 1}</span>` : `<button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : `SOFORTVERKAUF (${euro(sellP)})`}</button>`}<button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
-    </div></div>`;
+  const sellP = quickSalePrice(p), locked = isLocked(p), sq = CAREER.squads[CAREER.team], seven = sevenPick(CAREER.team, sq.filter(x => x.start)), capt = isCapt(p);
+  const isSeven = CAREER.seven === p.pid, autoSeven = !CAREER.seven && seven && seven.pid === p.pid;
+  const fit = Math.round(p.fit), zust = fit >= 85 ? 'frisch' : fit >= 65 ? 'gut' : fit >= 45 ? 'müde' : 'erschöpft';
+  const badges = `${capt ? '<span class="cbadge">C</span>' : ''}${isSeven || autoSeven ? '<span class="cbadge">7M</span>' : ''}`;
+  const info = `<section class="pcbox"><h3>SPIELER</h3><dl>
+      <dt>Stärke</dt><dd>${stars(starsOf(ovr(p)), 'var(--gold)')} <b style="color:var(--gold)">${ovr(p)}</b></dd>
+      <dt>Potenzial</dt><dd>${stars(starsOf(potOf(p)), 'var(--cyan)')} <b style="color:var(--cyan)">${potOf(p)}</b> <span class="muted">${POT_TXT[potTrend(p)]}</span></dd>
+      <dt>Zustand</dt><dd>${fitBar(fit, 60)} ${fit} % · ${zust}</dd>
+      <dt>Form</dt><dd>${formTxt(p.form)} · ${['in der Krise', 'schwach', 'etwas schwach', 'normal', 'gut drauf', 'stark', 'in Topform'][Math.round(p.form) + 3]}</dd>
+      <dt>Vertrag</dt><dd>${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</dd>
+      <dt>Marktwert</dt><dd>${euro(pValue(p))}</dd>
+      <dt>Aufgaben</dt><dd>${[p.start ? 'Startsieben' : 'Bank', capt && 'Kapitän', isSeven ? '7-Meter-Schütze' : autoSeven ? '7-Meter-Schütze (automatisch)' : ''].filter(Boolean).join(' · ')}</dd>
+    </dl>${p.inj ? `<p style="margin:6px 0 0;color:var(--hot)">Verletzt: fällt noch ${p.inj === 1 ? 'einen Spieltag' : `${p.inj} Spieltage`} aus.</p>` : ''}</section>`;
+  const right = CSTAT ? `<section class="pcbox"><h3>STATISTIK</h3>${statTable(p)}</section>`
+    : `<section class="pcbox"><h3>WERTE</h3><div class="bars">${attrs.map(([l, v]) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}</span>`).join('')}</div>
+      <p class="muted pcinfo">${attrs.map(([l]) => `<b>${l}:</b> ${ATTR_INFO[l]}`).join(' · ')}</p></section>`;
+  const startBtn = p.start ? `<button data-act="cBench" data-v="${p.pid}">AUF DIE BANK</button>` : p.inj ? '<span class="tag" style="color:var(--hot)">VERLETZT</span>' : `<button class="main" data-act="cStart" data-v="${p.pid}">AUFSTELLEN</button>`;
+  return `<div class="pcard"><div class="pchead"><canvas id="pdC" width="40" height="40"></canvas><div>
+      <h2>#${p.num} ${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''} ${badges}</h2>
+      <p class="muted">${ROLE_LONG[p.role].toUpperCase()} · ${p.age} Jahre${p.trait ? ` · ${esc(p.trait)}` : ''}</p></div></div>
+    <div class="pcgrid">${info}${right}</div>
+    ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p) * REF_LEN)} pro Saison, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
+    <div class="row">${startBtn}<button data-act="cStat">${CSTAT ? 'WERTE' : 'STATISTIK'}</button>
+      ${p.role === 'TW' ? '' : `<button data-act="cSeven" data-v="${p.pid}">${isSeven ? '7-METER: AUTOMATISCH' : '7-METER-SCHÜTZE'}</button>`}
+      <button data-act="cCapt" data-v="${p.pid}">${capt ? 'KEIN KAPITÄN' : 'KAPITÄN'}</button>
+      ${locked ? `<span class="tag">NEUZUGANG · VERKAUF AB SPIELTAG ${p.lock.r + 1}</span>` : `<button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : `SOFORTVERKAUF (${euro(sellP)})`}</button>`}<button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
+  </div>`;
 }
 // ---------- Statistik: Kennzahlen, Platz-Verlauf, Torjäger, eigener Kader ----------
 function statsView() {
@@ -215,7 +249,7 @@ function careerHub(tab) {
       const sq = CAREER.squads[CAREER.team].slice().sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role) || b.start - a.start || ovr(b) - ovr(a));
       body = `<p class="muted">Gelb = Startsieben. Tippe auf einen Namen für Details, Aufstellung und Verkauf. POT ist das Potenzial: ↗ wächst noch, ↘ baut ab. FIT ist die aktuelle Frische: Wer müde ist, spielt schwächer und läuft langsamer. AUS (Ausdauer) bestimmt, wie schnell ein Spieler ermüdet und sich erholt.${CAREER.coach.lineup ? ' <b style="color:var(--cyan)">Der Co-Trainer stellt vor jedem Spiel auf.</b>' : ''}</p>
       <table class="sqt cards"><thead><tr><th>POS</th><th>NAME</th><th>GES</th><th title="Potenzial: Höchstwert, den der Spieler erreichen kann">POT</th><th>WUR</th><th>PAS</th><th>ABW</th><th>TEM</th><th>AUS</th><th>FORM</th><th>FIT</th><th>TORE</th><th>VTR</th><th>WERT</th></tr></thead><tbody>${
-        sq.map(p => `<tr class="${p.start ? 'me' : ''}"><td data-l="POS">${p.role}</td><td class="c-name"><button class="link" data-act="cPick" data-v="${p.pid}">${esc(p.name)}</button><span class="age">${p.age}</span>${p.star ? ' ★' : ''}${p.age <= 21 && p.pot - ovr(p) > 8 ? ' <span class="tal">TALENT</span>' : ''}${p.inj ? ` <span class="inj">VERL. ${p.inj}</span>` : ''}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${potCell(p)}</td>
+        sq.map(p => `<tr class="${p.start ? 'me' : ''}"><td data-l="POS">${p.role}</td><td class="c-name"><button class="link" data-act="cPick" data-v="${p.pid}">${esc(p.name)}</button><span class="age">${p.age}</span>${p.star ? ' ★' : ''}${isCapt(p) ? ' <span class="cbadge">C</span>' : ''}${CAREER.seven === p.pid ? ' <span class="cbadge">7M</span>' : ''}${p.age <= 21 && p.pot - ovr(p) > 8 ? ' <span class="tal">TALENT</span>' : ''}${p.inj ? ` <span class="inj">VERL. ${p.inj}</span>` : ''}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${potCell(p)}</td>
           ${p.role === 'TW' ? `<td colspan="3" class="gkc">TOR ${p.gk}</td>` : `<td data-l="WUR">${p.att}</td><td data-l="PAS">${p.pas}</td><td data-l="ABW">${p.def}</td>`}<td data-l="TEM">${p.spd}</td><td data-l="AUS">${p.sta ?? 75}</td>
           <td data-l="FORM">${formTxt(p.form)}</td><td data-l="FIT">${fitBar(Math.round(p.fit))}</td><td data-l="${p.role === 'TW' ? 'PAR' : 'TORE'}">${p.role === 'TW' ? p.ss : p.sg}</td><td data-l="VTR" style="${p.vt <= 1 ? 'color:var(--hot)' : ''}">${p.vt}J</td><td data-l="WERT">${euroS(pValue(p))}</td></tr>`).join('')}</tbody></table>`;
     }
@@ -249,9 +283,12 @@ function careerHub(tab) {
       CAREER.history.map(h => `<tr><td class="c-name"><span class="hm-only">${seasonName(h.year)} · ${h.lg}. Liga · Platz ${h.pos}</span><span class="hd-only">${seasonName(h.year)}</span></td><td class="hd-only">${h.lg}.</td><td class="hd-only">${h.pos}</td><td data-l="ZIEL" style="color:${h.met ? 'var(--green)' : h.met === false ? 'var(--hot)' : 'inherit'}">${esc(h.goal || '–')}</td><td data-l="MEISTER">${esc(TEAMS[h.champ].short)}</td><td data-l="POKAL" style="${h.cup === CAREER.team ? 'color:var(--gold)' : ''}">${h.cup !== null && h.cup !== undefined ? esc(TEAMS[h.cup].short) : '–'}</td><td data-l="EUROPA" style="${h.euro === CAREER.team ? 'color:var(--gold)' : ''}">${h.euro !== null && h.euro !== undefined ? esc(TEAMS[h.euro].short) : '–'}${h.euroMy && h.euro !== CAREER.team ? ` <span class="muted">(${esc(h.euroMy)})</span>` : ''}</td><td data-l="TORJÄGER">${h.top ? `${esc(h.top.name)} (${h.top.n})` : '–'}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">Noch keine abgeschlossene Saison.</p>';
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
   }
+  // Auf der Spielerkarte bleibt der Fokus auf dem gedrückten Knopf (STATISTIK, 7-METER, KAPITÄN, BANK), sonst springt er bei Pad und Tastatur nach oben
+  const ae = document.activeElement, keep = CSEL && ae && ae.closest && ae.closest('.pcard') && ae.dataset.act !== 'cSell' ? [ae.dataset.act, ae.dataset.v || ''] : null;
   showMenu(`<div class="panel wide"><div class="csticky">${head}${tabs()}</div>${CMSG ? `<p style="margin:0;color:var(--hot)">${esc(CMSG)}</p>` : ''}${body}<div class="row"><button data-act="main">HAUPTMENÜ</button></div></div>`);
   const c = menu.querySelector('#pdC'); if (c && CSEL) { const p = CAREER.squads[CAREER.team].find(x => x.pid === CSEL); if (p) c.getContext('2d').drawImage(portrait(p, { c1: me.home.c1, c2: me.home.c2, gk: me.gkc }), 0, 0); }
   const on = menu.querySelector('.ctabs .on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  if (keep) { const same = a => a === keep[0] || (/^c(Bench|Start)$/.test(a) && /^c(Bench|Start)$/.test(keep[0])), k = [...menu.querySelectorAll('.pcard [data-act]')].find(b => same(b.dataset.act) && (b.dataset.v || '') === keep[1]); if (k) k.focus({ preventScroll: true }); }
   CMSG = ''; if (CTAB !== 'hist') CDEL = false;
 }
 function seasonSummary() {
@@ -294,6 +331,16 @@ Object.assign(ACT, {
   },
   cExt(v) { const [pid, y] = v.split(':').map(Number); CMSG = extendContract(pid, y); careerHub(); },
   cSim() { careerSimOwn(); track('karriere-simuliert'); careerHub('home'); },
+  cStat() { CSTAT = !CSTAT; careerHub(); },
+  cBench(v) {   // auf die Bank: der beste gesunde Ersatz auf derselben Position rückt in die Startsieben
+    const sq = CAREER.squads[CAREER.team], p = sq.find(x => x.pid === +v); if (!p) return careerHub();
+    const alt = sq.filter(x => x.role === p.role && x !== p && !x.inj).sort((a, b) => effOvr(b) - effOvr(a))[0];
+    if (!alt) { CMSG = `Kein gesunder Ersatz für ${p.name} auf dieser Position.`; return careerHub(); }
+    p.start = false; alt.start = true; if (CAREER.coach.lineup) { CAREER.coach.lineup = false; CMSG = `${alt.name} spielt für ${p.name}. Du stellst jetzt selbst auf.`; } else CMSG = `${alt.name} spielt für ${p.name}.`;
+    saveCareer(); careerHub();
+  },
+  cSeven(v) { const p = CAREER.squads[CAREER.team].find(x => x.pid === +v); if (!p) return careerHub(); CAREER.seven = CAREER.seven === p.pid ? null : p.pid; CMSG = CAREER.seven ? `${p.name} wirft ab jetzt die 7-Meter.` : 'Die 7-Meter wirft wieder der beste Werfer auf dem Feld.'; if (CAREER.seven) news(CMSG); saveCareer(); careerHub(); },
+  cCapt(v) { const p = CAREER.squads[CAREER.team].find(x => x.pid === +v); if (!p) return careerHub(); CAREER.capt = CAREER.capt === p.pid ? null : p.pid; CMSG = CAREER.capt ? `${p.name} ist neuer Kapitän.` : `${p.name} gibt die Kapitänsbinde ab.`; if (CAREER.capt) news(`${p.name} ist neuer Kapitän und führt die Mannschaft aufs Feld.`); saveCareer(); careerHub(); },
   cStart(v) {
     const sq = CAREER.squads[CAREER.team], p = sq.find(x => x.pid === +v);
     if (p && p.inj) { CMSG = `${p.name} ist verletzt und kann nicht spielen.`; return careerHub(); }

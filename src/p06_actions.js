@@ -26,7 +26,7 @@ function pass(p, q) {
   const tp = { x: clamp(q.x + q.vx * t * 0.85, 0.3, CW - 0.3), y: clamp(q.y + q.vy * t * 0.85, 0.3, CH - 0.3) };
   pushOut(tp, 6.4); const tx = tp.x, ty = tp.y;
   launch(p.x + p.face * 0.3, p.y, p.z + 1.5, tx, ty, 1.3, sp);
-  b.passTo = q; b.shot = null; b.nc = p; b.ncT = 0.25; b.last = p; p.throwT = 0.22; p.hold = 0;
+  b.passTo = q; b.shot = null; b.nc = p; b.ncT = 0.25; b.last = p; b.passer = p; p.throwT = 0.22; p.hold = 0;
   q.tx = tx; q.ty = ty;
   if (G.human === p.team) { G.ctrl = q; G.recvLock = { p: q, x: IN.x, y: IN.y }; }   // beim Pass gehaltene Richtung steuert den Empfänger nicht
   AU.pass();
@@ -38,7 +38,7 @@ function kempa(p) {
   const q = cands[0]; if (!q) return pass(p, choosePass(p, 0, 0));
   const cy = clamp(q.y, GY1 - 3, GY2 + 3), ly = lerp(q.y, 10, 0.35), lx = gx - s * Math.max(3.6, Math.min(4.8, Math.abs(q.x - gx) * 0.6));
   launch(p.x, p.y, p.z + 1.8, lx, ly, 2.6, 9.5);
-  const b = G.ball; b.passTo = q; b.lob = true; b.nc = p; b.ncT = 0.4; b.last = p; p.throwT = 0.25;
+  const b = G.ball; b.passTo = q; b.lob = true; b.nc = p; b.ncT = 0.4; b.last = p; b.passer = p; p.throwT = 0.25;
   q.tx = lx - s * 1.2; q.ty = ly; q.kempaRun = true;
   G.kempa = { by: p, to: q };
   if (G.human === p.team) G.ctrl = q;
@@ -67,7 +67,10 @@ function shoot(p, aimY, charge, lob = false) {
   launch(p.x + s * 0.3, p.y, p.z + 2.1, gx + s * 0.15, ty, tz, speed);
   b.shot = { by: p, team: p.team, speed, d, gkDone: false, lob, react: rnd(0.08, 0.2) * (1.3 - gk.gk / 200) * (G.human === gk.team ? 1 : DIFF[G.diff].react) * (lob ? 2.2 : 1), blocked: new Set() };
   if (d > 12) b.shot.react *= 0.45;
-  b.passTo = null; b.nc = p; b.ncT = 0.4; b.last = p; p.throwT = 0.32; p.charge = 0; p.charging = false; p.shots++;
+  // Statistik: 7-Meter, Tempogegenstoß (kurz nach Ballgewinn im laufenden Spiel), Vorlage (letzter Pass eines Mitspielers)
+  b.shot.pen = !!(G.pen && G.pen.shooter === p && !G.shootout); b.shot.fb = !G.pen && G.possSrc === 'live' && G.possT < 4.5; b.shot.assist = p.assistFrom || null;
+  if (b.shot.pen) { p.s7 = (p.s7 || 0) + 1; const gk7 = G.goalie[1 - p.team]; if (gk7) gk7.f7 = (gk7.f7 || 0) + 1; }
+  b.passTo = null; b.nc = p; b.ncT = 0.4; b.last = p; p.throwT = 0.32; p.charge = 0; p.charging = false; if (!G.shootout) p.shots++;
   G.stats.shots[p.team]++; G.possT = 0; G.excite = Math.max(G.excite, 0.6);
   AU.shot(charge); AU.crowd(0.13, 0.3); if (p.team === G.human) buzz(20);
   for (const o of fieldOpps(p)) {
@@ -106,7 +109,7 @@ function foul(d, c) {
   if (dd < 8.6 && (c.x - gx) * -s > 0) seven = fieldOpps(c).filter(o => o !== d && segDist(o.x, o.y, c.x, c.y, gx, 10) < 1.0).length === 0;
   const suspend = Math.random() < (seven ? 0.35 : 0.11) || d.fouls >= 4;
   if (suspend) {
-    d.out = 120 * G.halfLen / 1800; d.fouls = 0; G.stats.susp[d.team]++;
+    d.out = 120 * G.halfLen / 1800; d.fouls = 0; G.stats.susp[d.team]++; d.zs = (d.zs || 0) + 1;
     if (G.ctrl === d) G.ctrl = null;
     G.cut = { kind: 'card', p: d, t: 0, dur: 2.2, title: '2 MINUTEN', col: '#ff4f3a' };
     say(`Zwei Minuten für ${d.name}. ${TEAMS[G.tid[c.team]].short} in Überzahl!`);

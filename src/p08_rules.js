@@ -103,7 +103,7 @@ function save(g) {
   const b = G.ball, sh = b.shot; G.stats.saves[g.team]++; g.saves++;
   banner('GEHALTEN!', '#ffc83a', g.name, 1, true); AU.save(); AU.crowd(0.22, 0.4); G.shake = 0.15; G.slowT = 0.45; G.flash = 0.25;
   G.parts.push(...burst(b.x, b.y, b.z, '#ffffff', 14, 4));
-  if (G.pen) G.cut = { kind: 'card', p: g, t: 0, dur: 2, title: '7-METER PARIERT', col: '#ffc83a' };
+  if (G.pen) { G.cut = { kind: 'card', p: g, t: 0, dur: 2, title: '7-METER PARIERT', col: '#ffc83a' }; if (sh && sh.pen) g.sv7 = (g.sv7 || 0) + 1; }
   say(pick([`Was für eine Parade von ${g.name}!`, `${g.name} ist zur Stelle!`, `Glanztat! ${g.name} hält.`, `${sh.by.name} scheitert am Keeper.`]));
   G.pen = null;
   if (sh.speed < 21 && Math.random() < 0.5) { giveBall(g); return; }
@@ -111,12 +111,17 @@ function save(g) {
 }
 function scoreGoal(team, gx) {
   if (G.shootout) { AU.net(); G.netKick[gx === 0 ? 0 : 1] = 1; G.ball.shot = null; G.ball.vx *= 0.2; return soResolve(true); }
-  const b = G.ball, sc = b.last && b.last.team === team ? b.last : null;
+  const b = G.ball, sc = b.last && b.last.team === team ? b.last : null, shot = b.shot;
   G.score[team]++; G.stats.goals[team]++; G.phase = 'goal'; G.phaseT = 0; G.lastScorer = sc; G.lastConcede = 1 - team;
   G.replay = G.rec.slice(); G.rec = []; G.replayMeta = { scorer: sc, kempa: G.kempa && G.kempa.to === sc };
   b.shot = null; b.vx *= 0.25; b.vy *= 0.3; G.netKick[gx === 0 ? 0 : 1] = 1;
   const k = kit(team), wasPen = !!G.pen; G.pen = null;
   if (sc) sc.goals++;
+  // Statistik: 7-Meter, Tempogegenstoß, Vorlage, Gegentor des Torhüters
+  if (sc && wasPen && shot && shot.pen) sc.g7 = (sc.g7 || 0) + 1;
+  if (sc && shot && shot.fb) sc.fb = (sc.fb || 0) + 1;
+  if (sc && shot && shot.assist && shot.assist !== sc && shot.assist.team === team) shot.assist.as = (shot.assist.as || 0) + 1;
+  const gkC = G.goalie[1 - team]; if (gkC) gkC.ga = (gkC.ga || 0) + 1;
   const kempaGoal = G.kempa && G.kempa.to === sc; G.kempa = null;
   const title = !sc ? 'EIGENTOR' : kempaGoal ? 'KEMPA-TOR!' : wasPen ? 'VERWANDELT!' : 'TOR!';
   banner(title, k.c1, sc ? `#${sc.num} ${sc.name}` : TEAMS[G.tid[team]].n, 2.1, true);
