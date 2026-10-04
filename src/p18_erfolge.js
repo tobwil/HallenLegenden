@@ -55,7 +55,7 @@ function seasonClose(lg, pos, row, up, cupWon, euroWon) {
   if (!CAREER.rec) erfolgeInit();
   const me = CAREER.team, R = CAREER.rec, sq = CAREER.squads[me];
   const titles = seasonTitles(lg, pos, cupWon, euroWon, up);
-  titles.forEach(type => CAREER.titles.push({ type, year: CAREER.year, team: me }));
+  titles.forEach(type => { CAREER.titles.push({ type, year: CAREER.year, team: me }); track('titel', { art: type }); });
   const pts = row.s * 2 + row.u, best = sq.filter(p => p.role !== 'TW').sort((a, b) => b.sg - a.sg)[0];
   if (better(R.season, pts * 10 + (lg === 1 ? 5 : 0))) R.season = { v: pts * 10 + (lg === 1 ? 5 : 0), pts, neg: row.n * 2 + row.u, pos, lg, year: CAREER.year, team: me };
   if (best && best.sg && better(R.scorer, best.sg)) R.scorer = { v: best.sg, name: best.name, year: CAREER.year, team: me };

@@ -59,13 +59,21 @@ function shade(h, f) { const c = hexRgb(h); return rgbHex(c[0] * f, c[1] * f, c[
 function mix(a, b, t) { const x = hexRgb(a), y = hexRgb(b); return rgbHex(lerp(x[0], y[0], t), lerp(x[1], y[1], t), lerp(x[2], y[2], t)); }
 function colDist(a, b) { const x = hexRgb(a), y = hexRgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); }
 const lum = h => { const c = hexRgb(h); return (c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11) / 255; };
+// Plattform: Im Browser gilt der Standard. Eine Hülle (z. B. die Desktop-Version) setzt vor dem Spiel window.HL_PLATFORM:
+//   storage: Speicher mit getItem/setItem/removeItem, synchron wie localStorage (z. B. Dateien für die Steam Cloud)
+//   event(name, data): Ereignisse aus dem Spiel (dieselben wie für die Statistik), z. B. für Erfolge der Plattform
+//   quit(): Spiel beenden (Knopf BEENDEN im Hauptmenü) · legal: Copyright-Zeile auf dem Titelbildschirm
+const PLATFORM = Object.assign({ name: 'web', storage: null, event: null, quit: null, legal: null }, window.HL_PLATFORM);
 const store = {
-  get(k, d = null) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } },
-  del(k) { try { localStorage.removeItem(k); } catch (e) { } },
+  get(k, d = null) { try { const v = (PLATFORM.storage || localStorage).getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { (PLATFORM.storage || localStorage).setItem(k, JSON.stringify(v)); } catch (e) { } },
+  del(k) { try { (PLATFORM.storage || localStorage).removeItem(k); } catch (e) { } },
 };
-// Nutzungsstatistik (Umami): Skript lädt nur auf hallenlegenden.de, sonst ohne Wirkung
-const track = (name, data) => { try { if (window.umami) window.umami.track(name, data); } catch (e) { } };
+// Nutzungsstatistik (Umami): Skript lädt nur auf hallenlegenden.de, sonst ohne Wirkung. Die Plattform bekommt dieselben Ereignisse
+const track = (name, data) => {
+  try { if (window.umami) window.umami.track(name, data); } catch (e) { }
+  try { if (PLATFORM.event) PLATFORM.event(name, data || {}); } catch (e) { }
+};
 const SETTINGS = Object.assign({ speed: 1 }, store.get('hl4_settings', {}));
 
 // ================= Ligen 2026/27 =================

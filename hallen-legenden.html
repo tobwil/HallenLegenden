@@ -375,13 +375,21 @@ function shade(h, f) { const c = hexRgb(h); return rgbHex(c[0] * f, c[1] * f, c[
 function mix(a, b, t) { const x = hexRgb(a), y = hexRgb(b); return rgbHex(lerp(x[0], y[0], t), lerp(x[1], y[1], t), lerp(x[2], y[2], t)); }
 function colDist(a, b) { const x = hexRgb(a), y = hexRgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); }
 const lum = h => { const c = hexRgb(h); return (c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11) / 255; };
+// Plattform: Im Browser gilt der Standard. Eine Hülle (z. B. die Desktop-Version) setzt vor dem Spiel window.HL_PLATFORM:
+//   storage: Speicher mit getItem/setItem/removeItem, synchron wie localStorage (z. B. Dateien für die Steam Cloud)
+//   event(name, data): Ereignisse aus dem Spiel (dieselben wie für die Statistik), z. B. für Erfolge der Plattform
+//   quit(): Spiel beenden (Knopf BEENDEN im Hauptmenü) · legal: Copyright-Zeile auf dem Titelbildschirm
+const PLATFORM = Object.assign({ name: 'web', storage: null, event: null, quit: null, legal: null }, window.HL_PLATFORM);
 const store = {
-  get(k, d = null) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } },
-  del(k) { try { localStorage.removeItem(k); } catch (e) { } },
+  get(k, d = null) { try { const v = (PLATFORM.storage || localStorage).getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { (PLATFORM.storage || localStorage).setItem(k, JSON.stringify(v)); } catch (e) { } },
+  del(k) { try { (PLATFORM.storage || localStorage).removeItem(k); } catch (e) { } },
 };
-// Nutzungsstatistik (Umami): Skript lädt nur auf hallenlegenden.de, sonst ohne Wirkung
-const track = (name, data) => { try { if (window.umami) window.umami.track(name, data); } catch (e) { } };
+// Nutzungsstatistik (Umami): Skript lädt nur auf hallenlegenden.de, sonst ohne Wirkung. Die Plattform bekommt dieselben Ereignisse
+const track = (name, data) => {
+  try { if (window.umami) window.umami.track(name, data); } catch (e) { }
+  try { if (PLATFORM.event) PLATFORM.event(name, data || {}); } catch (e) { }
+};
 const SETTINGS = Object.assign({ speed: 1 }, store.get('hl4_settings', {}));
 
 // ================= Ligen 2026/27 =================
@@ -2428,7 +2436,7 @@ const ACT = {
     showMenu(`<div class="title"><p class="logo">HALLEN-<br>LEGENDEN<span>HANDBALL 26/27</span></p>
       <button class="press" data-act="main" autofocus>DRÜCKE START</button>
       <p class="legal">Inoffizielles Fan-Spiel. Vereinsnamen nur zur Zuordnung, ohne Logos und ohne Verbindung zu Liga oder Vereinen.</p>
-      <p class="legal">© 2026 tobwil · Quellcode offen, nicht kommerziell · github.com/tobwil/HallenLegenden</p></div>`, true);
+      <p class="legal">${esc(PLATFORM.legal || '© 2026 tobwil · Quellcode offen, nicht kommerziell · github.com/tobwil/HallenLegenden')}</p></div>`, true);
   },
   main() {
     SCREEN = 'main'; AU.startMusic();
@@ -2438,8 +2446,10 @@ const ACT = {
       <button data-act="career">KARRIERE <i>${CAREER ? `${esc(TEAMS[CAREER.team].k)} · ${CAREER.season.lg}. Liga · ${CAREER.year}/${String(CAREER.year + 1).slice(2)}` : 'Manager & Liga'}</i></button>
       <button data-act="editor">EDITOR <i>Vereine, Farben, Spieler</i></button>
       <button data-act="help">STEUERUNG <i>& Regeln</i></button>
-      <button data-act="options">OPTIONEN <i>Lautstärke, Hallensprecher</i></button></div></div>`);
+      <button data-act="options">OPTIONEN <i>Lautstärke, Hallensprecher</i></button>
+      ${PLATFORM.quit ? '<button data-act="exitGame">BEENDEN</button>' : ''}</div></div>`);
   },
+  exitGame() { if (PLATFORM.quit) PLATFORM.quit(); },
   quick() {
     SCREEN = 'quick'; SEASON_PICK = false;
     showMenu(`<div class="panel"><div class="row spread"><h2>SCHNELLES SPIEL</h2>${leagueTabs()}</div>
@@ -3538,7 +3548,7 @@ function seasonClose(lg, pos, row, up, cupWon, euroWon) {
   if (!CAREER.rec) erfolgeInit();
   const me = CAREER.team, R = CAREER.rec, sq = CAREER.squads[me];
   const titles = seasonTitles(lg, pos, cupWon, euroWon, up);
-  titles.forEach(type => CAREER.titles.push({ type, year: CAREER.year, team: me }));
+  titles.forEach(type => { CAREER.titles.push({ type, year: CAREER.year, team: me }); track('titel', { art: type }); });
   const pts = row.s * 2 + row.u, best = sq.filter(p => p.role !== 'TW').sort((a, b) => b.sg - a.sg)[0];
   if (better(R.season, pts * 10 + (lg === 1 ? 5 : 0))) R.season = { v: pts * 10 + (lg === 1 ? 5 : 0), pts, neg: row.n * 2 + row.u, pos, lg, year: CAREER.year, team: me };
   if (best && best.sg && better(R.scorer, best.sg)) R.scorer = { v: best.sg, name: best.name, year: CAREER.year, team: me };

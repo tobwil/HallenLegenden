@@ -44,6 +44,44 @@ test('Seite lädt ohne Fehler, Spielschleife läuft (Desktop und Handy)', async 
   }
 });
 
+test('Plattform-Schnittstelle: eigener Speicher, Ereignisse, BEENDEN und Copyright-Zeile (Desktop-Hülle)', async () => {
+  // Browser ohne Hülle: kein BEENDEN, Standard-Zeile
+  const web = await open(DESKTOP);
+  const w = await web.page.evaluate(() => { const legal = menu.querySelectorAll('.legal')[1].innerText; ACT.main(); return { legal, quit: !!menu.querySelector('[data-act="exitGame"]'), name: PLATFORM.name }; });
+  ok(w.name === 'web' && !w.quit && w.legal.includes('tobwil'), 'Browser: ' + JSON.stringify(w)); ok(!web.errors.length, web.errors.join('; ')); await web.ctx.close();
+  // mit Hülle: Speicher in einer Map (vorbelegte Einstellungen), Ereignisse mitschreiben
+  const ctx = await browser.newContext(DESKTOP);
+  await ctx.addInitScript(() => {
+    let x = 31; Math.random = () => (x = (x * 16807) % 2147483647) / 2147483647;
+    const m = new Map([['hl4_settings', JSON.stringify({ speed: 2 })]]);
+    window.__mem = m; window.__ev = []; window.__quit = 0;
+    window.HL_PLATFORM = { name: 'test', legal: '© TEST', quit: () => window.__quit++, event: (n, d) => window.__ev.push([n, d]),
+      storage: { getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k) } };
+  });
+  const page = await ctx.newPage(), errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto(GAME); await page.waitForTimeout(700);
+  const r = await page.evaluate(() => {
+    const legal = menu.querySelectorAll('.legal')[1].innerText;
+    ACT.main(); const btn = menu.querySelector('[data-act="exitGame"]'); btn.click();
+    careerCreate(0, 0, 1, 1); track('karriere-neu');
+    // Saisons spielen, bis ein Titel dabei ist (Magdeburg ist der stärkste Verein)
+    for (let s = 0; s < 6 && !(CAREER.titles || []).length; s++) {
+      if (s) ACT.cNext();
+      let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 100) ACT.cSim();
+      ACT.cEnd();
+    }
+    const names = __ev.map(e => e[0]), titel = __ev.filter(e => e[0] === 'titel').map(e => e[1].art);
+    return { legal, quit: __quit, speed: SETTINGS.speed, inMem: __mem.has(CAREER_KEY), inLs: localStorage.getItem(CAREER_KEY) !== null,
+      neu: names.includes('karriere-neu'), sim: names.filter(n => n === 'karriere-simuliert').length, titel, titles: CAREER.titles.map(t => t.type) };
+  });
+  ok(r.legal === '© TEST' && r.quit === 1, 'Zeile/BEENDEN: ' + JSON.stringify(r));
+  ok(r.speed === 2 && r.inMem && !r.inLs, 'Speicher läuft nicht über die Plattform: ' + JSON.stringify(r));
+  ok(r.neu && r.sim > 5, 'Ereignisse fehlen: ' + JSON.stringify(r));
+  ok(r.titel.length > 0 && r.titel.join() === r.titles.join(), 'Titel-Ereignisse passen nicht zu den Titeln: ' + JSON.stringify(r));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Handy: kein Menü-Overlay im Spiel, Antipp-Tipp beim ersten Spiel, dezente Knöpfe', async () => {
   const { page, ctx, errors } = await open(MOBILE);
   await page.evaluate(() => { document.body.classList.add('touch'); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); G.introT = 99; });

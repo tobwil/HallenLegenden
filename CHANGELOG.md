@@ -2,6 +2,11 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.14: Plattform-Schnittstelle
+- **Vorbereitung für eine Desktop-Version:** Eine Hülle kann vor dem Spiel `window.HL_PLATFORM` setzen und damit den Speicher ersetzen (zum Beispiel Dateien statt `localStorage`), Ereignisse aus dem Spiel empfangen (Spielende, Titel), einen Knopf BEENDEN ins Hauptmenü bringen und die Copyright-Zeile ändern. Im Browser ändert sich nichts.
+- Gewonnene Titel (Meister, Pokal, Europapokal, Meister 2. Liga, Aufstieg) sind jetzt ein eigenes Ereignis `titel`.
+- 1 neuer Regressionstest (Plattform-Schnittstelle mit eigenem Speicher), insgesamt 35
+
 ## v8.13: Tiefe Tests und drei Fehler weniger
 - **Neue tiefe Testsuite** (`cd tests && npm run tief`, etwa zweieinhalb Minuten): Dauerlauf über 18 Saisons mit Prüfung des ganzen Spielstands nach jedem Spieltag, Speichern und Laden (Karriere und laufendes Spiel), Zufallsklicks durch alle Menüs und Spiele, eine Saison wirklich gespielt, 11 Bildschirmgrößen, beschädigte Spielstände, Tempo pro Bild.
 - **Behoben: Ergebnis zählte doppelt.** Wer ein Pokal- oder Europapokalspiel mittendrin speicherte, es dann in der Karriere simulierte und später den alten Spielstand lud, bekam das Ergebnis ein zweites Mal angerechnet. Ein gespeichertes Karriere-Spiel zählt jetzt nur, wenn genau diese Partie noch ansteht, sonst läuft es als Freundschaftsspiel.
