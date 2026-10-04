@@ -513,7 +513,7 @@ test('Wirtschaft: Entlassung nach zweimal deutlich verfehltem Ziel, neuer Verein
   // mit dem neuen Verein selbst spielen: SELBST SPIELEN -> ANPFIFF -> Abpfiff -> WEITER ZUR KARRIERE
   await page.evaluate(() => careerHub('home')); await page.click('#menu button[data-act="cPlay"]'); await page.click('#menu button[data-act="pmGo"]');
   const match = await page.evaluate(() => ({ mine: G.tid[G.human] === CAREER.team, career: G.career }));
-  await page.evaluate(() => { G.paused = true; G.introT = 99; let n = 0; while (G.phase !== 'fulltime' && n++ < 90000) { readInput(1 / 60); step(1 / 60); } G.paused = false; });
+  await page.evaluate(() => { G.paused = true; G.introT = 99; let n = 0; while (G.phase !== 'fulltime' && n++ < 90000) { if (G.phase === 'penalty' && G.pen && G.human === G.pen.shooter.team && G.phaseT <= 0) { shoot(G.pen.shooter, 0.5, 0.8); G.phase = 'play'; } readInput(1 / 60); step(1 / 60); }   /* eigenen 7-Meter wirft der Test */ G.paused = false; });
   await page.waitForSelector('#menu button[data-act="afterMatch"]', { timeout: 15000 }); await page.click('#menu button[data-act="afterMatch"]');
   const rest = await page.evaluate(() => { const r1 = CAREER.season.round; let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 200) ACT.cSim(); ACT.cEnd();
     return { r1, done: g < 200, histTeam: CAREER.history.slice(-1)[0].team === CAREER.team, histOld: CAREER.history.slice(0, 2).every(h => h.team !== CAREER.team) }; });
@@ -693,7 +693,7 @@ test('Spielerkarte: Handball-Statistik aus Simulation und Spiel stimmig, 7-Meter
     careerHub('home'); ACT.cPlay(); ACT.pmGo(); G.paused = true; G.introT = 99; __run(200);
     const me = G.human; setupPenalty(me); const shooter = G.pen && G.pen.shooter.pid; __run(80); shoot(G.pen.shooter, 0.6, 0.8); G.phase = 'play';   // 7-Meter für dich: den Wurf nimmt der Test ab
     const before = new Map(sq.map(q => [q.pid, statOf(q, 'k')]));
-    let n = 0; while (G.phase !== 'fulltime' && n++ < 150000) { if (!menu.hidden) hideMenu(); __run(1); }
+    let n = 0; while (G.phase !== 'fulltime' && n++ < 150000) { if (!menu.hidden) hideMenu(); if (G.phase === 'penalty' && G.pen && G.human === G.pen.shooter.team && G.phaseT <= 0) { shoot(G.pen.shooter, 0.5, 0.8); G.phase = 'play'; } __run(1); }
     const h = G.human, my = G.score[h], th = G.score[1 - h]; endMatch();
     const d = sq.map(q => { const a = statOf(q, 'k'), b0 = before.get(q.pid); const o = {}; STK.forEach(k => o[k] = a[k] - b0[k]); o.role = q.role; return o; });
     const sum = (k, f = () => true) => d.filter(f).reduce((a, o) => a + o[k], 0);
