@@ -318,17 +318,23 @@ function refreshMarket(full) {
   CAREER.free.forEach(p => CAREER.market.push({ pid: p.pid, from: -1, price: Math.round(pValue(p) * 0.6 / 5000) * 5000 }));
 }
 function marketPlayer(m) { return m.from < 0 ? CAREER.free.find(p => p.pid === m.pid) : CAREER.squads[m.from].find(p => p.pid === m.pid); }
-function buyPlayer(pid) {
-  const m = CAREER.market.find(x => x.pid === pid), sq = CAREER.squads[CAREER.team];
-  if (!m) return 'Spieler nicht mehr verfügbar.';
+function buyCheck(m) {   // warum ein Kauf gerade nicht geht ('' = geht), auch für die Scouting-Karte
+  const sq = CAREER.squads[CAREER.team];
+  if (!m || !marketPlayer(m)) return 'Spieler nicht mehr verfügbar.';
   if (sq.length >= 18) return 'Der Kader ist voll (18 Spieler). Verkaufe zuerst jemanden.';
   if (CAREER.money < 0) return 'Transfersperre: Die Kasse ist im Minus.';
   if (CAREER.money < m.price) return 'Dafür reicht das Budget nicht.';
   if (sq.length >= 16 && CAREER.money - m.price < wagesPerRound() * 3) return 'Zu riskant: Nach dem Kauf wären die Gehälter der nächsten Spieltage nicht gedeckt.';
-  const p = marketPlayer(m); if (!p) return 'Spieler nicht mehr verfügbar.';
+  return '';
+}
+const newSalary = p => Math.round(salaryFor(p) * 1.1 / 500) * 500;   // Gehalt pro Spieltag nach einem Wechsel
+function buyPlayer(pid) {
+  const m = CAREER.market.find(x => x.pid === pid), sq = CAREER.squads[CAREER.team];
+  const why = buyCheck(m); if (why) return why;
+  const p = marketPlayer(m);
   if (m.from < 0) CAREER.free = CAREER.free.filter(x => x !== p);
   else { const src = CAREER.squads[m.from]; src.splice(src.indexOf(p), 1); if (src.length < 13) { src.push(finalize(genPlayer(p.role, TEAMS[m.from].r - 10, Math.random, 18, 20))); fixNumbers(src); } ensureAiRoles(m.from); }
-  CAREER.money -= m.price; finOf().transfer -= m.price; if (m.from >= 0) CAREER.aiMoney[m.from] += m.price; p.lock = { y: CAREER.year, r: CAREER.season.round + lockRounds() }; p.start = false; p.num = 0; p.vt = 2 + ((Math.random() * 3) | 0); p.sal = Math.round(salaryFor(p) * 1.1 / 500) * 500; sq.push(p); fixNumbers(sq);
+  CAREER.money -= m.price; finOf().transfer -= m.price; if (m.from >= 0) CAREER.aiMoney[m.from] += m.price; p.lock = { y: CAREER.year, r: CAREER.season.round + lockRounds() }; p.start = false; p.num = 0; p.vt = 2 + ((Math.random() * 3) | 0); p.sal = newSalary(p); sq.push(p); fixNumbers(sq);
   CAREER.market = CAREER.market.filter(x => x.pid !== pid);
   news(`Transfer: ${p.name} (${ROLE_LONG[p.role]}, ${ovr(p)}) kommt für ${euro(m.price)}.`); saveCareer(); return '';
 }
@@ -504,6 +510,8 @@ function headline() {
 if (CAREER) {
   CAREER.aiTransfers ??= false; CAREER.coach ??= { lineup: false, training: false };
   CAREER.statFrom ??= { year: CAREER.year, round: CAREER.season.round };   // Spieler-Statistik zählt ab diesem Update
+  // v8.18: ein Wechsel während des Wurfs schrieb dem Eingewechselten das Tor ohne Wurf gut; Würfe nie unter Toren
+  for (const p of Object.values(CAREER.squads).flat().concat(CAREER.free || [])) for (const w of ['s', 'k']) { const a = p[w]; if (a) { a[3] = Math.max(a[3] || 0, a[2] || 0); a[5] = Math.max(a[5] || 0, a[4] || 0); } }
   TEAMS.forEach(t => (CAREER.squads[t.id] || []).forEach(p => { p.sta ??= 75; p.inj ??= 0; p.vt ??= 1 + ((Math.random() * 3) | 0); p.sal ??= salaryFor(p); })); CAREER.offers ??= []; CAREER.streak ??= 0; CAREER.lastMatch ??= null; CAREER.issue ??= 1;
   if (!CAREER.aiMoney) { CAREER.aiMoney = {}; TEAMS.forEach(t => CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 20000) + 50000); }
   TEAMS.forEach(t => { if (CAREER.squads[t.id]) return; CAREER.squads[t.id] = makeSquad(t.id); CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.aiMoney[t.id] = Math.round((t.r - 60) * 25000) + 50000; });   // später hinzugekommene Vereine (international)

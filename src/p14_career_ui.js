@@ -1,5 +1,5 @@
 // ================= Karriere-Bildschirme: Zeitung, Kader, Transfers =================
-let CTAB = 'home', CMSG = '', CDEL = false, CSEL = null, CSELL = null, CSTAT = false;
+let CTAB = 'home', CMSG = '', CDEL = false, CSEL = null, CSELL = null, CSTAT = false, CSCOUT = null;
 const seasonName = y => `${y}/${String(y + 1).slice(2)}`;
 const euroS = v => v >= 1e6 ? (v / 1e6).toFixed(1).replace('.', ',') + ' M' : Math.round(v / 1000) + ' T';
 function careerEntry() { SEASON_PICK = false; if (CAREER) careerHub('home'); else careerNewScreen(); }
@@ -105,34 +105,68 @@ function statTable(p) {
   return `<table class="sqt stt pcstat"><thead><tr><th></th><th class="num">SAISON</th><th class="num">KARRIERE</th></tr></thead><tbody>${rows.map(([l, f]) => `<tr><td class="lbl">${l}</td><td class="num">${f(S)}</td><td class="num">${f(K)}</td></tr>`).join('')}</tbody></table>
     <p class="muted" style="margin:4px 0 0">Liga, Pokal und Europapokal zusammen${ss || ks ? ` · gezählt ${[ss && 'Saison ' + ss, ks && 'Karriere ' + ks].filter(Boolean).join(', ')}` : ''}</p>`;
 }
+const attrsOf = p => (p.role === 'TW' ? [['Torwart', p.gk], ['Tempo', p.spd]] : [['Wurf', p.att], ['Pass', p.pas], ['Abwehr', p.def], ['Tempo', p.spd]]).concat([['Ausdauer', p.sta ?? 75]]);
+const zustOf = p => { const fit = Math.round(p.fit ?? 100); return `${fitBar(fit, 60)} ${fit} % · ${fit >= 85 ? 'frisch' : fit >= 65 ? 'gut' : fit >= 45 ? 'müde' : 'erschöpft'}`; };
+const FORM_TXT = ['in der Krise', 'schwach', 'etwas schwach', 'normal', 'gut drauf', 'stark', 'in Topform'];
+const dTxt = d => `<span style="color:${d > 0 ? 'var(--green)' : d < 0 ? 'var(--hot)' : 'var(--dim)'}">${d > 0 ? '+' : d < 0 ? '−' : '±'}${Math.abs(d)}</span>`;
+function cardHead(p, sub, badges = '') {
+  return `<div class="pchead"><canvas id="pdC" width="40" height="40"></canvas><div>
+      <h2>${p.num ? `#${p.num} ` : ''}${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''} ${badges}</h2>
+      <p class="muted">${ROLE_LONG[p.role].toUpperCase()} · ${p.age} Jahre${sub}${p.trait ? ` · ${esc(p.trait)}` : ''}</p></div></div>`;
+}
+function cardRight(p, ref, note = '') {   // WERTE (mit Abstand zum eigenen Stammspieler, wenn ref) oder STATISTIK
+  if (CSTAT) return `<section class="pcbox"><h3>STATISTIK</h3>${statTable(p)}${note}</section>`;
+  const A = attrsOf(p), R = ref ? attrsOf(ref) : null;
+  return `<section class="pcbox"><h3>WERTE${ref ? ` · ±&nbsp;ZU ${esc(ref.name.toUpperCase())}` : ''}</h3><div class="bars">${A.map(([l, v], i) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}${R ? ` ${dTxt(v - R[i][1])}` : ''}</span>`).join('')}</div>
+      <p class="muted pcinfo">${A.map(([l]) => `<b>${l}:</b> ${ATTR_INFO[l]}`).join(' · ')}</p></section>`;
+}
 function playerDetail(p) {
-  const attrs = (p.role === 'TW' ? [['Torwart', p.gk], ['Tempo', p.spd]] : [['Wurf', p.att], ['Pass', p.pas], ['Abwehr', p.def], ['Tempo', p.spd]]).concat([['Ausdauer', p.sta ?? 75]]);
   const sellP = quickSalePrice(p), locked = isLocked(p), sq = CAREER.squads[CAREER.team], seven = sevenPick(CAREER.team, sq.filter(x => x.start)), capt = isCapt(p);
-  const isSeven = CAREER.seven === p.pid, autoSeven = !CAREER.seven && seven && seven.pid === p.pid;
-  const fit = Math.round(p.fit), zust = fit >= 85 ? 'frisch' : fit >= 65 ? 'gut' : fit >= 45 ? 'müde' : 'erschöpft';
+  const isSeven = CAREER.seven === p.pid, autoSeven = !CAREER.seven && seven && seven.pid === p.pid, offer = CAREER.offers.find(o => o.pid === p.pid);
   const badges = `${capt ? '<span class="cbadge">C</span>' : ''}${isSeven || autoSeven ? '<span class="cbadge">7M</span>' : ''}`;
   const info = `<section class="pcbox"><h3>SPIELER</h3><dl>
       <dt>Stärke</dt><dd>${stars(starsOf(ovr(p)), 'var(--gold)')} <b style="color:var(--gold)">${ovr(p)}</b></dd>
       <dt>Potenzial</dt><dd>${stars(starsOf(potOf(p)), 'var(--cyan)')} <b style="color:var(--cyan)">${potOf(p)}</b> <span class="muted">${POT_TXT[potTrend(p)]}</span></dd>
-      <dt>Zustand</dt><dd>${fitBar(fit, 60)} ${fit} % · ${zust}</dd>
-      <dt>Form</dt><dd>${formTxt(p.form)} · ${['in der Krise', 'schwach', 'etwas schwach', 'normal', 'gut drauf', 'stark', 'in Topform'][Math.round(p.form) + 3]}</dd>
+      <dt>Zustand</dt><dd>${zustOf(p)}</dd>
+      <dt>Form</dt><dd>${formTxt(p.form)} · ${FORM_TXT[Math.round(p.form) + 3]}</dd>
       <dt>Vertrag</dt><dd>${p.vt <= 1 ? '<b style="color:var(--hot)">läuft am Saisonende aus</b>' : `noch ${p.vt} Saisons`} · ${euro((p.sal || salaryFor(p)) * REF_LEN)} pro Saison</dd>
       <dt>Marktwert</dt><dd>${euro(pValue(p))}</dd>
       <dt>Aufgaben</dt><dd>${[p.start ? 'Startsieben' : 'Bank', capt && 'Kapitän', isSeven ? '7-Meter-Schütze' : autoSeven ? '7-Meter-Schütze (automatisch)' : ''].filter(Boolean).join(' · ')}</dd>
     </dl>${p.inj ? `<p style="margin:6px 0 0;color:var(--hot)">Verletzt: fällt noch ${p.inj === 1 ? 'einen Spieltag' : `${p.inj} Spieltage`} aus.</p>` : ''}</section>`;
-  const right = CSTAT ? `<section class="pcbox"><h3>STATISTIK</h3>${statTable(p)}</section>`
-    : `<section class="pcbox"><h3>WERTE</h3><div class="bars">${attrs.map(([l, v]) => `<span>${l}</span><div class="bar"><i style="width:${clamp((v - 50) / 49 * 100, 4, 100)}%"></i></div><span>${v}</span>`).join('')}</div>
-      <p class="muted pcinfo">${attrs.map(([l]) => `<b>${l}:</b> ${ATTR_INFO[l]}`).join(' · ')}</p></section>`;
   const startBtn = p.start ? `<button data-act="cBench" data-v="${p.pid}">AUF DIE BANK</button>` : p.inj ? '<span class="tag" style="color:var(--hot)">VERLETZT</span>' : `<button class="main" data-act="cStart" data-v="${p.pid}">AUFSTELLEN</button>`;
-  return `<div class="pcard"><div class="pchead"><canvas id="pdC" width="40" height="40"></canvas><div>
-      <h2>#${p.num} ${esc(p.name.toUpperCase())}${p.star ? ' ★' : ''} ${badges}</h2>
-      <p class="muted">${ROLE_LONG[p.role].toUpperCase()} · ${p.age} Jahre${p.trait ? ` · ${esc(p.trait)}` : ''}</p></div></div>
-    <div class="pcgrid">${info}${right}</div>
+  return `<div class="pcard">${cardHead(p, '', badges)}
+    <div class="pcgrid">${info}${cardRight(p)}</div>
+    ${offer ? `<div class="row"><span class="tag" style="color:var(--gold)">ANGEBOT: ${esc(TEAMS[offer.from].short.toUpperCase())} BIETET ${euro(offer.price)} (BIS SPIELTAG ${offer.exp})</span><button class="small main" data-act="cOffer" data-v="${p.pid}:1">ANNEHMEN</button><button class="small" data-act="cOffer" data-v="${p.pid}:0">ABLEHNEN</button></div>` : ''}
     ${p.vt <= 2 ? `<div class="row"><span class="tag">VERLÄNGERN (Forderung ${euro(extendDemand(p) * REF_LEN)} pro Saison, Handgeld ${euro(extendDemand(p) * 5)})</span>${[1, 2, 3].map(y => `<button class="small" data-act="cExt" data-v="${p.pid}:${y}">+${y} J.</button>`).join('')}</div>` : ''}
     <div class="row">${startBtn}<button data-act="cStat">${CSTAT ? 'WERTE' : 'STATISTIK'}</button>
       ${p.role === 'TW' ? '' : `<button data-act="cSeven" data-v="${p.pid}">${isSeven ? '7-METER: AUTOMATISCH' : '7-METER-SCHÜTZE'}</button>`}
       <button data-act="cCapt" data-v="${p.pid}">${capt ? 'KEIN KAPITÄN' : 'KAPITÄN'}</button>
       ${locked ? `<span class="tag">NEUZUGANG · VERKAUF AB SPIELTAG ${p.lock.r + 1}</span>` : `<button data-act="cSell" data-v="${p.pid}">${CSELL === p.pid ? `WIRKLICH FÜR ${euro(sellP)} VERKAUFEN?` : `SOFORTVERKAUF (${euro(sellP)})`}</button>`}<button data-act="cPick" data-v="">ZURÜCK ZUM KADER</button></div>
+  </div>`;
+}
+// ---------- Scouting-Karte: Spieler von der Transferliste, dieselbe Karte, dazu Ablöse, Gehalt und Vergleich mit dem eigenen Kader ----------
+function scoutDetail(p, m) {
+  const sq = CAREER.squads[CAREER.team], same = sq.filter(x => x.role === p.role).sort((a, b) => ovr(b) - ovr(a)), best = same[0], starter = sq.find(x => x.role === p.role && x.start) || best;
+  const club = m.from < 0 ? 'vereinslos' : TEAMS[m.from].n, why = buyCheck(m), d = best ? ovr(p) - ovr(best) : 0;
+  const verdict = !best ? `Du hast keinen ${ROLE_LONG[p.role]} im Kader.` : d > 0 ? `Wäre dein bester ${ROLE_LONG[p.role]}.` : starter && ovr(p) > ovr(starter) ? 'Stärker als dein Stammspieler.'
+    : potOf(p) > ovr(best) && potTrend(p) === 'up' ? `Talent: kann ${esc(best.name)} überholen.` : 'Ergänzung für die Bank.';
+  const games = statOf(p, 'k').sp;
+  const info = `<section class="pcbox"><h3>SCOUTING</h3><dl>
+      <dt>Stärke</dt><dd>${stars(starsOf(ovr(p)), 'var(--gold)')} <b style="color:var(--gold)">${ovr(p)}</b></dd>
+      <dt>Potenzial</dt><dd>${stars(starsOf(potOf(p)), 'var(--cyan)')} <b style="color:var(--cyan)">${potOf(p)}</b> <span class="muted">${POT_TXT[potTrend(p)]}</span></dd>
+      <dt>Zustand</dt><dd>${zustOf(p)}${p.inj ? ` · <b style="color:var(--hot)">verletzt (${p.inj} Sp.)</b>` : ''}</dd>
+      <dt>Form</dt><dd>${formTxt(p.form || 0)} · ${FORM_TXT[Math.round(p.form || 0) + 3]}</dd>
+      <dt>Vertrag</dt><dd>${m.from < 0 ? 'vereinslos, sofort zu haben' : `noch ${p.vt} ${p.vt === 1 ? 'Saison' : 'Saisons'} bei ${esc(TEAMS[m.from].short)}`}</dd>
+      <dt>Marktwert</dt><dd>${euro(pValue(p))}</dd>
+      <dt>Ablöse</dt><dd><b style="color:var(--gold)">${euro(m.price)}</b></dd>
+      <dt>Gehalt</dt><dd>${euro(newSalary(p) * REF_LEN)} pro Saison bei dir</dd>
+      <dt>Vergleich</dt><dd>${best ? `${dTxt(d)} zu ${esc(best.name)} (${ovr(best)}) · ` : ''}${verdict}</dd>
+    </dl></section>`;
+  const note = !games ? `<p class="muted" style="margin:4px 0 0">${m.from < 0 ? 'Vereinslos: in dieser Karriere noch kein Spiel.' : 'Noch kein Spiel in dieser Karriere.'}</p>` : '';
+  return `<div class="pcard">${cardHead(p, ` · ${esc(club)}`)}
+    <div class="pcgrid">${info}${cardRight(p, starter && starter !== p ? starter : null, note)}</div>
+    <div class="row">${why ? `<span class="tag" style="color:var(--hot)">${esc(why.toUpperCase())}</span>` : `<button class="main" data-act="cBuy" data-v="${p.pid}">KAUFEN FÜR ${euro(m.price)}</button>`}<button data-act="cStat">${CSTAT ? 'WERTE' : 'STATISTIK'}</button><button data-act="cScout" data-v="">ZURÜCK ZUR TRANSFERLISTE</button></div>
+    <p class="muted" style="margin:0">Neuzugänge sind ${lockRounds()} Spieltage für einen Weiterverkauf gesperrt.</p>
   </div>`;
 }
 // ---------- Statistik: Kennzahlen, Platz-Verlauf, Torjäger, eigener Kader ----------
@@ -234,7 +268,7 @@ function cupView() {
 }
 function careerHub(tab) {
   if (!CAREER) return careerNewScreen();
-  if (tab) { CTAB = tab; if (tab !== 'squad') CSEL = null; }
+  if (tab) { CTAB = tab; if (tab !== 'squad') CSEL = null; if (tab !== 'market') CSCOUT = null; }
   SCREEN = 'career'; if (!G || !G.demo) startDemo(); AU.startMusic();
   if (CAREER.summary) return seasonSummary();
   const S = CAREER.season, me = TEAMS[CAREER.team];
@@ -262,13 +296,15 @@ function careerHub(tab) {
       <h3>TRAININGSSCHWERPUNKT${c.training ? ' · VOM CO-TRAINER GEWÄHLT' : ''}</h3>
       <p class="muted">Der Schwerpunkt wirkt nach jedem Spieltag. Junge Spieler entwickeln sich am schnellsten. Am Saisonende altern alle: Talente legen zu, Routiniers bauen ab.</p>
       <div class="btns menu-list">${TRAINING.map(t => `<button class="${CAREER.training === t.k ? 'main' : ''}" data-act="cTrain" data-v="${t.k}">${t.n} <i>${t.d}</i></button>`).join('')}</div>`;
+  } else if (CTAB === 'market' && CSCOUT && CAREER.market.some(m => m.pid === CSCOUT && marketPlayer(m))) {
+    const m = CAREER.market.find(x => x.pid === CSCOUT); body = scoutDetail(marketPlayer(m), m);
   } else if (CTAB === 'market') {
-    const sq = CAREER.squads[CAREER.team];
-    body = `<div class="row spread"><p class="muted">Kader ${sq.length}/18 (mindestens 12). Die Liste wird alle zwei Spieltage neu gemischt. Neuzugänge sind ${lockRounds()} Spieltage gesperrt, ein Sofortverkauf bringt 55 % des Marktwerts. Mehr gibt es über Angebote.${CAREER.money < 0 ? ' <b style="color:var(--hot)">Transfersperre: Die Kasse ist im Minus.</b>' : ''}</p>
+    const sq = CAREER.squads[CAREER.team]; CSCOUT = null;
+    body = `<div class="row spread"><p class="muted">Kader ${sq.length}/18 (mindestens 12). Die Liste wird alle zwei Spieltage neu gemischt. Neuzugänge sind ${lockRounds()} Spieltage gesperrt, ein Sofortverkauf bringt 55 % des Marktwerts. Mehr gibt es über Angebote. Tippe auf einen Namen für die Scouting-Karte.${CAREER.money < 0 ? ' <b style="color:var(--hot)">Transfersperre: Die Kasse ist im Minus.</b>' : ''}</p>
       <div class="row"><span class="tag">CPU-TRANSFERS</span><button class="small ${CAREER.aiTransfers ? 'on' : ''}" data-act="cAiT" data-v="1">AN</button><button class="small ${CAREER.aiTransfers ? '' : 'on'}" data-act="cAiT" data-v="0">AUS</button></div></div>`;
-    if (CAREER.offers.length) body += `<h3>ANGEBOTE FÜR DEINE SPIELER</h3><table class="sqt cards"><tbody>${CAREER.offers.map(o => { const p = findCareerPlayer(CAREER.team, o.pid); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name">${esc(p.name)} <span class="age">${ovr(p)}</span></td><td data-l="VON">${esc(TEAMS[o.from].short)}</td><td data-l="BIETET">${euro(o.price)}</td><td data-l="BIS">${o.exp}. Sp.</td><td class="c-act"><button class="small main" data-act="cOffer" data-v="${p.pid}:1">ANNEHMEN</button> <button class="small" data-act="cOffer" data-v="${p.pid}:0">ABLEHNEN</button></td></tr>`; }).join('')}</tbody></table>`;
+    if (CAREER.offers.length) body += `<h3>ANGEBOTE FÜR DEINE SPIELER</h3><table class="sqt cards"><tbody>${CAREER.offers.map(o => { const p = findCareerPlayer(CAREER.team, o.pid); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name"><button class="link" data-act="cPick" data-v="${p.pid}">${esc(p.name)}</button> <span class="age">${ovr(p)}</span></td><td data-l="VON">${esc(TEAMS[o.from].short)}</td><td data-l="BIETET">${euro(o.price)}</td><td data-l="BIS">${o.exp}. Sp.</td><td class="c-act"><button class="small main" data-act="cOffer" data-v="${p.pid}:1">ANNEHMEN</button> <button class="small" data-act="cOffer" data-v="${p.pid}:0">ABLEHNEN</button></td></tr>`; }).join('')}</tbody></table>`;
     body += `<h3>TRANSFERLISTE</h3><table class="sqt cards"><thead><tr><th>POS</th><th>NAME</th><th>VON</th><th>GES</th><th>POT</th><th>PREIS</th><th></th></tr></thead><tbody>${
-      CAREER.market.map(m => { const p = marketPlayer(m); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name">${esc(p.name)}<span class="age">${p.age}</span></td><td data-l="VON">${m.from < 0 ? 'frei' : TEAMS[m.from].k}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${potCell(p)}</td><td data-l="PREIS">${euroS(m.price)}</td>
+      CAREER.market.map(m => { const p = marketPlayer(m); if (!p) return ''; return `<tr><td data-l="POS">${p.role}</td><td class="c-name"><button class="link" data-act="cScout" data-v="${p.pid}">${esc(p.name)}</button><span class="age">${p.age}</span></td><td data-l="VON">${m.from < 0 ? 'frei' : TEAMS[m.from].k}</td><td data-l="GES"><b>${ovr(p)}</b></td><td data-l="POT">${potCell(p)}</td><td data-l="PREIS">${euroS(m.price)}</td>
         <td class="c-act"><button class="small" data-act="cBuy" data-v="${p.pid}" ${CAREER.money >= m.price ? '' : 'disabled style="opacity:.45"'}>KAUFEN</button></td></tr>`; }).join('')}</tbody></table>`;
     if ((CAREER.transferLog || []).length) body += `<h3>WECHSEL IN DER LIGA</h3><p class="muted" style="font-size:17px">${CAREER.transferLog.slice(0, 5).map(esc).join('<br>')}</p>`;
   } else if (CTAB === 'table') {
@@ -284,9 +320,12 @@ function careerHub(tab) {
     body += `<div class="row"><button data-act="cDel">${CDEL ? 'WIRKLICH LÖSCHEN? JA' : 'KARRIERE LÖSCHEN'}</button>${CDEL ? '<button data-act="cTab" data-v="hist">NEIN</button>' : ''}</div>`;
   }
   // Auf der Spielerkarte bleibt der Fokus auf dem gedrückten Knopf (STATISTIK, 7-METER, KAPITÄN, BANK), sonst springt er bei Pad und Tastatur nach oben
-  const ae = document.activeElement, keep = CSEL && ae && ae.closest && ae.closest('.pcard') && ae.dataset.act !== 'cSell' ? [ae.dataset.act, ae.dataset.v || ''] : null;
+  const ae = document.activeElement, keep = (CSEL || CSCOUT) && ae && ae.closest && ae.closest('.pcard') && ae.dataset.act !== 'cSell' ? [ae.dataset.act, ae.dataset.v || ''] : null;
   showMenu(`<div class="panel wide"><div class="csticky">${head}${tabs()}</div>${CMSG ? `<p style="margin:0;color:var(--hot)">${esc(CMSG)}</p>` : ''}${body}<div class="row"><button data-act="main">HAUPTMENÜ</button></div></div>`);
-  const c = menu.querySelector('#pdC'); if (c && CSEL) { const p = CAREER.squads[CAREER.team].find(x => x.pid === CSEL); if (p) c.getContext('2d').drawImage(portrait(p, { c1: me.home.c1, c2: me.home.c2, gk: me.gkc }), 0, 0); }
+  const c = menu.querySelector('#pdC');
+  if (c && CSEL) { const p = CAREER.squads[CAREER.team].find(x => x.pid === CSEL); if (p) c.getContext('2d').drawImage(portrait(p, { c1: me.home.c1, c2: me.home.c2, gk: me.gkc }), 0, 0); }
+  else if (c && CSCOUT) { const m = CAREER.market.find(x => x.pid === CSCOUT), p = m && marketPlayer(m), T = m && m.from >= 0 ? TEAMS[m.from] : null;   // im Trikot seines Vereins, vereinslos in Grau
+    if (p) c.getContext('2d').drawImage(portrait(p, T ? { c1: T.home.c1, c2: T.home.c2, gk: T.gkc } : { c1: '#6d6878', c2: '#d9d4e3', gk: '#3d3a46' }), 0, 0); }
   const on = menu.querySelector('.ctabs .on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
   if (keep) { const same = a => a === keep[0] || (/^c(Bench|Start)$/.test(a) && /^c(Bench|Start)$/.test(keep[0])), k = [...menu.querySelectorAll('.pcard [data-act]')].find(b => same(b.dataset.act) && (b.dataset.v || '') === keep[1]); if (k) k.focus({ preventScroll: true }); }
   CMSG = ''; if (CTAB !== 'hist') CDEL = false;
@@ -320,7 +359,8 @@ function seasonSummary() {
 }
 Object.assign(ACT, {
   cNew() { SEASON_PICK = false; careerCreate(SEL.a, SEL.len, SEL.half, SEL.diff, SEL.ait === 0, SEL.coach); track('karriere-neu'); careerHub('home'); },
-  cTab(v) { CSEL = null; CSELL = null; CTAB = v; careerHub(); },
+  cTab(v) { CSEL = null; CSELL = null; CSCOUT = null; CTAB = v; careerHub(); },
+  cScout(v) { CSCOUT = v ? +v : null; CTAB = 'market'; careerHub(); },
   cPick(v) { CSEL = v ? +v : null; CSELL = null; CTAB = 'squad'; careerHub(); },
   cPlay() {
     const ct = ownCupTie(), et = !ct && ownEuroTie(), en = et ? euroNext() : null, fx = ct || et || ownFixture(); if (!fx) return careerHub();
@@ -349,8 +389,8 @@ Object.assign(ACT, {
   },
   cCoach(v) { const [k, on] = v.split(':'); CAREER.coach[k] = on === '1'; if (k === 'training' && CAREER.coach.training) CAREER.training = coachTraining(); if (k === 'lineup' && CAREER.coach.lineup) coachPrep(); saveCareer(); careerHub('train'); },
   cSell(v) { if (CSELL !== +v) { CSELL = +v; return careerHub(); } CSELL = null; CMSG = sellPlayer(+v); if (!CMSG) CSEL = null; careerHub(); },
-  cBuy(v) { CMSG = buyPlayer(+v); careerHub('market'); },
-  cOffer(v) { const [pid, a] = v.split(':'); CMSG = answerOffer(+pid, a === '1'); careerHub('market'); },
+  cBuy(v) { const m = CAREER.market.find(x => x.pid === +v), p = m && marketPlayer(m); CMSG = buyPlayer(+v); if (!CMSG && p) { CSCOUT = null; CMSG = `${p.name} gehört jetzt zu deinem Kader (Rückennummer ${p.num}).`; } careerHub('market'); },
+  cOffer(v) { const [pid, a] = v.split(':'); CMSG = answerOffer(+pid, a === '1'); careerHub(); },   // bleibt, wo entschieden wurde: Transferliste oder Spielerkarte
   cAiT(v) { CAREER.aiTransfers = v === '1'; saveCareer(); careerHub('market'); },
   cTrain(v) { CAREER.training = v; if (CAREER.coach.training) { CAREER.coach.training = false; CMSG = 'Du bestimmst das Training jetzt selbst.'; } saveCareer(); careerHub('train'); },
   cEnd() { careerEndSeason(); careerHub(); },
