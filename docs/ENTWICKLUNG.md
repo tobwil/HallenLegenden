@@ -116,4 +116,3 @@ Was gebaut wurde:
 ## Offene Ideen
 
 - Übungsmodus mit kurzen Lektionen (Passen, Werfen, Abwehr, Kempa, 7-Meter)
-- Lizenz für das Repository festlegen
