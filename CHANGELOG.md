@@ -2,6 +2,14 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.13: Tiefe Tests und drei Fehler weniger
+- **Neue tiefe Testsuite** (`cd tests && npm run tief`, etwa zweieinhalb Minuten): Dauerlauf über 18 Saisons mit Prüfung des ganzen Spielstands nach jedem Spieltag, Speichern und Laden (Karriere und laufendes Spiel), Zufallsklicks durch alle Menüs und Spiele, eine Saison wirklich gespielt, 11 Bildschirmgrößen, beschädigte Spielstände, Tempo pro Bild.
+- **Behoben: Ergebnis zählte doppelt.** Wer ein Pokal- oder Europapokalspiel mittendrin speicherte, es dann in der Karriere simulierte und später den alten Spielstand lud, bekam das Ergebnis ein zweites Mal angerechnet. Ein gespeichertes Karriere-Spiel zählt jetzt nur, wenn genau diese Partie noch ansteht, sonst läuft es als Freundschaftsspiel.
+- **Behoben: beschädigte Spielstände** (zum Beispiel nach einem abgebrochenen Speichern) ließen das Hauptmenü oder die Karriere abstürzen. Eine beschädigte Karriere wird jetzt beiseitegelegt (bleibt unter `hl3_karriere_defekt` erhalten), ein unvollständig gespeichertes Spiel wird verworfen.
+- **Behoben: sehr kleine Handys** (320 px breit): Die Kader-Tabelle in der Statistik ragte über den Rand.
+- Spieler des Spiels wird auch in einem Sonderfall ohne Einsatzminuten gefunden.
+- Gemessen: ein Bild braucht inklusive Zeichnen etwa 3 bis 4 ms (Budget 16,7 ms bei 60 Bildern pro Sekunde), Spielstand nach 6 Saisons rund 230 KB.
+
 ## v8.12: Neue Lizenz, nicht kommerziell
 - **Lizenz:** Ab dieser Version steht das Spiel unter der **PolyForm Noncommercial License 1.0.0** statt unter MIT. Der Quellcode bleibt offen: Spielen, Lesen, Verändern und kostenloses Weitergeben sind erlaubt, kommerzielle Nutzung (zum Beispiel Verkauf, App-Store, Werbung) braucht eine eigene Lizenz von tobwil.
 - Versionen bis einschließlich v8.11 bleiben MIT-lizenziert. Das steht in `LICENSE` und in der README.

@@ -4,7 +4,8 @@
   "description": "Regressionstests für das Spiel (game/index.html)",
   "type": "module",
   "scripts": {
-    "test": "node run.mjs"
+    "test": "node run.mjs",
+    "tief": "node tief.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.63.0"
