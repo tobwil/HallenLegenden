@@ -235,7 +235,7 @@ const allMatchPlayers = () => G.players.concat(G.bench[0].map(b => ({ ...b, team
 function potm() {
   const all = allMatchPlayers().filter(p => p.mins > 0 || p.goals || p.saves);
   const score = p => p.goals * 3 + p.saves * 1.6 + p.stealsN * 1.5 + (G.score[p.team] > G.score[1 - p.team] ? 2 : 0);
-  return all.sort((a, b) => score(b) - score(a))[0];
+  return all.sort((a, b) => score(b) - score(a))[0] || allMatchPlayers()[0];   // Abpfiff ohne Einsatzminuten (nur theoretisch): irgendein Spieler
 }
 function endMatch() {
   const T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]], st = G.stats;
@@ -327,14 +327,28 @@ function saveMatch() {
     bo: G.ball.owner ? G.players.indexOf(G.ball.owner) : -1, at: Date.now() };
   store.set(SAVE_KEY, d); return true;
 }
+// gespeichertes Spiel nur verwenden, wenn es vollständig ist (sonst verwerfen statt abstürzen)
+function savedMatch() {
+  const d = store.get(SAVE_KEY, null);
+  const ok = d && Array.isArray(d.tid) && TEAMS[d.tid[0]] && TEAMS[d.tid[1]] && Array.isArray(d.score) && Array.isArray(d.ps) && d.ps.length && d.half >= 1;
+  if (d && !ok) store.del(SAVE_KEY);
+  return ok ? d : null;
+}
 function savedInfo() {
-  const d = store.get(SAVE_KEY, null); if (!d || !TEAMS[d.tid[0]]) return '';
+  const d = savedMatch(); if (!d) return '';
   return `${TEAMS[d.tid[0]].k} ${d.score[0]}:${d.score[1]} ${TEAMS[d.tid[1]].k} · ${d.half}. HZ`;
 }
+// Ein gespeichertes Karriere-Spiel zählt nur, wenn genau diese Partie noch ansteht (sonst wurde sie inzwischen simuliert und zählte doppelt)
+function savedStillDue(d) {
+  const same = t => !!t && t[0] === d.tid[0] && t[1] === d.tid[1];
+  if (d.cup) return same(ownCupTie());
+  if (d.euro) return same(ownEuroTie());
+  return !ownCupTie() && !ownEuroTie() && same(ownFixture());
+}
 function loadMatch() {
-  const d = store.get(SAVE_KEY, null); if (!d) return ACT.main();
+  const d = savedMatch(); if (!d) return ACT.main();
   AU.stopMusic();
-  const career = !!(d.career && CAREER && d.ck === careerStamp() && d.lineups);
+  const career = !!(d.career && CAREER && d.ck === careerStamp() && d.lineups && savedStillDue(d));
   newMatch(d.tid[0], d.tid[1], { human: d.human, halfLen: d.halfLen, diff: d.diff, career, label: d.label, kits: d.kits, cup: !!d.cup, euro: d.euro, event: d.event, lineups: career ? d.lineups.map((ids, t) => ids.map(id => findCareerPlayer(d.tid[t], id))) : null });
   Object.assign(G, { score: d.score, half: d.half, clock: d.clock, swap: d.swap, tact: d.tact, timeouts: d.timeouts, stats: d.stats, log: d.log, starter: d.starter });
   d.ps.forEach((s, i) => Object.assign(G.players[i], s));

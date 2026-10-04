@@ -2,6 +2,10 @@
 const CAREER_KEY = 'hl3_karriere';
 let CAREER = store.get(CAREER_KEY, null);
 if (CAREER && CAREER.v !== 1) CAREER = null;
+// beschädigter Spielstand: beiseitelegen statt das Spiel abstürzen zu lassen (bleibt unter hl3_karriere_defekt erhalten)
+if (CAREER && !(CAREER.squads && typeof CAREER.squads === 'object' && CAREER.lgOf && CAREER.season && CAREER.season.table && Array.isArray(CAREER.season.fixtures) && TEAMS[CAREER.team] && CAREER.squads[CAREER.team])) {
+  store.set(CAREER_KEY + '_defekt', CAREER); store.del(CAREER_KEY); CAREER = null;
+}
 function saveCareer() { if (CAREER) store.set(CAREER_KEY, CAREER); }
 const careerStamp = () => CAREER ? `${CAREER.year}-${CAREER.season.round}` : '';
 const SEASON_LENS = [{ n: 'KURZ · 6', v: 6 }, { n: 'HINRUNDE · 17', v: 17 }, { n: 'VOLL · 34', v: 34 }];
