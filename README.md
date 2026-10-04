@@ -105,7 +105,7 @@ In der Abwehr und bei freiem Ball steuerst du ohne Wechseltaste automatisch den 
 
 **Menüs:** Pfeiltasten wählen, Enter bestätigt, Esc oder Backspace geht zurück.
 
-**Gamepad:** A Pass, X Wurf, B Finte/Klau, RB Sprint, Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück.
+**Gamepad:** A Pass, X Wurf, B Finte/Klau, RB Sprint, Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück. Links/rechts ändert Lautstärke-Regler, Vereinsliste und Trikotfarben (gehalten geht es schneller). Das ganze Spiel ist ohne Maus und Tastatur bedienbar, die Hinweise zeigen dann die Controller-Tasten.
 
 **Touch (Handy):**
 - Stick erscheint dort, wo der Daumen links aufsetzt. Voll ausgelenkt sprintet der Spieler
@@ -166,7 +166,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Si
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 35 Tests, etwa eine Minute
+npm test                             # alle 36 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 8 tiefe Tests, etwa zweieinhalb Minuten (vor größeren Versionen)
@@ -285,7 +285,7 @@ In defence and on loose balls you automatically control the player closest to th
 
 **Menus:** arrow keys to select, Enter to confirm, Esc or Backspace to go back.
 
-**Gamepad:** A pass, X shoot, B feint/steal, RB sprint, Start pause. In menus: D-pad to select, A to confirm, B to go back.
+**Gamepad:** A pass, X shoot, B feint/steal, RB sprint, Start pause. In menus: D-pad to select, A to confirm, B to go back. Left/right change volume sliders, the club list and kit colours (hold to go faster). The whole game works without mouse and keyboard, and the on-screen hints then show controller buttons.
 
 **Touch (phone):**
 - The stick appears wherever your left thumb touches down. Full deflection makes the player sprint
@@ -346,7 +346,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). They 
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 35 tests, about one minute
+npm test                             # all 36 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 8 deep tests, about two and a half minutes (before bigger releases)

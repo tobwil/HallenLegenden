@@ -262,6 +262,7 @@ body.touch button.link{min-height:0;font-size:19px}
 @keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 @media (orientation:portrait){ body.touch.ingame:not(.portraitok):not(.menuopen) #rotate{display:flex} }
 body.menuopen #pad{display:none!important}
+body.padin #pad{display:none!important}   /* mit Gamepad gespielt (z. B. Steam Deck): keine Touch-Knöpfe über dem Spielfeld */
 /* Mobile-Navigation */
 .mbar{display:flex;align-items:center;gap:10px;position:sticky;top:calc(-10px - env(safe-area-inset-top,0px));z-index:3;width:100%;box-sizing:border-box;
   background:var(--bg);border-bottom:2px solid var(--line);padding:6px 2px;flex:none}
@@ -2216,7 +2217,7 @@ function hud() {
       const gx = goalX(c.team), ty = 10 + clamp(c.aim || 0, -1, 1) * 1.25, tz = 0.25 + c.charge * 1.5;
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
-      text(TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
+      text(usePad() ? 'B=HEBER' : TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
@@ -2285,7 +2286,7 @@ function drawCut() {
 }
 function ticker() {
   let tick = G.ticker.t > 0 ? G.ticker.txt : '';
-  if (!tick && G.phase === 'kickoff' && G.half === 1 && G.score[0] + G.score[1] === 0) tick = TOUCHDEV ? 'MITSPIELER ANTIPPEN = PASS  TOR ANTIPPEN = WURF  PASS LANG = KEMPA' : 'S PASS  A KEMPA  LEERTASTE WURF  D FINTE/KLAU  W SPRINT  T TIMEOUT';
+  if (!tick && G.phase === 'kickoff' && G.half === 1 && G.score[0] + G.score[1] === 0) tick = usePad() ? 'A PASS  RB+A KEMPA  X WURF  B FINTE/KLAU  RB SPRINT  START PAUSE' : TOUCHDEV ? 'MITSPIELER ANTIPPEN = PASS  TOR ANTIPPEN = WURF  PASS LANG = KEMPA' : 'S PASS  A KEMPA  LEERTASTE WURF  D FINTE/KLAU  W SPRINT  T TIMEOUT';
   if (!tick) return;
   rect(0, H - 18, W, 18, 'rgba(8,7,14,0.88)'); rect(0, H - 18, 6, 18, '#ff4f3a'); rect(0, H - 19, W, 1, '#ffc83a');
   ctx.font = `8px ${FONT}`; while (ctx.measureText(tick).width > W - 24 && tick.length > 4) tick = tick.slice(0, -2) + '…';
@@ -2295,7 +2296,7 @@ function replayHud() {
   rect(0, 0, W, 24, '#000'); rect(0, H - 24, W, 24, '#000');
   if (Math.floor(G.t * 2) % 2) rect(12, 8, 8, 8, '#e2372f');
   text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', hudR() - 12, 8, '#9b90ad', 8, 'right', null);
-  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = WEITER`, W - 12, H - 16, '#9b90ad', 8, 'right', null);
+  text(`${usePad() ? 'A' : TOUCHDEV ? 'TIPPEN' : 'TASTE'} = WEITER`, W - 12, H - 16, '#9b90ad', 8, 'right', null);
   const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
   const yy = (G.t * 90) % H; rect(0, yy, W, 2, 'rgba(255,255,255,0.07)');
   for (let i = 0; i < 30; i++) rect(Math.random() * W, 24 + Math.random() * (H - 48), 1, 1, 'rgba(255,255,255,0.25)');
@@ -2304,7 +2305,7 @@ function introHud() {
   const t = G.introT, T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]];
   rect(0, 0, W, 20, '#000'); rect(0, H - 20, W, 20, '#000');
   text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), hudR() - 14, 6, '#9b90ad', 8, 'right', null);
-  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = ÜBERSPRINGEN`, W / 2, H - 14, '#6e6680', 8, 'center', null);
+  text(`${usePad() ? 'A' : TOUCHDEV ? 'TIPPEN' : 'TASTE'} = ÜBERSPRINGEN`, W / 2, H - 14, '#6e6680', 8, 'center', null);
   if (t < 3.6) {
     const e = ease(t / 0.6), o = clamp((t - 3.1) / 0.5, 0, 1);
     ctx.globalAlpha = 1 - o;
@@ -2351,7 +2352,7 @@ function halftimeHud() {
   const best = t => G.players.filter(p => p.team === t).sort((a, b) => b.goals - a.goals)[0];
   const b0 = best(0), b1 = best(1);
   text(`TOP: ${b0.name} ${b0.goals}`, x + 14, y + 200, '#ffc83a', 8, 'left', null, 160); text(`${b1.name} ${b1.goals}`, x + 346, y + 200, '#ffc83a', 8, 'right', null, 160);
-  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = 2. HALBZEIT`, W / 2, y + 218, '#6e6680', 8, 'center', null);
+  text(`${usePad() ? 'A' : TOUCHDEV ? 'TIPPEN' : 'TASTE'} = 2. HALBZEIT`, W / 2, y + 218, '#6e6680', 8, 'center', null);
 }
 // ================= Menüs, Editor, Spielende, Speichern =================
 const menu = document.getElementById('menu');
@@ -2364,9 +2365,20 @@ const SAVE_KEY = 'hl3_spielstand';
 let PM = null;   // Vor-dem-Spiel-Auswahl
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Zuletzt benutzte Eingabe ('key', 'pad' oder 'touch'): danach richten sich die Hinweise in Menü und Spiel
+let LASTIN = TOUCHDEV ? 'touch' : 'key';
+const usePad = () => LASTIN === 'pad';
+const navText = () => usePad() ? `STEUERKREUZ wählen · A bestätigen · B zurück${menu.querySelector('select, input[type=range], input[type=color]') ? ' · LINKS/RECHTS ändern' : ''}` : 'PFEILE wählen · ENTER bestätigen · ESC zurück';
+function setInput(m) {
+  if (m === LASTIN) return; LASTIN = m; document.body.classList.toggle('padin', m === 'pad');
+  const h = menu.querySelector('.navhint'); if (h) h.textContent = navText();
+  else if (m === 'pad' && !menu.hidden) menu.insertAdjacentHTML('beforeend', `<p class="navhint">${navText()}</p>`);
+}
+addEventListener('keydown', () => setInput('key'), true); addEventListener('touchstart', () => setInput('touch'), { capture: true, passive: true });
 function showMenu(html, clear = false) {
-  if (!document.body.classList.contains('touch')) html += `<p class="navhint">PFEILE wählen · ENTER bestätigen · ESC zurück</p>`;
+  if (!document.body.classList.contains('touch') || usePad()) html += `<p class="navhint">${usePad() ? '' : navText()}</p>`;
   menu.innerHTML = html; menu.hidden = false; document.body.classList.add('menuopen'); menu.scrollTop = 0;
+  if (usePad()) { const h = menu.querySelector('.navhint'); if (h) h.textContent = navText(); }
   if (document.body.classList.contains('touch') && !['title', 'main'].includes(SCREEN) && !(G && !G.demo && G.paused && SCREEN === 'pause')) {
     const t = menu.querySelector('h2'), bar = document.createElement('div'); bar.className = 'mbar';
     bar.innerHTML = `<button class="mback" aria-label="Zurück">‹ ZURÜCK</button><span>${t ? t.textContent : ''}</span>`;
@@ -2497,7 +2509,7 @@ const ACT = {
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
-      <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück</span>
+      <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler, Listen und Farben</span>
       <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
@@ -2557,8 +2569,8 @@ const ACT = {
       <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg === 3 ? 'International' : X.lg + '. Liga'} · ${esc(X.n)}</option>`).join('')}</select>
       <h3>VEREIN</h3>
       <div class="ed"><span class="tag">NAME</span><input id="edTn" value="${esc(T.n)}" maxlength="30" aria-label="Vereinsname"><input id="edTk" value="${esc(T.k)}" maxlength="3" aria-label="Kürzel"></div>
-      <div class="row"><span class="tag" style="min-width:120px">HEIMTRIKOT</span><input type="color" id="edH1" value="${T.home.c1}" aria-label="Heim Trikotfarbe"><input type="color" id="edH2" value="${T.home.c2}" aria-label="Heim Zweitfarbe"><img src="${kitIcon(T.home)}" width="32" height="32" alt="" style="image-rendering:pixelated">
-        <span class="tag" style="min-width:110px;margin-left:12px">AUSWÄRTS</span><input type="color" id="edA1" value="${T.away.c1}" aria-label="Auswärts Trikotfarbe"><input type="color" id="edA2" value="${T.away.c2}" aria-label="Auswärts Zweitfarbe"><img src="${kitIcon(T.away)}" width="32" height="32" alt="" style="image-rendering:pixelated"></div>
+      <div class="row"><span class="tag" style="min-width:120px">HEIMTRIKOT</span><input type="color" id="edH1" value="${T.home.c1}" aria-label="Heim Trikotfarbe"><input type="color" id="edH2" value="${T.home.c2}" aria-label="Heim Zweitfarbe"><img id="edHi" src="${kitIcon(T.home)}" width="32" height="32" alt="" style="image-rendering:pixelated">
+        <span class="tag" style="min-width:110px;margin-left:12px">AUSWÄRTS</span><input type="color" id="edA1" value="${T.away.c1}" aria-label="Auswärts Trikotfarbe"><input type="color" id="edA2" value="${T.away.c2}" aria-label="Auswärts Zweitfarbe"><img id="edAi" src="${kitIcon(T.away)}" width="32" height="32" alt="" style="image-rendering:pixelated"></div>
       <h3>SCHNELLES SPIEL · STARTSIEBEN (NAME · NUMMER)</h3>
       <div class="ed">${ps.slice(0, ROLES.length).map((p, i) => row(p, 'ed' + i, ROLE_LONG[p.role])).join('')}</div>
       <h3>SCHNELLES SPIEL · ERSATZBANK</h3>
@@ -2567,6 +2579,8 @@ const ACT = {
       <div class="ed">${csq.map((p, i) => row(p, 'edC' + i, ROLE_LONG[p.role])).join('')}</div>` : ''}
       <div class="row"><button class="main" data-act="edSave">SPEICHERN</button><button data-act="edReset">ZURÜCKSETZEN</button><button data-act="main">ZURÜCK</button></div></div>`);
     menu.querySelector('#edTeam').onchange = e => ACT.editor(e.target.value);
+    // Trikot-Vorschau gleich beim Ändern der Farbe (Farbwähler, Gamepad, Pfeiltasten), gespeichert wird erst mit SPEICHERN
+    for (const [k, base] of [['H', 'home'], ['A', 'away']]) { const v = n => menu.querySelector(`#ed${k}${n}`), upd = () => { menu.querySelector(`#ed${k}i`).src = kitIcon({ ...T[base], c1: v(1).value, c2: v(2).value }); }; v(1).addEventListener('input', upd); v(2).addEventListener('input', upd); }
   },
   edSave() {
     const T = TEAMS[SEL.edit], v = id => menu.querySelector(id).value;
@@ -4118,14 +4132,58 @@ document.getElementById('tbPause').addEventListener('pointerdown', e => { e.prev
 document.getElementById('rotOk').addEventListener('click', () => document.body.classList.add('portraitok'));
 // Gamepad im Menü: Steuerkreuz/Stick navigiert, A bestätigt, B zurück
 const PADM = {};
+// Trikotfarben zum Durchschalten (Gamepad, Pfeiltasten): die Vereinsfarben aus dem Spiel und ein paar weitere, nach Farbton sortiert
+const KIT_PALETTE = (() => {
+  const hsl = h => { const [r, g, b] = hexRgb(h).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, l = (mx + mn) / 2;
+    const hue = !d ? 0 : mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return { h: hue, s: d, l }; };
+  const cols = [];   // fast gleiche Farben nur einmal, damit jeder Druck sichtbar etwas ändert
+  const extra = ['#7a1f2b', '#ff6fae', '#8a8f99', '#c9a227', '#2ec4b6', '#a4e04a'];   // Bordeaux, Pink, Grau, Gold, Türkis, Hellgrün
+  for (const c of ['#ffffff', '#16161a'].concat(TEAM_BASE.flatMap(t => [t[2], t[3]]), extra).map(c => c.toLowerCase())) if (!cols.some(x => colDist(x, c) < 40)) cols.push(c);
+  return cols.sort((x, y) => { const a = hsl(x), b = hsl(y), ga = a.s < 0.12, gb = b.s < 0.12; return ga !== gb ? (ga ? -1 : 1) : ga ? a.l - b.l : a.h - b.h || a.l - b.l; });
+})();
+// Wert eines Menüelements ändern statt den Fokus zu bewegen: Regler ±5, Auswahlliste ±1 Eintrag, Trikotfarbe ±1 Palettenfarbe
+function menuAdjust(el, d, wrap) {
+  if (!el || !menu.contains(el)) return false;
+  const fire = (...ev) => ev.forEach(n => el.dispatchEvent(new Event(n, { bubbles: true })));
+  if (el.tagName === 'SELECT') {
+    const n = el.options.length, i = wrap ? (el.selectedIndex + d + n) % n : clamp(el.selectedIndex + d, 0, n - 1);
+    if (i !== el.selectedIndex) { const id = el.id; el.selectedIndex = i; fire('input', 'change'); const now = id && menu.querySelector('#' + id); if (now && document.activeElement !== now) now.focus(); }   // Editor baut sich beim Wechsel neu auf
+    return true;
+  }
+  if (el.type === 'range') { el.value = clamp(+el.value + d * 5, +el.min || 0, +el.max || 100); fire('input', 'change'); return true; }
+  if (el.type === 'color') {
+    const v = el.value.toLowerCase(), near = KIT_PALETTE.reduce((bi, c, i) => colDist(c, v) < colDist(KIT_PALETTE[bi], v) ? i : bi, 0);
+    const i = KIT_PALETTE[near] === v ? (near + d + KIT_PALETTE.length) % KIT_PALETTE.length : near;
+    el.value = KIT_PALETTE[i]; fire('input', 'change'); return true;
+  }
+  return false;
+}
+// Pfeil links/rechts auf einer Trikotfarbe: Palette durchschalten (Regler und Listen kann der Browser selbst)
+addEventListener('keydown', e => {
+  const el = document.activeElement;
+  if (menu.hidden || !el || el.type !== 'color' || !['ArrowLeft', 'ArrowRight'].includes(e.code)) return;
+  e.preventDefault(); e.stopImmediatePropagation(); menuAdjust(el, e.code === 'ArrowLeft' ? -1 : 1);
+}, true);
 function menuPad() {
-  if (menu.hidden || !navigator.getGamepads) return;
+  if (!navigator.getGamepads) return;
   for (const gp of navigator.getGamepads()) {
     if (!gp) continue;
     const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
-    const st = { up: b(12) || ay < -0.6, down: b(13) || ay > 0.6, left: b(14) || ax < -0.6, right: b(15) || ax > 0.6, a: b(0), b: b(1) };
-    for (const k in st) if (st[k] && !PADM[k]) { if (k === 'a') { const el = document.activeElement; if (el && menu.contains(el)) el.click(); else menuMove('down'); } else if (k === 'b') menuBack(); else menuMove(k); }
-    Object.assign(PADM, st); break;
+    if (gp.buttons.some(x => x && x.pressed) || Math.hypot(ax, ay) > 0.5) setInput('pad');
+    const st = { up: b(12) || ay < -0.6, down: b(13) || ay > 0.6, left: b(14) || ax < -0.6, right: b(15) || ax > 0.6, a: b(0), b: b(1) }, now = performance.now();
+    // im Spiel gehaltene Knöpfe gelten erst nach dem Loslassen im Menü (sonst klickt ein Pass beim Abpfiff gleich etwas an)
+    if (menu.hidden) { for (const k in st) PADM[k] = st[k] ? Infinity : false; return; }
+    for (const k in st) {
+      if (!st[k]) { PADM[k] = false; continue; }
+      const el = document.activeElement, adj = (k === 'left' || k === 'right') && el && menu.contains(el) && (el.tagName === 'SELECT' || el.type === 'range' || el.type === 'color');
+      // neu gedrückt; links/rechts beim Wertändern wiederholen sich beim Halten (nach 0,35 s alle 0,08 s)
+      if (PADM[k]) { if (!adj || now < PADM[k]) continue; PADM[k] = now + 80; } else PADM[k] = now + 350;
+      if (k === 'a') { if (el && menu.contains(el) && (el.tagName === 'SELECT' || el.type === 'color')) menuAdjust(el, 1, true); else if (el && menu.contains(el) && el.type === 'range') menuMove('down'); else if (el && menu.contains(el)) el.click(); else menuMove('down'); }
+      else if (k === 'b') menuBack();
+      else if (adj) menuAdjust(el, k === 'left' ? -1 : 1);
+      else menuMove(k);
+    }
+    break;
   }
 }
 cv.addEventListener('pointerdown', () => { if (G && !G.demo && ['intro', 'replay', 'halftime', 'goal'].includes(G.phase)) { KEY.Enter = true; setTimeout(() => { KEY.Enter = false; }, 60); } });

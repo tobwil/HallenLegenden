@@ -102,7 +102,7 @@ function hud() {
       const gx = goalX(c.team), ty = 10 + clamp(c.aim || 0, -1, 1) * 1.25, tz = 0.25 + c.charge * 1.5;
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
-      text(TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
+      text(usePad() ? 'B=HEBER' : TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
@@ -171,7 +171,7 @@ function drawCut() {
 }
 function ticker() {
   let tick = G.ticker.t > 0 ? G.ticker.txt : '';
-  if (!tick && G.phase === 'kickoff' && G.half === 1 && G.score[0] + G.score[1] === 0) tick = TOUCHDEV ? 'MITSPIELER ANTIPPEN = PASS  TOR ANTIPPEN = WURF  PASS LANG = KEMPA' : 'S PASS  A KEMPA  LEERTASTE WURF  D FINTE/KLAU  W SPRINT  T TIMEOUT';
+  if (!tick && G.phase === 'kickoff' && G.half === 1 && G.score[0] + G.score[1] === 0) tick = usePad() ? 'A PASS  RB+A KEMPA  X WURF  B FINTE/KLAU  RB SPRINT  START PAUSE' : TOUCHDEV ? 'MITSPIELER ANTIPPEN = PASS  TOR ANTIPPEN = WURF  PASS LANG = KEMPA' : 'S PASS  A KEMPA  LEERTASTE WURF  D FINTE/KLAU  W SPRINT  T TIMEOUT';
   if (!tick) return;
   rect(0, H - 18, W, 18, 'rgba(8,7,14,0.88)'); rect(0, H - 18, 6, 18, '#ff4f3a'); rect(0, H - 19, W, 1, '#ffc83a');
   ctx.font = `8px ${FONT}`; while (ctx.measureText(tick).width > W - 24 && tick.length > 4) tick = tick.slice(0, -2) + '…';
@@ -181,7 +181,7 @@ function replayHud() {
   rect(0, 0, W, 24, '#000'); rect(0, H - 24, W, 24, '#000');
   if (Math.floor(G.t * 2) % 2) rect(12, 8, 8, 8, '#e2372f');
   text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', hudR() - 12, 8, '#9b90ad', 8, 'right', null);
-  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = WEITER`, W - 12, H - 16, '#9b90ad', 8, 'right', null);
+  text(`${usePad() ? 'A' : TOUCHDEV ? 'TIPPEN' : 'TASTE'} = WEITER`, W - 12, H - 16, '#9b90ad', 8, 'right', null);
   const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
   const yy = (G.t * 90) % H; rect(0, yy, W, 2, 'rgba(255,255,255,0.07)');
   for (let i = 0; i < 30; i++) rect(Math.random() * W, 24 + Math.random() * (H - 48), 1, 1, 'rgba(255,255,255,0.25)');
@@ -190,7 +190,7 @@ function introHud() {
   const t = G.introT, T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]];
   rect(0, 0, W, 20, '#000'); rect(0, H - 20, W, 20, '#000');
   text('LIVE', 14, 6, '#ff3b3b', 8, 'left', null); text(G.label || lgName(G.lg), hudR() - 14, 6, '#9b90ad', 8, 'right', null);
-  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = ÜBERSPRINGEN`, W / 2, H - 14, '#6e6680', 8, 'center', null);
+  text(`${usePad() ? 'A' : TOUCHDEV ? 'TIPPEN' : 'TASTE'} = ÜBERSPRINGEN`, W / 2, H - 14, '#6e6680', 8, 'center', null);
   if (t < 3.6) {
     const e = ease(t / 0.6), o = clamp((t - 3.1) / 0.5, 0, 1);
     ctx.globalAlpha = 1 - o;
@@ -237,5 +237,5 @@ function halftimeHud() {
   const best = t => G.players.filter(p => p.team === t).sort((a, b) => b.goals - a.goals)[0];
   const b0 = best(0), b1 = best(1);
   text(`TOP: ${b0.name} ${b0.goals}`, x + 14, y + 200, '#ffc83a', 8, 'left', null, 160); text(`${b1.name} ${b1.goals}`, x + 346, y + 200, '#ffc83a', 8, 'right', null, 160);
-  text(`${TOUCHDEV ? 'TIPPEN' : 'TASTE'} = 2. HALBZEIT`, W / 2, y + 218, '#6e6680', 8, 'center', null);
+  text(`${usePad() ? 'A' : TOUCHDEV ? 'TIPPEN' : 'TASTE'} = 2. HALBZEIT`, W / 2, y + 218, '#6e6680', 8, 'center', null);
 }

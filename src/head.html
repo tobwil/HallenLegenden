@@ -254,6 +254,7 @@ body.touch button.link{min-height:0;font-size:19px}
 @keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 @media (orientation:portrait){ body.touch.ingame:not(.portraitok):not(.menuopen) #rotate{display:flex} }
 body.menuopen #pad{display:none!important}
+body.padin #pad{display:none!important}   /* mit Gamepad gespielt (z. B. Steam Deck): keine Touch-Knöpfe über dem Spielfeld */
 /* Mobile-Navigation */
 .mbar{display:flex;align-items:center;gap:10px;position:sticky;top:calc(-10px - env(safe-area-inset-top,0px));z-index:3;width:100%;box-sizing:border-box;
   background:var(--bg);border-bottom:2px solid var(--line);padding:6px 2px;flex:none}

@@ -82,6 +82,64 @@ test('Plattform-Schnittstelle: eigener Speicher, Ereignisse, BEENDEN und Copyrig
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Gamepad allein: Regler, Vereinsliste und Trikotfarben bedienbar, Hinweise zeigen Controller-Tasten', async () => {
+  // simuliertes Gamepad wie im Steam-Deck-Test: 17 Knöpfe, A=0, B=1, Start=9, Steuerkreuz 12 bis 15
+  const ctx = await browser.newContext(DESKTOP);
+  await ctx.addInitScript(() => {
+    window.__gp = { id: 'Test-Pad', index: 0, connected: true, mapping: 'standard', axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+    Object.defineProperty(navigator, 'getGamepads', { value: () => [window.__gp, null, null, null], configurable: true });
+  });
+  const page = await ctx.newPage(), errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto(GAME); await page.waitForTimeout(700);
+  const btn = (i, on) => page.evaluate(([i, on]) => { __gp.buttons[i].pressed = on; __gp.buttons[i].value = on ? 1 : 0; }, [i, on]);
+  const press = async (i, ms = 90) => { await btn(i, true); await page.waitForTimeout(ms); await btn(i, false); await page.waitForTimeout(90); };
+  const A = 0, B = 1, LEFT = 14, RIGHT = 15;
+  const ev = f => page.evaluate(f);
+  // Titel → Hauptmenü mit A, Hinweiszeile zeigt Controller-Tasten
+  await press(A);
+  const m = await ev(() => ({ screen: SCREEN, hint: (menu.querySelector('.navhint') || {}).textContent || '' }));
+  // Optionen: Lautstärke-Regler
+  await ev(() => { ACT.options(); menu.querySelector('#vol_master').focus(); });
+  const v0 = await ev(() => +menu.querySelector('#vol_master').value);
+  await press(LEFT); const v1 = await ev(() => ({ v: +menu.querySelector('#vol_master').value, au: Math.round(AU.vol.master * 100), shown: menu.querySelector('#vv_master').textContent, focus: document.activeElement.id, hint: menu.querySelector('.navhint').textContent }));
+  await press(LEFT, 800); const v2 = await ev(() => +menu.querySelector('#vol_master').value);
+  await press(RIGHT); const v3 = await ev(() => +menu.querySelector('#vol_master').value);
+  // Editor: Vereinsliste
+  await ev(() => { ACT.editor(0); menu.querySelector('#edTeam').focus(); });
+  await press(RIGHT); const t1 = await ev(() => ({ edit: SEL.edit, sel: +menu.querySelector('#edTeam').value, name: menu.querySelector('#edTn').value, team: TEAMS[1].n, focus: document.activeElement.id }));
+  await press(RIGHT, 1000); const t2 = await ev(() => ({ edit: SEL.edit, focus: document.activeElement.id }));
+  await press(LEFT); const t3 = await ev(() => SEL.edit);
+  // Editor: Trikotfarben aus der Palette (A und links/rechts), dann speichern
+  await ev(() => { ACT.editor(2); menu.querySelector('#edH1').focus(); });
+  const c0 = await ev(() => menu.querySelector('#edH1').value);
+  const i0 = await ev(() => menu.querySelector('#edHi').src);
+  await press(A); const c1 = await ev(() => menu.querySelector('#edH1').value), i1 = await ev(() => menu.querySelector('#edHi').src);
+  await press(RIGHT); const c2 = await ev(() => menu.querySelector('#edH1').value);
+  await press(LEFT); const c3 = await ev(() => ({ v: menu.querySelector('#edH1').value, inPal: KIT_PALETTE.includes(menu.querySelector('#edH1').value), open: !!menu.querySelector('#edH1'), n: KIT_PALETTE.length, gap: Math.min(...KIT_PALETTE.flatMap((a, i) => KIT_PALETTE.slice(i + 1).map(b => colDist(a, b)))) }));
+  const saved = await ev(() => { ACT.edSave(); return TEAM_EDIT[2] && TEAM_EDIT[2].h1; });
+  // Tastatur: Pfeil rechts auf einer Farbe schaltet die Palette, Hinweis wieder für Tastatur
+  await ev(() => { ACT.editor(2); menu.querySelector('#edA1').focus(); });
+  const k0 = await ev(() => menu.querySelector('#edA1').value);
+  await page.keyboard.press('ArrowRight'); const k1 = await ev(() => ({ v: menu.querySelector('#edA1').value, focus: document.activeElement.id, hint: menu.querySelector('.navhint').textContent }));
+  // im Spiel gehaltenes A löst im gerade geöffneten Menü nichts aus; Hinweise im Spiel zeigen Controller-Tasten
+  await ev(() => { hideMenu(); startMatch(2, 5, { human: 0, halfLen: 180 }); G.introT = 99; });
+  await press(LEFT); await btn(A, true); await page.waitForTimeout(150);
+  await ev(() => { G.paused = true; ACT.pause(); }); await page.waitForTimeout(250);
+  const p1 = await ev(() => ({ screen: SCREEN, hidden: menu.hidden, pad: usePad(), padin: document.body.classList.contains('padin') }));
+  await btn(A, false); await page.waitForTimeout(120); await press(B); const p2 = await ev(() => ({ hidden: menu.hidden }));
+  ok(m.screen === 'main' && m.hint.includes('A bestätigen'), 'Hauptmenü/Hinweis: ' + JSON.stringify(m));
+  ok(v1.v === v0 - 5 && v1.au === v1.v && v1.shown === String(v1.v) && v1.focus === 'vol_master' && v1.hint.includes('LINKS/RECHTS'), 'Regler: ' + JSON.stringify({ v0, v1 }));
+  ok(v2 <= v1.v - 15 && v3 === v2 + 5, 'Regler gehalten/zurück: ' + JSON.stringify({ v1, v2, v3 }));
+  ok(t1.edit === 1 && t1.sel === 1 && t1.name === t1.team && t1.focus === 'edTeam', 'Vereinsliste: ' + JSON.stringify(t1));
+  ok(t2.edit >= 4 && t2.focus === 'edTeam' && t3 === t2.edit - 1, 'Vereinsliste gehalten: ' + JSON.stringify({ t2, t3 }));
+  ok(c1 !== c0 && c2 !== c1 && c3.v === c1 && c3.inPal && c3.open && c3.n >= 16 && c3.gap >= 40, 'Trikotfarbe: ' + JSON.stringify({ c0, c1, c2, c3 }));
+  ok(saved === c1, 'Farbe nicht gespeichert: ' + saved + ' statt ' + c1); ok(i1 !== i0, 'Trikot-Vorschau ändert sich nicht mit der Farbe');
+  ok(k1.v !== k0 && k1.focus === 'edA1' && k1.hint.includes('PFEILE'), 'Tastatur auf Farbe: ' + JSON.stringify({ k0, k1 }));
+  ok(p1.screen === 'pause' && !p1.hidden && p1.pad && p1.padin, 'Gehaltenes A im Pausenmenü: ' + JSON.stringify(p1));
+  ok(p2.hidden, 'B im Pausenmenü sollte weiterspielen');
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Handy: kein Menü-Overlay im Spiel, Antipp-Tipp beim ersten Spiel, dezente Knöpfe', async () => {
   const { page, ctx, errors } = await open(MOBILE);
   await page.evaluate(() => { document.body.classList.add('touch'); startMatch(SEL.a, SEL.b, { human: 0, halfLen: 180 }); G.introT = 99; });
