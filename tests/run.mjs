@@ -175,6 +175,11 @@ test('Gamepad: jedes Element in jedem Menü nur mit dem Steuerkreuz erreichbar (
       window.__run = n => { for (let i = 0; i < n; i++) { readInput(1 / 60); step(1 / 60); } }; __run(300); endMatch(); chk('Spielende');
       ACT.afterMatch(); let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 60) ACT.cSim(); ACT.cEnd(); chk('Saisonabschluss');
       await shareCard('season'); chk('Teilen'); ACT.cShareBack(); ACT.cNext(); ACT.cTab('hist'); ACT.cDel(); chk('Karriere löschen?');
+      // natürliche Wege im Editor: rechts vom Namen das Kürzel, die Farbreihe der Reihe nach, rechts davon nicht zurück auf Name oder Liste
+      ACT.editor(2); const go = (id, d) => { menu.querySelector('#' + id).focus(); menuMove(d); return document.activeElement.id || document.activeElement.dataset.act; };
+      const row = ['edH1', 'edH2', 'edA1', 'edA2'], seq = row.slice(0, 3).map((id, i) => go(id, 'right') === row[i + 1]);
+      const nat = { nameRechts: go('edTn', 'right'), reihe: seq.every(Boolean), zurueck: row.slice(1).map((id, i) => go(id, 'left') === row[i]).every(Boolean), nameRunter: go('edTn', 'down'), ausReiheRechts: go('edA2', 'right') };
+      if (nat.nameRechts !== 'edTk' || !nat.reihe || !nat.zurueck || !row.includes(nat.nameRunter) || ['edTn', 'edTeam'].includes(nat.ausReiheRechts)) out.push('Editor-Wege: ' + JSON.stringify(nat));
       return out;
     });
     bad.push(...r.map(x => `${vp.join('×')} ${x}`), ...errors.map(e => `${vp.join('×')} Fehler ${e}`));

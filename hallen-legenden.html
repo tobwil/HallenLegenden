@@ -2401,10 +2401,12 @@ function menuMove(dir) {
   for (const el of els) {
     if (el === cur) continue;
     const q = el.getBoundingClientRect(), ex = q.left + q.width / 2, ey = q.top + q.height / 2, vx = ex - cx, vy = ey - cy;
-    const along = vx * dx + vy * dy; if (along <= 4) continue;
+    // nur was wirklich in dieser Richtung beginnt (Rand zu Rand, 4 px Spiel): ein breites Feld darüber liegt nicht „rechts“
+    const along = dir === 'right' ? q.left - r.right : dir === 'left' ? r.left - q.right : dir === 'down' ? q.top - r.bottom : r.top - q.bottom;
+    if (along < -4 || (vx * dx + vy * dy) <= 4) continue;
     // seitlicher Abstand zwischen den Rändern, nicht den Mitten: ein schmales Feld direkt unter einem breiten liegt „darunter“
     const gap = dx ? Math.max(0, q.top - r.bottom, r.top - q.bottom) : Math.max(0, q.left - r.right, r.left - q.right);
-    const across = Math.abs(vx * dy - vy * dx), sc = along + gap * 2.5 + across * 0.15;
+    const across = Math.abs(vx * dy - vy * dx), sc = Math.max(0, along) + gap * 2.5 + across * 0.15;
     if (sc < bs) { bs = sc; best = el; }
   }
   if (!best && (dir === 'down' || dir === 'up')) best = dir === 'down' ? els[0] : els[els.length - 1];   // am Ende umbrechen
