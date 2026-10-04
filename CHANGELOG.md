@@ -2,6 +2,16 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.16: Komplett mit dem Gamepad (Steam Deck)
+- **Regler, Vereinsliste und Trikotfarben per Gamepad:** Links/rechts ändern den Wert statt zum nächsten Feld zu springen. Lautstärke in 5er-Schritten, Vereine einzeln, gehalten wiederholt es sich. A auf einer Auswahlliste oder Farbe schaltet weiter. Gefunden beim Steam-Deck-Test (#30).
+- **Trikotfarben ohne System-Farbwähler:** Gamepad und Pfeiltasten schalten durch 22 Trikotfarben (alle Vereinsfarben des Spiels und ein paar weitere). Mit Maus oder Touch bleibt der freie Farbwähler. Die Trikot-Vorschau im Editor zeigt jede Änderung sofort.
+- **Hinweise passend zur Eingabe:** Wer zuletzt das Gamepad benutzt hat, sieht „STEUERKREUZ wählen · A bestätigen · B zurück“ im Menü und im Spiel „A = WEITER“, „B=HEBER“ und die Gamepad-Belegung in der Laufschrift beim Anwurf. Mit Tastatur oder Touch bleibt alles wie bisher.
+- Mit Gamepad gespielt blendet das Spiel die Touch-Knöpfe aus (Geräte mit Touchscreen wie das Steam Deck).
+- Ein im Spiel gehaltener Knopf löst im gerade geöffneten Menü nichts mehr aus (zum Beispiel A beim Abpfiff).
+- Mit der Tastatur schalten Pfeil links/rechts auf der Vereinsliste und den Trikotfarben im Editor ebenfalls weiter.
+- 1 neuer Regressionstest mit simuliertem Gamepad (und Pfeiltasten auf Liste und Farbe), insgesamt 36
+- **Neuer tiefer Test „Update von der Vorversion“:** Spielstände aus der bisherigen Version (aus git oder `ALT=…`) werden in der neuen weitergespielt: laufendes Spiel, inzwischen simuliertes Pokalspiel, Karriere mit Rekorden und Titeln, Einstellungen. Ersetzt die Prüfskripte, die bisher bei jedem Preview-Test nebenher liefen. Tiefe Suite jetzt 9 Tests
+
 ## v8.15: Datenschutzerklärung vollständig
 - Die Liste der anonym gezählten Ereignisse nennt jetzt alle: zusätzlich Klicks auf „Feature wünschen“, simulierte Spiele, gewonnene Titel (nur die Art, neu seit v8.14) und geteilte Bilder.
 

@@ -97,14 +97,59 @@ document.getElementById('tbPause').addEventListener('pointerdown', e => { e.prev
 document.getElementById('rotOk').addEventListener('click', () => document.body.classList.add('portraitok'));
 // Gamepad im Menü: Steuerkreuz/Stick navigiert, A bestätigt, B zurück
 const PADM = {};
+// Trikotfarben zum Durchschalten (Gamepad, Pfeiltasten): die Vereinsfarben aus dem Spiel und ein paar weitere, nach Farbton sortiert
+const KIT_PALETTE = (() => {
+  const hsl = h => { const [r, g, b] = hexRgb(h).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn, l = (mx + mn) / 2;
+    const hue = !d ? 0 : mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return { h: hue, s: d, l }; };
+  const cols = [];   // fast gleiche Farben nur einmal, damit jeder Druck sichtbar etwas ändert
+  const extra = ['#7a1f2b', '#ff6fae', '#8a8f99', '#c9a227', '#2ec4b6', '#a4e04a'];   // Bordeaux, Pink, Grau, Gold, Türkis, Hellgrün
+  for (const c of ['#ffffff', '#16161a'].concat(TEAM_BASE.flatMap(t => [t[2], t[3]]), extra).map(c => c.toLowerCase())) if (!cols.some(x => colDist(x, c) < 40)) cols.push(c);
+  return cols.sort((x, y) => { const a = hsl(x), b = hsl(y), ga = a.s < 0.12, gb = b.s < 0.12; return ga !== gb ? (ga ? -1 : 1) : ga ? a.l - b.l : a.h - b.h || a.l - b.l; });
+})();
+// Wert eines Menüelements ändern statt den Fokus zu bewegen: Regler ±5, Auswahlliste ±1 Eintrag, Trikotfarbe ±1 Palettenfarbe
+function menuAdjust(el, d, wrap) {
+  if (!el || !menu.contains(el)) return false;
+  const fire = (...ev) => ev.forEach(n => el.dispatchEvent(new Event(n, { bubbles: true })));
+  if (el.tagName === 'SELECT') {
+    const n = el.options.length, i = wrap ? (el.selectedIndex + d + n) % n : clamp(el.selectedIndex + d, 0, n - 1);
+    if (i !== el.selectedIndex) { const id = el.id; el.selectedIndex = i; fire('input', 'change'); const now = id && menu.querySelector('#' + id); if (now && document.activeElement !== now) now.focus(); }   // Editor baut sich beim Wechsel neu auf
+    return true;
+  }
+  if (el.type === 'range') { el.value = clamp(+el.value + d * 5, +el.min || 0, +el.max || 100); fire('input', 'change'); return true; }
+  if (el.type === 'color') {
+    const v = el.value.toLowerCase(), near = KIT_PALETTE.reduce((bi, c, i) => colDist(c, v) < colDist(KIT_PALETTE[bi], v) ? i : bi, 0);
+    const i = KIT_PALETTE[near] === v ? (near + d + KIT_PALETTE.length) % KIT_PALETTE.length : near;
+    el.value = KIT_PALETTE[i]; fire('input', 'change'); return true;
+  }
+  return false;
+}
+// Pfeil links/rechts auf einer Trikotfarbe oder Auswahlliste: Wert ändern wie mit dem Gamepad (Regler kann der Browser selbst,
+// hoch/runter auf der Liste bleibt beim Browser)
+addEventListener('keydown', e => {
+  const el = document.activeElement;
+  if (menu.hidden || !el || !['color', 'select-one'].includes(el.type) || !['ArrowLeft', 'ArrowRight'].includes(e.code)) return;
+  e.preventDefault(); e.stopImmediatePropagation(); menuAdjust(el, e.code === 'ArrowLeft' ? -1 : 1);
+}, true);
 function menuPad() {
-  if (menu.hidden || !navigator.getGamepads) return;
+  if (!navigator.getGamepads) return;
   for (const gp of navigator.getGamepads()) {
     if (!gp) continue;
     const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed), ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
-    const st = { up: b(12) || ay < -0.6, down: b(13) || ay > 0.6, left: b(14) || ax < -0.6, right: b(15) || ax > 0.6, a: b(0), b: b(1) };
-    for (const k in st) if (st[k] && !PADM[k]) { if (k === 'a') { const el = document.activeElement; if (el && menu.contains(el)) el.click(); else menuMove('down'); } else if (k === 'b') menuBack(); else menuMove(k); }
-    Object.assign(PADM, st); break;
+    if (gp.buttons.some(x => x && x.pressed) || Math.hypot(ax, ay) > 0.5) setInput('pad');
+    const st = { up: b(12) || ay < -0.6, down: b(13) || ay > 0.6, left: b(14) || ax < -0.6, right: b(15) || ax > 0.6, a: b(0), b: b(1) }, now = performance.now();
+    // im Spiel gehaltene Knöpfe gelten erst nach dem Loslassen im Menü (sonst klickt ein Pass beim Abpfiff gleich etwas an)
+    if (menu.hidden) { for (const k in st) PADM[k] = st[k] ? Infinity : false; return; }
+    for (const k in st) {
+      if (!st[k]) { PADM[k] = false; continue; }
+      const el = document.activeElement, adj = (k === 'left' || k === 'right') && el && menu.contains(el) && (el.tagName === 'SELECT' || el.type === 'range' || el.type === 'color');
+      // neu gedrückt; links/rechts beim Wertändern wiederholen sich beim Halten (nach 0,35 s alle 0,08 s)
+      if (PADM[k]) { if (!adj || now < PADM[k]) continue; PADM[k] = now + 80; } else PADM[k] = now + 350;
+      if (k === 'a') { if (el && menu.contains(el) && (el.tagName === 'SELECT' || el.type === 'color')) menuAdjust(el, 1, true); else if (el && menu.contains(el) && el.type === 'range') menuMove('down'); else if (el && menu.contains(el)) el.click(); else menuMove('down'); }
+      else if (k === 'b') menuBack();
+      else if (adj) menuAdjust(el, k === 'left' ? -1 : 1);
+      else menuMove(k);
+    }
+    break;
   }
 }
 cv.addEventListener('pointerdown', () => { if (G && !G.demo && ['intro', 'replay', 'halftime', 'goal'].includes(G.phase)) { KEY.Enter = true; setTimeout(() => { KEY.Enter = false; }, 60); } });

@@ -1,8 +1,10 @@
 // Tiefe Tests: lange Läufe, Speichern/Laden, Zufallsklicks, viele Bildschirmgrößen, kaputte Spielstände, Tempo.
 // Dauern einige Minuten. Aufruf: cd tests && npm run tief   (nur bestimmte: npm run tief -- dauerlauf monkey)
 // Gleiche Optionen wie run.mjs: GAME=… (Datei oder URL, z. B. Netlify-Vorschau), CHROMIUM_PATH=…
+// ALT=… (Datei oder URL): Vorversion für den Update-Test, sonst game/index.html aus origin/main (git)
 import { chromium } from 'playwright-core';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { execSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -309,6 +311,76 @@ test('Tempo: Spielschritt und Zeichnen bleiben flott (Desktop und breites Handy)
     ok(r.step + r.draw < 8 && r.step99 + r.draw99 < 14, `${name} zu langsam (Budget 16,7 ms je Bild): ${JSON.stringify(r)}`); ok(!errors.length, errors.join('; ')); await ctx.close();
   }
   console.log('      ' + res.join('\n      '));
+});
+
+// ---------------------------------------------------------------- Update von der Vorversion
+// Spielstände entstehen in der Vorversion und werden in der neuen Version weitergespielt, so wie bei Spielern nach einem Deploy.
+// Vorversion: ALT=Datei oder URL, sonst game/index.html aus origin/main. Der Speicher wird von Seite zu Seite übertragen, daher
+// dürfen beide Versionen auf verschiedenen Adressen liegen (zum Beispiel live und Netlify-Vorschau).
+function vorversion() {
+  if (process.env.ALT) return /^https?:\/\//.test(process.env.ALT) ? process.env.ALT : pathToFileURL(path.resolve(process.env.ALT)).href;
+  try {
+    const html = execSync('git show origin/main:game/index.html', { cwd: root, maxBuffer: 64 * 1024 * 1024, stdio: ['ignore', 'pipe', 'ignore'] });
+    const dir = path.join(root, 'tests', '.vorversion'); mkdirSync(dir, { recursive: true }); writeFileSync(path.join(dir, 'index.html'), html);
+    return pathToFileURL(path.join(dir, 'index.html')).href;
+  } catch (e) { return null; }
+}
+const toMidS = `G.paused = true; G.introT = 99; { let n = 0; while (!(G.half === 1 && G.clock > G.halfLen * 0.5 && G.phase === 'play') && n++ < 60000) __run(1); }`;
+const toEndS = `G.paused = true; G.introT = 99; { let n = 0; while (G.phase !== 'fulltime' && n++ < 120000) __run(1); } G.paused = false;`;
+// eine Partie: Spielstand in der Vorversion anlegen (prep), Speicher in die neue Version übertragen, dort weiter (check)
+async function update(ALT, seed, prep, check) {
+  const a = await open(DESKTOP, seed); await a.page.goto(ALT); await a.page.waitForTimeout(600); await a.page.evaluate(STEP);
+  const before = await prep(a.page);
+  const data = await a.page.evaluate(() => Object.fromEntries(Object.keys(localStorage).map(k => [k, localStorage.getItem(k)])));
+  const oldErr = a.errors.slice(); await a.ctx.close();
+  const n = await open(DESKTOP, seed + 1);
+  await n.page.evaluate(d => { localStorage.clear(); for (const [k, v] of Object.entries(d)) localStorage.setItem(k, v); }, data);
+  await n.page.reload(); await n.page.waitForTimeout(600); await n.page.evaluate(STEP); await n.page.evaluate(INV);
+  const r = await check(n.page, before);
+  const errs = oldErr.map(e => 'Vorversion: ' + e).concat(n.errors); await n.ctx.close();
+  return { r, errs };
+}
+test('Update von der Vorversion: laufendes Spiel, simuliertes Pokalspiel, Karriere und Einstellungen gehen nach dem Deploy weiter', async () => {
+  const ALT = vorversion(); if (!ALT) { console.log('      übersprungen: keine Vorversion (kein git, ALT nicht gesetzt)'); return; }
+  console.log('      Vorversion: ' + ALT.replace(pathToFileURL(root).href, '.'));
+  // A: Ligaspiel mittendrin gespeichert → in der neuen Version fortsetzen, zählt genau einmal
+  const A = await update(ALT, 21, async p => {
+    await p.evaluate(() => { careerCreate(TEAM_BASE.findIndex(b => b[0] === 'HAN'), 1, 1, 1); for (let i = 0; i < 3 || cupDue() || euroDue(); i++) ACT.cSim(); careerHub('home'); ACT.cPlay(); ACT.pmGo(); });
+    await p.evaluate(toMidS); return p.evaluate(() => { const r = { round: CAREER.season.round, sp: CAREER.season.table[CAREER.team].sp, score: G.score.join(':') }; ACT.saveQuit(); return r; });
+  }, async (p, b) => {
+    const s1 = await p.evaluate(() => { ACT.main(); const btn = menu.querySelector('[data-act="load"]'); const t = btn && btn.innerText.replace(/\s+/g, ' '); ACT.load(); return { btn: t, career: !!G.career, score: G.score.join(':') }; });
+    await p.evaluate(toEndS); await p.waitForSelector('#menu button[data-act="afterMatch"]', { timeout: 15000 }); await p.click('#menu button[data-act="afterMatch"]');
+    const s2 = await p.evaluate(() => ({ round: CAREER.season.round, sp: CAREER.season.table[CAREER.team].sp, saved: !!localStorage.getItem('hl3_spielstand'), inv: __inv('nach dem Spiel') }));
+    return { ok: !!s1.btn && s1.career && s1.score === b.score && s2.round === b.round + 1 && s2.sp === b.sp + 1 && !s2.saved && !s2.inv.length, b, s1, s2 };
+  });
+  // B: Pokalspiel gespeichert, nach dem Update erst simuliert, dann geladen → Freundschaftsspiel, Pokal unverändert
+  const B = await update(ALT, 9, async p => {
+    const ok = await p.evaluate(() => { careerCreate(TEAM_BASE.findIndex(b => b[0] === 'BER'), 1, 1, 1); let g = 0; while (!ownCupTie() && g++ < 40) ACT.cSim(); if (!ownCupTie()) return false; careerHub('home'); ACT.cPlay(); ACT.pmGo(); return true; });
+    if (ok) { await p.evaluate(toMidS); await p.evaluate(() => ACT.saveQuit()); } return ok;
+  }, async (p, ok) => {
+    if (!ok) return { ok: false, grund: 'kein Pokalspiel erreicht' };
+    const r = await p.evaluate(() => { careerHub('home'); ACT.cSim(); const cup = JSON.stringify(CAREER.cup); ACT.load(); return { career: !!G.career, cup }; });
+    await p.evaluate(toEndS); await p.waitForTimeout(3600);
+    const after = await p.evaluate(() => JSON.stringify(CAREER.cup));
+    return { ok: !r.career && after === r.cup, career: r.career, gleich: after === r.cup };
+  });
+  // C: Karriere über 2 Saisons mit Rekorden, Titeln und Editor-Änderung → alles da, 10 weitere Spieltage stimmig
+  const C = await update(ALT, 4, async p => p.evaluate(() => {
+    localStorage.setItem('hl4_settings', JSON.stringify({ speed: 2 }));
+    careerCreate(TEAM_BASE.findIndex(b => b[0] === 'KIE'), 1, 1, 1, true, 1);
+    for (let s = 0; s < 2; s++) { let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 100) ACT.cSim(); ACT.cEnd(); if (CAREER.summary.board.fired) { const o = [...menu.querySelectorAll('[data-act="cJob"]')]; ACT.cJob(+o[0].dataset.v); } else ACT.cNext(); }
+    saveCareer();
+    const sq = TEAMS.flatMap(t => CAREER.squads[t.id].map(p => p.pid)).sort((a, b) => a - b).join();
+    return { team: CAREER.team, year: CAREER.year, money: CAREER.money, hist: JSON.stringify(CAREER.history), titles: JSON.stringify(CAREER.titles || []), rec: JSON.stringify(CAREER.rec || {}), sq };
+  }), async (p, b) => p.evaluate(b => {
+    const sq = TEAMS.flatMap(t => CAREER.squads[t.id].map(p => p.pid)).sort((a, b) => a - b).join();
+    const now = { team: CAREER.team === b.team, year: CAREER.year === b.year, money: CAREER.money === b.money, hist: JSON.stringify(CAREER.history) === b.hist, titles: JSON.stringify(CAREER.titles || []) === b.titles, rec: JSON.stringify(CAREER.rec || {}) === b.rec, kader: sq === b.sq, tempo: SETTINGS.speed === 2, defekt: !localStorage.getItem('hl3_karriere_defekt') };
+    const bad = []; for (let i = 0; i < 10; i++) { ACT.cSim(); bad.push(...__inv('Spieltag nach Update')); }
+    return { ok: Object.values(now).every(Boolean) && !bad.length, now, bad: bad.slice(0, 3) };
+  }, b));
+  for (const [n, x] of [['A laufendes Ligaspiel', A], ['B simuliertes Pokalspiel', B], ['C Karriere und Einstellungen', C]]) {
+    ok(x.r.ok, `${n}: ${JSON.stringify(x.r)}`); ok(!x.errs.length, `${n}: ${x.errs.join('; ')}`);
+  }
 });
 
 // ---------------------------------------------------------------- Main

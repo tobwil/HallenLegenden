@@ -9,9 +9,20 @@ const SAVE_KEY = 'hl3_spielstand';
 let PM = null;   // Vor-dem-Spiel-Auswahl
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// Zuletzt benutzte Eingabe ('key', 'pad' oder 'touch'): danach richten sich die Hinweise in Menü und Spiel
+let LASTIN = TOUCHDEV ? 'touch' : 'key';
+const usePad = () => LASTIN === 'pad';
+const navText = () => usePad() ? `STEUERKREUZ wählen · A bestätigen · B zurück${menu.querySelector('select, input[type=range], input[type=color]') ? ' · LINKS/RECHTS ändern' : ''}` : 'PFEILE wählen · ENTER bestätigen · ESC zurück';
+function setInput(m) {
+  if (m === LASTIN) return; LASTIN = m; document.body.classList.toggle('padin', m === 'pad');
+  const h = menu.querySelector('.navhint'); if (h) h.textContent = navText();
+  else if (m === 'pad' && !menu.hidden) menu.insertAdjacentHTML('beforeend', `<p class="navhint">${navText()}</p>`);
+}
+addEventListener('keydown', () => setInput('key'), true); addEventListener('touchstart', () => setInput('touch'), { capture: true, passive: true });
 function showMenu(html, clear = false) {
-  if (!document.body.classList.contains('touch')) html += `<p class="navhint">PFEILE wählen · ENTER bestätigen · ESC zurück</p>`;
+  if (!document.body.classList.contains('touch') || usePad()) html += `<p class="navhint">${usePad() ? '' : navText()}</p>`;
   menu.innerHTML = html; menu.hidden = false; document.body.classList.add('menuopen'); menu.scrollTop = 0;
+  if (usePad()) { const h = menu.querySelector('.navhint'); if (h) h.textContent = navText(); }
   if (document.body.classList.contains('touch') && !['title', 'main'].includes(SCREEN) && !(G && !G.demo && G.paused && SCREEN === 'pause')) {
     const t = menu.querySelector('h2'), bar = document.createElement('div'); bar.className = 'mbar';
     bar.innerHTML = `<button class="mback" aria-label="Zurück">‹ ZURÜCK</button><span>${t ? t.textContent : ''}</span>`;
@@ -142,7 +153,7 @@ const ACT = {
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
-      <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück</span>
+      <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler, Listen und Farben</span>
       <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
@@ -202,8 +213,8 @@ const ACT = {
       <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg === 3 ? 'International' : X.lg + '. Liga'} · ${esc(X.n)}</option>`).join('')}</select>
       <h3>VEREIN</h3>
       <div class="ed"><span class="tag">NAME</span><input id="edTn" value="${esc(T.n)}" maxlength="30" aria-label="Vereinsname"><input id="edTk" value="${esc(T.k)}" maxlength="3" aria-label="Kürzel"></div>
-      <div class="row"><span class="tag" style="min-width:120px">HEIMTRIKOT</span><input type="color" id="edH1" value="${T.home.c1}" aria-label="Heim Trikotfarbe"><input type="color" id="edH2" value="${T.home.c2}" aria-label="Heim Zweitfarbe"><img src="${kitIcon(T.home)}" width="32" height="32" alt="" style="image-rendering:pixelated">
-        <span class="tag" style="min-width:110px;margin-left:12px">AUSWÄRTS</span><input type="color" id="edA1" value="${T.away.c1}" aria-label="Auswärts Trikotfarbe"><input type="color" id="edA2" value="${T.away.c2}" aria-label="Auswärts Zweitfarbe"><img src="${kitIcon(T.away)}" width="32" height="32" alt="" style="image-rendering:pixelated"></div>
+      <div class="row"><span class="tag" style="min-width:120px">HEIMTRIKOT</span><input type="color" id="edH1" value="${T.home.c1}" aria-label="Heim Trikotfarbe"><input type="color" id="edH2" value="${T.home.c2}" aria-label="Heim Zweitfarbe"><img id="edHi" src="${kitIcon(T.home)}" width="32" height="32" alt="" style="image-rendering:pixelated">
+        <span class="tag" style="min-width:110px;margin-left:12px">AUSWÄRTS</span><input type="color" id="edA1" value="${T.away.c1}" aria-label="Auswärts Trikotfarbe"><input type="color" id="edA2" value="${T.away.c2}" aria-label="Auswärts Zweitfarbe"><img id="edAi" src="${kitIcon(T.away)}" width="32" height="32" alt="" style="image-rendering:pixelated"></div>
       <h3>SCHNELLES SPIEL · STARTSIEBEN (NAME · NUMMER)</h3>
       <div class="ed">${ps.slice(0, ROLES.length).map((p, i) => row(p, 'ed' + i, ROLE_LONG[p.role])).join('')}</div>
       <h3>SCHNELLES SPIEL · ERSATZBANK</h3>
@@ -212,6 +223,8 @@ const ACT = {
       <div class="ed">${csq.map((p, i) => row(p, 'edC' + i, ROLE_LONG[p.role])).join('')}</div>` : ''}
       <div class="row"><button class="main" data-act="edSave">SPEICHERN</button><button data-act="edReset">ZURÜCKSETZEN</button><button data-act="main">ZURÜCK</button></div></div>`);
     menu.querySelector('#edTeam').onchange = e => ACT.editor(e.target.value);
+    // Trikot-Vorschau gleich beim Ändern der Farbe (Farbwähler, Gamepad, Pfeiltasten), gespeichert wird erst mit SPEICHERN
+    for (const [k, base] of [['H', 'home'], ['A', 'away']]) { const v = n => menu.querySelector(`#ed${k}${n}`), upd = () => { menu.querySelector(`#ed${k}i`).src = kitIcon({ ...T[base], c1: v(1).value, c2: v(2).value }); }; v(1).addEventListener('input', upd); v(2).addEventListener('input', upd); }
   },
   edSave() {
     const T = TEAMS[SEL.edit], v = id => menu.querySelector(id).value;
