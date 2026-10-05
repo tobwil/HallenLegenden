@@ -37,16 +37,43 @@ Umami wertet `utm_source` aus. So sehen wir Besucher von X auch dann, wenn die X
 
 ## Angehefteter Post (erster Post)
 
+X erlaubt 280 Zeichen. Jeder Link zählt 23, jedes Emoji 2. Die Entwürfe unten sind mit Hashtags gezählt. Der Hinweis auf das Fan-Projekt steht in der Bio, im Post ist dafür kein Platz.
+
 Mit [hallenlegenden-teaser.mp4](hallenlegenden-teaser.mp4) (Video läuft bei X automatisch, GIF wird schlechter komprimiert):
 
 > Hallen-Legenden: Retro-Handball im Pixel-Look 🤾
 >
-> 7 gegen 7 mit Sprungwurf, Kempa und 7-Meter. Dazu eine Karriere als Manager mit Transfers, Pokal und Europapokal bis zum Final Four.
+> 7 gegen 7 mit Sprungwurf und Kempa, dazu eine Karriere als Manager bis zum Final Four.
 >
 > Kostenlos im Browser, auch am Handy 👇
 > hallenlegenden.de
 >
-> Inoffizielles Fan-Projekt, alle Namen sind erfunden.
+> #Handball #Pixelart
+
+(etwa 220 von 280)
+
+Ganz kurz, für Antworten oder einen zweiten Post:
+
+> Handball im Pixel-Look 🤾 Sprungwurf, Kempa, Final Four.
+>
+> Kostenlos im Browser spielen: hallenlegenden.de
+>
+> #Handball #IndieGame
+
+(etwa 135 von 280)
+
+Englisch:
+
+> Retro pixel-art handball 🤾
+>
+> 7v7 with jump shots and Kempa tricks, plus a manager career all the way to the Final Four.
+>
+> Free in your browser, on mobile too 👇
+> hallenlegenden.de
+>
+> #Handball #Pixelart #IndieGame
+
+(etwa 215 von 280)
 
 **Alt-Text für das Video**: Szenen aus dem Spiel: Startbildschirm, Aufstellungskarten, ein Tor, ein Kempa-Tor, der Europapokal-Turnierbaum, das Final Four und die Pokalübergabe.
 
