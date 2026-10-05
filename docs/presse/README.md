@@ -27,6 +27,9 @@ Alle Dateien hier dürfen für Berichte, Posts und Vorstellungen des Spiels frei
 | [hallenlegenden-aufstellung.png](hallenlegenden-aufstellung.png) | Standbild: Aufstellungskarten | 1280 × 720 |
 | [hallenlegenden-europapokal-gruppen.png](hallenlegenden-europapokal-gruppen.png) · [-turnierbaum.png](hallenlegenden-europapokal-turnierbaum.png) | Standbilder: Europapokal mit Gruppen und mit Turnierbaum | 1280 × 720 |
 | [hallenlegenden-abschlusstafel.png](hallenlegenden-abschlusstafel.png) | Logo mit Adresse | 1280 × 720 |
+| [hallenlegenden-profilbild.png](hallenlegenden-profilbild.png) · [-400.png](hallenlegenden-profilbild-400.png) | Profilbild für Social Media: Spieler im Sprungwurf, randlos für runde Ausschnitte | 1024 × 1024 · 400 × 400 |
+| [hallenlegenden-banner.png](hallenlegenden-banner.png) | Banner für X und Co.: Halle, Schriftzug, Sprungwurf vor dem Torraum | 1500 × 500 |
+| [social.md](social.md) | Texte für das X-Profil (Name, Bio, Link, angehefteter Post, Alt-Texte) | Text |
 | [../screenshots/](../screenshots/) | echte Aufnahmen aus dem Spiel: Partie, Titel, Teamauswahl, Zeitung, Statistik, Pokal | 1280 × 720 |
 
 Story-Film und Anzug-Wechsel stammen von der Landingpage, alle anderen Clips (auch der Teaser) sind echte Aufnahmen aus dem Spiel (Originalgrafik 640 × 360, fürs Video pixelgenau verdoppelt, ohne Ton). Im Spiel selbst spielst du die Partien und führst im Karriere-Modus gleichzeitig den Verein.
@@ -54,6 +57,6 @@ Story-Film und Anzug-Wechsel stammen von der Landingpage, alle anderen Clips (au
 cd tools/promo && npm i playwright && sh promo.sh
 ```
 
-Nur die Clips aus dem Spiel und den daraus geschnittenen Teaser: `sh promo.sh spiel`, nur Story-Film und Anzug-Clip: `sh promo.sh film`.
+Nur die Clips aus dem Spiel und den daraus geschnittenen Teaser: `sh promo.sh spiel`, nur Story-Film und Anzug-Clip: `sh promo.sh film`, nur Profilbild und Banner: `sh promo.sh profil`.
 
-Das braucht `ffmpeg` und `python3`. Die Zeitpläne für Story-Film und Anzug-Clip stehen in `tools/promo/aufnahme.js`, die Abschlusstafel in `tools/promo/abschlusstafel.html`. Die Spielclips nimmt `tools/promo/spiel.js` auf: Das Spiel läuft dabei Bild für Bild mit festem Zufall, jede Aufnahme fällt also gleich aus. Szenen, Vereine und Längen stehen dort pro Clip. Den Teaser schneidet `tools/promo/schnitt.js` aus diesen Clips, Reihenfolge und Länge der Szenen stehen dort in `SZENEN`.
+Das braucht `ffmpeg` und `python3`. Die Zeitpläne für Story-Film und Anzug-Clip stehen in `tools/promo/aufnahme.js`, die Abschlusstafel in `tools/promo/abschlusstafel.html`. Die Spielclips nimmt `tools/promo/spiel.js` auf: Das Spiel läuft dabei Bild für Bild mit festem Zufall, jede Aufnahme fällt also gleich aus. Szenen, Vereine und Längen stehen dort pro Clip. Den Teaser schneidet `tools/promo/schnitt.js` aus diesen Clips, Reihenfolge und Länge der Szenen stehen dort in `SZENEN`. Profilbild und Banner zeichnet `tools/promo/profil.js` Pixel für Pixel mit den Spielfiguren, im Stil des Steam-Symbols.
