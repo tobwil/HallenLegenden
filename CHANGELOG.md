@@ -2,6 +2,9 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.21: Landingpage: Titel mit Abstand zur Kopfzeile
+- **Behoben:** Auf Handys und in schmalen Fenstern klebte der Titel „HALLEN-LEGENDEN“ fast an der Kopfzeile (6 px, quer 2 px). Die Regel für die Story-Karten (10 px unter der Kopfzeile) galt aus Versehen auch für den Titelblock und überschrieb dessen eigenen Abstand. Jetzt hat er auf dem Handy 26 bis 34 px Luft, so viel wie am Desktop, quer 10 px. Nach unten bleibt genug Platz bis zum Spielfeld.
+
 ## v8.20: Gefunden vom Rundgang der iOS-App
 - **Behoben (#41): Touch-Knöpfe verdeckten beim Angriff das Tor.** Auf Handys im Querformat lagen PASS, WURF und FINTE über dem rechten Tor, nach dem Seitenwechsel der Stick über dem linken. Betroffen waren iPhone SE und iPhone 17 Pro (Safari und App) sowie Android-Handys mit 16:9. Der Kamera-Anschlag hing nur von der Bildbreite ab. Jetzt misst das Spiel, wo Knöpfe und Stick auf Torhöhe wirklich liegen, und lässt die Kamera beim eigenen Angriff gerade so weit fahren, dass das angegriffene Tor samt Netz daneben frei bleibt. Das berücksichtigt Notch und Sicherheitsabstände und alle drei Knopfgrößen. In der Abwehr bleibt die Kamera wie bisher.
 - **Behoben (#38, #40): Leisten im iOS-Sicherheitsbereich.** Reicht die Seite bis unter die Dynamic Island (iOS-App, Vollbild), lag der ZURÜCK-Knopf darunter, und zwischen ZURÜCK-Leiste und Karriere-Kopfzeile scrollte der Inhalt durch eine Lücke von bis zu 60 pt. Die Leiste reicht jetzt bis an den Rand und deckt den Bereich ab, Knopf und Titel liegen darunter, die Kopfzeile schließt ohne Lücke an. Im normalen Browser-Tab war das nicht zu sehen (dort ist der Sicherheitsabstand 0), dort ist nur eine Überlappung von 2 px zwischen den Leisten weg.

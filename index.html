@@ -205,6 +205,7 @@ footer a:hover{color:var(--gold)}
 /* ---------- Schmale Bildschirme ---------- */
 @media (max-width:820px){
   .js .cap{left:16px;right:16px;width:auto;top:calc(var(--head) + 10px)}
+  .js .cap-hero{top:calc(var(--head) + clamp(18px,4.5vh,40px))}   /* Titel: eigener Abstand, nicht die 10 px der Story-Karten */
   .cap .more,.thumb{display:none}
   .wish-inner,.about-inner{grid-template-columns:1fr}
   .features{grid-template-columns:1fr 1fr}
@@ -214,6 +215,7 @@ footer a:hover{color:var(--gold)}
 @media (max-height:520px) and (min-width:560px){
   :root{--head:46px;--hud:46px}
   .js .cap{top:calc(var(--head) + 6px);width:min(420px,48vw);left:auto}
+  .js .cap-hero{top:calc(var(--head) + 14px)}
   .cap .more,.thumb,.cap p{display:none}
   .cap h2{font-size:14px;margin-bottom:8px}
   .cap ul{font-size:18px}
