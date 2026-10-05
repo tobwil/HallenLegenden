@@ -246,6 +246,9 @@ button:focus-visible{box-shadow:0 0 0 3px var(--cyan),3px 3px 0 #000}
     padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
   #menu.clear{background:rgba(7,6,11,.72);justify-content:center}
   .panel{flex:1 0 auto;max-height:none;overflow:visible;padding:12px;box-shadow:4px 4px 0 #000}
+  /* ZURÜCK-Leiste bis an den oberen Rand: ihr Hintergrund deckt Notch und Dynamic Island ab, Knopf und Titel liegen darunter (#38).
+     Die Karriere-Kopfzeile (.csticky, top 46px) schließt dann ohne Lücke an, durch die der Inhalt scrollt (#40) */
+  #menu .mbar{margin-top:calc(-10px - env(safe-area-inset-top,0px));padding-top:calc(6px + env(safe-area-inset-top,0px))}
   .logo{font-size:clamp(24px,9vw,52px)}
   .paper{padding:10px}
 }
@@ -290,9 +293,14 @@ body.padin #pad{display:none!important}
   .ctabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
   .ctabs::-webkit-scrollbar{display:none}
   .ctabs button{flex:none}
+  .ctabw{position:relative}
+  .ctabw::before,.ctabw::after{position:absolute;top:0;bottom:4px;width:46px;display:flex;align-items:center;font-family:var(--pix);font-size:18px;color:var(--gold);text-shadow:2px 2px 0 #000;pointer-events:none;opacity:0;transition:opacity .15s;z-index:1}
+  .ctabw::before{content:'‹';left:0;justify-content:flex-start;padding-left:2px;background:linear-gradient(90deg,var(--panel) 55%,rgba(20,17,29,0))}
+  .ctabw::after{content:'›';right:0;justify-content:flex-end;padding-right:2px;background:linear-gradient(270deg,var(--panel) 55%,rgba(20,17,29,0))}
+  .ctabw.more-l::before,.ctabw.more-r::after{opacity:1}
   .csticky .row.spread > div:last-child .tag{display:none}
   .csticky{position:sticky;top:0;z-index:2;background:var(--panel);display:flex;flex-direction:column;gap:8px;padding-bottom:6px;margin:-4px 0 0}
-  body.touch .csticky{top:46px}   /* unter der ZURÜCK-Leiste, die es nur bei Touch gibt; sonst lag die Kopfzeile im schmalen Fenster über dem Inhalt */
+  body.touch .csticky{top:48px}   /* genau unter der ZURÜCK-Leiste (58 px hoch, davon 10 px im Polster des Menüs), die es nur bei Touch gibt; sonst lag die Kopfzeile im schmalen Fenster über dem Inhalt */
 }
 body.touch .tag{font-size:10px}
 body.touch h2{font-size:13px}
@@ -3854,8 +3862,14 @@ const formTxtPlain = f => { const v = Math.round(f); return (v > 0 ? '+' : '') +
 const fitBar = (v, w = 34) => `<span class="bar" style="display:inline-block;width:${w}px;vertical-align:middle"><i style="width:${v}%;background:${v > 75 ? 'var(--green)' : v > 55 ? 'var(--gold)' : 'var(--hot)'}"></i></span>`;
 function tabs() {
   const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['euro', 'EUROPA'], ['stats', 'STATISTIK'], ['trophy', 'ERFOLGE'], ['hist', 'HISTORIE']];
-  return `<div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div>`;
+  return `<div class="ctabw"><div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div></div>`;
 }
+// Reiterleiste breiter als der Bildschirm (Handy): Pfeil und Verlauf an der Seite, auf der noch Reiter liegen (#39)
+function tabHint() {
+  const w = menu.querySelector('.ctabw'), t = w && w.firstChild; if (!t) return;
+  w.classList.toggle('more-l', t.scrollLeft > 2); w.classList.toggle('more-r', t.scrollLeft + t.clientWidth < t.scrollWidth - 2);
+}
+addEventListener('resize', () => tabHint());
 function leagueTable(hl, rows, compact) {
   const S = CAREER.season, st = standingsOf(S.table), n = st.length, lg = S.lg;
   const show = st.map((r, k) => [r, k]).filter(([r, k]) => !rows || rows(k, r));
@@ -4162,6 +4176,7 @@ function careerHub(tab) {
   else if (c && CSCOUT) { const m = CAREER.market.find(x => x.pid === CSCOUT), p = m && marketPlayer(m), T = m && m.from >= 0 ? TEAMS[m.from] : null;   // im Trikot seines Vereins, vereinslos in Grau
     if (p) c.getContext('2d').drawImage(portrait(p, T ? { c1: T.home.c1, c2: T.home.c2, gk: T.gkc } : { c1: '#6d6878', c2: '#d9d4e3', gk: '#3d3a46' }), 0, 0); }
   const on = menu.querySelector('.ctabs .on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  const ct = menu.querySelector('.ctabs'); if (ct) { ct.addEventListener('scroll', tabHint, { passive: true }); tabHint(); }
   if (keep) { const same = a => a === keep[0] || (/^c(Bench|Start)$/.test(a) && /^c(Bench|Start)$/.test(keep[0])), k = [...menu.querySelectorAll('.pcard [data-act]')].find(b => same(b.dataset.act) && (b.dataset.v || '') === keep[1]); if (k) k.focus({ preventScroll: true }); }
   CMSG = ''; if (CTAB !== 'hist') CDEL = false;
 }

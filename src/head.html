@@ -238,6 +238,9 @@ button:focus-visible{box-shadow:0 0 0 3px var(--cyan),3px 3px 0 #000}
     padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
   #menu.clear{background:rgba(7,6,11,.72);justify-content:center}
   .panel{flex:1 0 auto;max-height:none;overflow:visible;padding:12px;box-shadow:4px 4px 0 #000}
+  /* ZURÜCK-Leiste bis an den oberen Rand: ihr Hintergrund deckt Notch und Dynamic Island ab, Knopf und Titel liegen darunter (#38).
+     Die Karriere-Kopfzeile (.csticky, top 46px) schließt dann ohne Lücke an, durch die der Inhalt scrollt (#40) */
+  #menu .mbar{margin-top:calc(-10px - env(safe-area-inset-top,0px));padding-top:calc(6px + env(safe-area-inset-top,0px))}
   .logo{font-size:clamp(24px,9vw,52px)}
   .paper{padding:10px}
 }
@@ -282,9 +285,14 @@ body.padin #pad{display:none!important}
   .ctabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
   .ctabs::-webkit-scrollbar{display:none}
   .ctabs button{flex:none}
+  .ctabw{position:relative}
+  .ctabw::before,.ctabw::after{position:absolute;top:0;bottom:4px;width:46px;display:flex;align-items:center;font-family:var(--pix);font-size:18px;color:var(--gold);text-shadow:2px 2px 0 #000;pointer-events:none;opacity:0;transition:opacity .15s;z-index:1}
+  .ctabw::before{content:'‹';left:0;justify-content:flex-start;padding-left:2px;background:linear-gradient(90deg,var(--panel) 55%,rgba(20,17,29,0))}
+  .ctabw::after{content:'›';right:0;justify-content:flex-end;padding-right:2px;background:linear-gradient(270deg,var(--panel) 55%,rgba(20,17,29,0))}
+  .ctabw.more-l::before,.ctabw.more-r::after{opacity:1}
   .csticky .row.spread > div:last-child .tag{display:none}
   .csticky{position:sticky;top:0;z-index:2;background:var(--panel);display:flex;flex-direction:column;gap:8px;padding-bottom:6px;margin:-4px 0 0}
-  body.touch .csticky{top:46px}   /* unter der ZURÜCK-Leiste, die es nur bei Touch gibt; sonst lag die Kopfzeile im schmalen Fenster über dem Inhalt */
+  body.touch .csticky{top:48px}   /* genau unter der ZURÜCK-Leiste (58 px hoch, davon 10 px im Polster des Menüs), die es nur bei Touch gibt; sonst lag die Kopfzeile im schmalen Fenster über dem Inhalt */
 }
 body.touch .tag{font-size:10px}
 body.touch h2{font-size:13px}
