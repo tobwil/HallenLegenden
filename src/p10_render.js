@@ -23,10 +23,10 @@ function pstar(x, y) { rect(x + 3, y, 2, 2, '#0c0a12'); rect(x, y + 2, 8, 2, '#0
 const rect = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
 const tcol = t => { const c = kit(t).c1; return lum(c) > 0.85 ? '#e8e8e0' : c; };
 
-// Touch: Kamera-Anschlag beim eigenen Angriff aus der echten Lage von Knöpfen und Stick (#41). Hat dein Team den Ball, fährt die
-// Kamera am Spielfeldende so weit, dass das angegriffene Tor samt etwas Netz links der Knöpfe auf Torhöhe liegt (rechtes Tor) bzw.
-// rechts vom Stick (linkes Tor). Auf schmalen Handys (16:9, Sicherheitsabstände) reichte der feste Anschlag nicht. In der Abwehr
-// bleibt der Anschlag wie bisher. Gemessen wird nur, wenn sich Bild, Fenster oder Knopfgröße ändern.
+// Touch: Kamera-Anschlag aus der echten Lage von Knöpfen und Stick (#41). Am Spielfeldende fährt die Kamera so weit, dass das Tor
+// samt etwas Netz links der Knöpfe auf Torhöhe liegt (rechtes Tor) bzw. rechts vom Stick (linkes Tor), im Angriff wie in der Abwehr.
+// Auf schmalen Handys (16:9, Sicherheitsabstände) reichte der feste Anschlag nicht. Gemessen wird nur, wenn sich Bild, Fenster oder
+// Knopfgröße ändern.
 let CAMLIM = { key: '' };
 function camLimits() {
   const lo = camHalf() - 3, hi = CW - camHalf() + 3;
@@ -49,8 +49,7 @@ function updateCamera() {
   const b = G.ball; let tgt;
   if (G.phase === 'intro') tgt = G.introT < 3.4 ? lerp(4, 36, ease(G.introT / 3.4)) : 20;
   else { const lead = G.poss >= 0 && G.phase === 'play' ? sgn(G.poss) * 3 : 0; tgt = b.x + lead; }
-  const [lo, hi] = camLimits(), att = G.human >= 0 && G.poss === G.human ? sgn(G.human) : 0;
-  tgt = clamp(tgt, att < 0 ? lo : camHalf() - 3, att > 0 ? hi : CW - camHalf() + 3);
+  const [lo, hi] = camLimits(); tgt = clamp(tgt, lo, hi);
   CAMX = G.phase === 'intro' ? tgt : lerp(CAMX, tgt, 0.075);
 }
 function render() {

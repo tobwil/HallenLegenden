@@ -830,7 +830,7 @@ test('iOS-Sicherheitsbereich: ZURÜCK-Leiste unter der Dynamic Island, Kopfzeile
   ok(d === 'ctabw', 'Desktop: ' + d); await ctx.close();
 });
 
-test('Touch: Beim Angriff liegt das Tor neben Knöpfen und Stick, auf schmalen Handys, mit Notch und in allen Knopfgrößen; Abwehr wie bisher (#41)', async () => {
+test('Touch: Am Spielfeldende liegt das Tor neben Knöpfen und Stick, im Angriff und in der Abwehr, auf schmalen Handys, mit Notch und in allen Knopfgrößen (#41)', async () => {
   const bad = [];
   for (const [lbl, w, h, ins] of [['iPhone SE quer', 667, 375, {}], ['iPhone SE Safari', 667, 331, {}], ['iPhone 17 Pro quer', 874, 402, { left: 62, right: 62, bottom: 21 }], ['Android 16:9', 640, 360, {}], ['Android 20:9', 915, 412, {}]]) {
     const { page, ctx, errors } = await openPhone(w, h, ins, 3);
@@ -839,18 +839,15 @@ test('Touch: Beim Angriff liegt das Tor neben Knöpfen und Stick, auf schmalen H
       for (const size of Object.keys(BTN_SCALE)) {
         SETTINGS.btn = size; applyBtnSize();
         startMatch(TEAMS[0].id, TEAMS[1].id, { human: 0, halfLen: 180 }); G.introT = 99; G.phase = 'play'; G.paused = true; document.body.classList.add('ingame'); document.body.classList.remove('menuopen');
-        for (const side of [1, 0]) {
-          G.swap = (G.human === 0) !== !!side;   // eigenes Team greift auf dieses Tor an
-          G.ball.owner = null; G.ball.x = side ? 39 : 1; G.poss = G.human; for (let i = 0; i < 300; i++) updateCamera();   // Kamera fährt wie im Spiel ans Ende
+        for (const side of [1, 0]) for (const angriff of [true, false]) {
+          G.swap = (G.human === 0) !== (side === (angriff ? 1 : 0));   // eigenes Team greift auf dieses Tor an oder verteidigt es
+          G.ball.owner = null; G.ball.x = side ? 39 : 1; G.poss = angriff ? G.human : 1 - G.human; for (let i = 0; i < 300; i++) updateCamera();   // Kamera fährt wie im Spiel ans Ende
           const cr = cv.getBoundingClientRect(), k = cr.width / W, gx = side ? CW : 0, xs = [], ys = [];
           for (const y of [GY1, GY2]) for (const z of [0, GH]) for (const dx of [0, side ? 0.5 : -0.5]) { xs.push(sx(gx + dx, y)); ys.push(sy(y, z)); }
           const g = { l: cr.left + Math.min(...xs) * k, r: cr.left + Math.max(...xs) * k, t: cr.top + Math.min(...ys) * k, b: cr.top + Math.max(...ys) * k };
-          for (const e of document.querySelectorAll('#pad .tb, #stick')) { const q = e.getBoundingClientRect(); if (Math.min(g.r, q.right) > Math.max(g.l, q.left) && Math.min(g.b, q.bottom) > Math.max(g.t, q.top)) out.push(`${size} ${side ? 'rechts' : 'links'}: ${e.textContent.trim() || 'Stick'}`); }
+          for (const e of document.querySelectorAll('#pad .tb, #stick')) { const q = e.getBoundingClientRect(); if (Math.min(g.r, q.right) > Math.max(g.l, q.left) && Math.min(g.b, q.bottom) > Math.max(g.t, q.top)) out.push(`${size} ${side ? 'rechts' : 'links'} ${angriff ? 'Angriff' : 'Abwehr'}: ${e.textContent.trim() || 'Stick'}`); }
         }
       }
-      // Abwehr vor dem eigenen Tor: Anschlag wie bisher
-      G.swap = G.human === 0; G.poss = 1 - G.human; G.ball.x = 39; for (let i = 0; i < 300; i++) updateCamera();
-      if (Math.abs(CAMX - (CW - camHalf() + 3)) > 0.05) out.push(`Abwehr: Kamera bei ${CAMX.toFixed(2)} statt ${(CW - camHalf() + 3).toFixed(2)}`);
       return out;
     });
     if (r.length) bad.push(`${lbl}: ${r.join(', ')}`); ok(!errors.length, errors.join('; ')); await ctx.close();

@@ -2,6 +2,10 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.22: Tor auch in der Abwehr frei
+- **Geändert (#41):** Der Kamera-Anschlag aus v8.20 gilt jetzt für beide Tore, im Angriff wie in der Abwehr. Bisher fuhr die Kamera nur beim eigenen Angriff weiter, vor dem eigenen Tor verdeckten Knöpfe bzw. Stick weiter Torwart und Torraum. Am Spielfeldende liegt das Tor jetzt immer neben Knöpfen und Stick. Am Desktop und mit Gamepad (Touch-Knöpfe aus) bleibt die Kamera wie bisher.
+- Regressionstest prüft beide Tore im Angriff und in der Abwehr auf fünf Handy-Größen in allen Knopfgrößen
+
 ## v8.21: Landingpage: Titel mit Abstand zur Kopfzeile
 - **Behoben:** Auf Handys und in schmalen Fenstern klebte der Titel „HALLEN-LEGENDEN“ fast an der Kopfzeile (6 px, quer 2 px). Die Regel für die Story-Karten (10 px unter der Kopfzeile) galt aus Versehen auch für den Titelblock und überschrieb dessen eigenen Abstand. Jetzt hat er auf dem Handy 26 bis 34 px Luft, so viel wie am Desktop, quer 10 px. Nach unten bleibt genug Platz bis zum Spielfeld.
 
