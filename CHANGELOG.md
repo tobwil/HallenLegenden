@@ -2,6 +2,12 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.24: Touch-Tipp mit Gamepad und Tastatur
+- **Behoben (#49): Der Touch-Tipp „Einfach antippen“ ließ sich mit dem Gamepad nicht schließen.** Auf Touch-Geräten mit Controller (Steam Deck, Tablet) hielt er beim Anwurf das Spiel an. A und B taten nichts, Start ließ das Spiel weiterlaufen, der Tipp blieb aber stehen. Weg ging er nur durch Antippen. Jetzt gilt:
+  - Wer zuletzt mit Gamepad oder Tastatur bedient hat oder ein Gamepad angeschlossen hat, bekommt den Tipp gar nicht. Er erklärt nur Touch-Bedienung. Der Zähler läuft dann nicht hoch, der Tipp kommt später bei echter Touch-Bedienung.
+  - Ist er offen, schließen ihn A, B, Start, Enter, Leertaste und Esc wie VERSTANDEN. Der Druck, der ihn schließt, löst im Spiel nichts aus, also keinen Anwurf-Pass.
+- 1 neuer Regressionstest (Touch-Modus mit Gamepad bzw. Tastatur ohne Tipp; Schließen mit A, B, Start, Enter und Esc ohne Pause und ohne Pass), insgesamt 46
+
 ## v8.23: iPad, Plattform-Texte, Datenschutz für die iOS-App
 - **Neu (#47): Menüs auf Tablets über den ganzen Bildschirm.** Auf dem iPad steckten die Menüs im 16:9-Bereich der Spielfläche: hochkant nutzten sie nur 28 bis 35 % des Bildschirms, darüber und darunter blieb alles leer, und die Schrift war klein. Auf Touch-Geräten, die größer als ein Handy sind, liegen die Menüs jetzt wie am Handy über dem ganzen Bildschirm (83 bis 95 %), und der Inhalt wächst mit dem Bildschirm, bis zum 1,5-Fachen (iPad Pro 13 quer). Die Grenze ist so gesetzt, dass nirgends seitlich gescrollt werden muss. Die ZURÜCK-Leiste deckt den Sicherheitsbereich oben ab. Desktop und Handy bleiben unverändert.
 - **Behoben (#46): Texte „im Browser“ in App und Desktop-Version.** Optionen („Sprachausgabe deines Geräts“) und Editor („Gespeichert wird nur auf diesem Gerät“) sagen außerhalb des Browsers „Gerät“, der Teilen-Text lässt „im Browser“ weg. Neu in der Plattform-Schnittstelle: `shareUrl` für eine eigene Adresse im Teilen-Text, zum Beispiel einen App-Store-Link. Im Browser bleibt alles wortgleich.
