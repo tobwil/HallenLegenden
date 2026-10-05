@@ -798,6 +798,66 @@ test('Karriere: Potenzial in Kader, Transferliste und Spielerprofil', async () =
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+// iOS: Sicherheitsabstände (Notch, Dynamic Island, Home-Balken) per CDP nachgestellt, wie in der iOS-App oder vollflächig im Browser
+async function openPhone(w, h, insets, seed = 7) {
+  const o = await open({ viewport: { width: w, height: h }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 }, seed);
+  const cdp = await o.ctx.newCDPSession(o.page); await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: { top: 0, bottom: 0, left: 0, right: 0, ...insets } });
+  await o.page.evaluate(() => { document.body.classList.add('touch'); dispatchEvent(new Event('resize')); });
+  return o;
+}
+test('iOS-Sicherheitsbereich: ZURÜCK-Leiste unter der Dynamic Island, Kopfzeile ohne Lücke; Reiterleiste zeigt weitere Reiter an (#38, #39, #40)', async () => {
+  const res = [];
+  for (const [lbl, w, h, ins] of [['17 Pro hoch', 402, 874, { top: 62, bottom: 34 }], ['SE hoch', 375, 667, { top: 20 }], ['17 Pro quer', 874, 402, { left: 62, right: 62, bottom: 21 }]]) {
+    const { page, ctx, errors } = await openPhone(w, h, ins);
+    const r = await page.evaluate(top => {
+      G = null; careerCreate(TEAM_BASE.findIndex(b => b[0] === 'MAG'), 1, 1, 1); const o = {};
+      for (const tab of ['home', 'squad', 'market', 'hist']) {
+        ACT.cTab(tab); const range = menu.scrollHeight - menu.clientHeight; menu.scrollTop = range;   // ganz nach unten: beide Leisten kleben
+        const m = menu.querySelector('.mbar').getBoundingClientRect(), b = menu.querySelector('.mbar .mback').getBoundingClientRect(), c = menu.querySelector('.csticky').getBoundingClientRect(), wr = menu.querySelector('.ctabw');
+        o[tab] = { barTop: Math.round(m.top), backTop: Math.round(b.top), gap: range > 250 ? Math.round(c.top - m.bottom) : 0, hint: (wr.classList.contains('more-l') ? '<' : '-') + (wr.classList.contains('more-r') ? '>' : '-') };
+      }
+      o.ok = Object.values(o).every(x => x.barTop <= 0 && x.backTop >= top && x.gap === 0); return o;
+    }, ins.top || 0);
+    res.push([lbl, r]); ok(!errors.length, errors.join('; ')); await ctx.close();
+  }
+  for (const [lbl, r] of res) {
+    ok(r.ok, `${lbl}: Leisten ${JSON.stringify(r)}`);
+    ok(r.home.hint === '->' && r.hist.hint === '<-', `${lbl}: Reiter-Hinweis Anfang/Ende ${r.home.hint} ${r.hist.hint}`);
+  }
+  // Desktop: alle Reiter passen, kein Hinweis
+  const { page, ctx } = await open(DESKTOP, 7);
+  const d = await page.evaluate(() => { G = null; careerCreate(TEAM_BASE.findIndex(b => b[0] === 'MAG'), 1, 1, 1); ACT.cTab('squad'); return menu.querySelector('.ctabw').className; });
+  ok(d === 'ctabw', 'Desktop: ' + d); await ctx.close();
+});
+
+test('Touch: Beim Angriff liegt das Tor neben Knöpfen und Stick, auf schmalen Handys, mit Notch und in allen Knopfgrößen; Abwehr wie bisher (#41)', async () => {
+  const bad = [];
+  for (const [lbl, w, h, ins] of [['iPhone SE quer', 667, 375, {}], ['iPhone SE Safari', 667, 331, {}], ['iPhone 17 Pro quer', 874, 402, { left: 62, right: 62, bottom: 21 }], ['Android 16:9', 640, 360, {}], ['Android 20:9', 915, 412, {}]]) {
+    const { page, ctx, errors } = await openPhone(w, h, ins, 3);
+    const r = await page.evaluate(() => {
+      localStorage.setItem('hl4_touchtip', '9'); const out = [];
+      for (const size of Object.keys(BTN_SCALE)) {
+        SETTINGS.btn = size; applyBtnSize();
+        startMatch(TEAMS[0].id, TEAMS[1].id, { human: 0, halfLen: 180 }); G.introT = 99; G.phase = 'play'; G.paused = true; document.body.classList.add('ingame'); document.body.classList.remove('menuopen');
+        for (const side of [1, 0]) {
+          G.swap = (G.human === 0) !== !!side;   // eigenes Team greift auf dieses Tor an
+          G.ball.owner = null; G.ball.x = side ? 39 : 1; G.poss = G.human; for (let i = 0; i < 300; i++) updateCamera();   // Kamera fährt wie im Spiel ans Ende
+          const cr = cv.getBoundingClientRect(), k = cr.width / W, gx = side ? CW : 0, xs = [], ys = [];
+          for (const y of [GY1, GY2]) for (const z of [0, GH]) for (const dx of [0, side ? 0.5 : -0.5]) { xs.push(sx(gx + dx, y)); ys.push(sy(y, z)); }
+          const g = { l: cr.left + Math.min(...xs) * k, r: cr.left + Math.max(...xs) * k, t: cr.top + Math.min(...ys) * k, b: cr.top + Math.max(...ys) * k };
+          for (const e of document.querySelectorAll('#pad .tb, #stick')) { const q = e.getBoundingClientRect(); if (Math.min(g.r, q.right) > Math.max(g.l, q.left) && Math.min(g.b, q.bottom) > Math.max(g.t, q.top)) out.push(`${size} ${side ? 'rechts' : 'links'}: ${e.textContent.trim() || 'Stick'}`); }
+        }
+      }
+      // Abwehr vor dem eigenen Tor: Anschlag wie bisher
+      G.swap = G.human === 0; G.poss = 1 - G.human; G.ball.x = 39; for (let i = 0; i < 300; i++) updateCamera();
+      if (Math.abs(CAMX - (CW - camHalf() + 3)) > 0.05) out.push(`Abwehr: Kamera bei ${CAMX.toFixed(2)} statt ${(CW - camHalf() + 3).toFixed(2)}`);
+      return out;
+    });
+    if (r.length) bad.push(`${lbl}: ${r.join(', ')}`); ok(!errors.length, errors.join('; ')); await ctx.close();
+  }
+  ok(!bad.length, 'Tor verdeckt: ' + bad.join(' | '));
+});
+
 test('Breite Handys: Spielfeld füllt den Bildschirm, Desktop und Hochformat bleiben 16:9', async () => {
   const phone = { viewport: { width: 852, height: 393 }, hasTouch: true, isMobile: true, deviceScaleFactor: 2 };
   const { page, ctx, errors } = await open(phone);

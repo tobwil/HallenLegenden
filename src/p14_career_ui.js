@@ -19,8 +19,14 @@ const formTxtPlain = f => { const v = Math.round(f); return (v > 0 ? '+' : '') +
 const fitBar = (v, w = 34) => `<span class="bar" style="display:inline-block;width:${w}px;vertical-align:middle"><i style="width:${v}%;background:${v > 75 ? 'var(--green)' : v > 55 ? 'var(--gold)' : 'var(--hot)'}"></i></span>`;
 function tabs() {
   const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['euro', 'EUROPA'], ['stats', 'STATISTIK'], ['trophy', 'ERFOLGE'], ['hist', 'HISTORIE']];
-  return `<div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div>`;
+  return `<div class="ctabw"><div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div></div>`;
 }
+// Reiterleiste breiter als der Bildschirm (Handy): Pfeil und Verlauf an der Seite, auf der noch Reiter liegen (#39)
+function tabHint() {
+  const w = menu.querySelector('.ctabw'), t = w && w.firstChild; if (!t) return;
+  w.classList.toggle('more-l', t.scrollLeft > 2); w.classList.toggle('more-r', t.scrollLeft + t.clientWidth < t.scrollWidth - 2);
+}
+addEventListener('resize', () => tabHint());
 function leagueTable(hl, rows, compact) {
   const S = CAREER.season, st = standingsOf(S.table), n = st.length, lg = S.lg;
   const show = st.map((r, k) => [r, k]).filter(([r, k]) => !rows || rows(k, r));
@@ -327,6 +333,7 @@ function careerHub(tab) {
   else if (c && CSCOUT) { const m = CAREER.market.find(x => x.pid === CSCOUT), p = m && marketPlayer(m), T = m && m.from >= 0 ? TEAMS[m.from] : null;   // im Trikot seines Vereins, vereinslos in Grau
     if (p) c.getContext('2d').drawImage(portrait(p, T ? { c1: T.home.c1, c2: T.home.c2, gk: T.gkc } : { c1: '#6d6878', c2: '#d9d4e3', gk: '#3d3a46' }), 0, 0); }
   const on = menu.querySelector('.ctabs .on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  const ct = menu.querySelector('.ctabs'); if (ct) { ct.addEventListener('scroll', tabHint, { passive: true }); tabHint(); }
   if (keep) { const same = a => a === keep[0] || (/^c(Bench|Start)$/.test(a) && /^c(Bench|Start)$/.test(keep[0])), k = [...menu.querySelectorAll('.pcard [data-act]')].find(b => same(b.dataset.act) && (b.dataset.v || '') === keep[1]); if (k) k.focus({ preventScroll: true }); }
   CMSG = ''; if (CTAB !== 'hist') CDEL = false;
 }

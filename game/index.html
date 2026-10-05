@@ -246,6 +246,9 @@ button:focus-visible{box-shadow:0 0 0 3px var(--cyan),3px 3px 0 #000}
     padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
   #menu.clear{background:rgba(7,6,11,.72);justify-content:center}
   .panel{flex:1 0 auto;max-height:none;overflow:visible;padding:12px;box-shadow:4px 4px 0 #000}
+  /* ZURÜCK-Leiste bis an den oberen Rand: ihr Hintergrund deckt Notch und Dynamic Island ab, Knopf und Titel liegen darunter (#38).
+     Die Karriere-Kopfzeile (.csticky, top 46px) schließt dann ohne Lücke an, durch die der Inhalt scrollt (#40) */
+  #menu .mbar{margin-top:calc(-10px - env(safe-area-inset-top,0px));padding-top:calc(6px + env(safe-area-inset-top,0px))}
   .logo{font-size:clamp(24px,9vw,52px)}
   .paper{padding:10px}
 }
@@ -290,9 +293,14 @@ body.padin #pad{display:none!important}
   .ctabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
   .ctabs::-webkit-scrollbar{display:none}
   .ctabs button{flex:none}
+  .ctabw{position:relative}
+  .ctabw::before,.ctabw::after{position:absolute;top:0;bottom:4px;width:46px;display:flex;align-items:center;font-family:var(--pix);font-size:18px;color:var(--gold);text-shadow:2px 2px 0 #000;pointer-events:none;opacity:0;transition:opacity .15s;z-index:1}
+  .ctabw::before{content:'‹';left:0;justify-content:flex-start;padding-left:2px;background:linear-gradient(90deg,var(--panel) 55%,rgba(20,17,29,0))}
+  .ctabw::after{content:'›';right:0;justify-content:flex-end;padding-right:2px;background:linear-gradient(270deg,var(--panel) 55%,rgba(20,17,29,0))}
+  .ctabw.more-l::before,.ctabw.more-r::after{opacity:1}
   .csticky .row.spread > div:last-child .tag{display:none}
   .csticky{position:sticky;top:0;z-index:2;background:var(--panel);display:flex;flex-direction:column;gap:8px;padding-bottom:6px;margin:-4px 0 0}
-  body.touch .csticky{top:46px}   /* unter der ZURÜCK-Leiste, die es nur bei Touch gibt; sonst lag die Kopfzeile im schmalen Fenster über dem Inhalt */
+  body.touch .csticky{top:48px}   /* genau unter der ZURÜCK-Leiste (58 px hoch, davon 10 px im Polster des Menüs), die es nur bei Touch gibt; sonst lag die Kopfzeile im schmalen Fenster über dem Inhalt */
 }
 body.touch .tag{font-size:10px}
 body.touch h2{font-size:13px}
@@ -2170,11 +2178,34 @@ function pstar(x, y) { rect(x + 3, y, 2, 2, '#0c0a12'); rect(x, y + 2, 8, 2, '#0
 const rect = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
 const tcol = t => { const c = kit(t).c1; return lum(c) > 0.85 ? '#e8e8e0' : c; };
 
+// Touch: Kamera-Anschlag beim eigenen Angriff aus der echten Lage von Knöpfen und Stick (#41). Hat dein Team den Ball, fährt die
+// Kamera am Spielfeldende so weit, dass das angegriffene Tor samt etwas Netz links der Knöpfe auf Torhöhe liegt (rechtes Tor) bzw.
+// rechts vom Stick (linkes Tor). Auf schmalen Handys (16:9, Sicherheitsabstände) reichte der feste Anschlag nicht. In der Abwehr
+// bleibt der Anschlag wie bisher. Gemessen wird nur, wenn sich Bild, Fenster oder Knopfgröße ändern.
+let CAMLIM = { key: '' };
+function camLimits() {
+  const lo = camHalf() - 3, hi = CW - camHalf() + 3;
+  if (!TOUCHDEV || !document.body.classList.contains('touch')) return [lo, hi];
+  const key = `${W}|${innerWidth}|${innerHeight}|${SETTINGS.btn}`;
+  if (CAMLIM.key === key) return CAMLIM.v;
+  const pad = document.getElementById('pad'), cr = cv.getBoundingClientRect();
+  if (!pad || !pad.getBoundingClientRect().width || !cr.width) return [lo, hi];   // Steuerung gerade nicht zu sehen: nicht merken
+  const k = cr.width / W, kk = kOf(GY2), M = 6;                                 // CSS-Pixel je Leinwand-Pixel; vorderer Pfosten am breitesten
+  const top = cr.top + sy(GY1, GH) * k, bot = cr.top + sy(GY2) * k;             // Tor auf dem Bildschirm, von oben bis zum Boden
+  const onGoal = q => q.width && q.bottom > top && q.top < bot;
+  const btn = [...pad.querySelectorAll('.tb')].map(e => e.getBoundingClientRect()).filter(onGoal), st = document.getElementById('stick').getBoundingClientRect();
+  let l = lo, h = hi;
+  if (btn.length) { const T = (Math.min(...btn.map(q => q.left)) - cr.left) / k - M; h = Math.max(hi, CW + 0.6 - (T - W / 2) / (PX * kk)); }
+  if (onGoal(st)) { const T = (st.right - cr.left) / k + M; l = Math.min(lo, -0.6 - (T - W / 2) / (PX * kk)); }
+  CAMLIM = { key, v: [Math.max(l, 4), Math.min(h, CW - 4)] };
+  return CAMLIM.v;
+}
 function updateCamera() {
   const b = G.ball; let tgt;
   if (G.phase === 'intro') tgt = G.introT < 3.4 ? lerp(4, 36, ease(G.introT / 3.4)) : 20;
   else { const lead = G.poss >= 0 && G.phase === 'play' ? sgn(G.poss) * 3 : 0; tgt = b.x + lead; }
-  tgt = clamp(tgt, camHalf() - 3, CW - camHalf() + 3);
+  const [lo, hi] = camLimits(), att = G.human >= 0 && G.poss === G.human ? sgn(G.human) : 0;
+  tgt = clamp(tgt, att < 0 ? lo : camHalf() - 3, att > 0 ? hi : CW - camHalf() + 3);
   CAMX = G.phase === 'intro' ? tgt : lerp(CAMX, tgt, 0.075);
 }
 function render() {
@@ -3854,8 +3885,14 @@ const formTxtPlain = f => { const v = Math.round(f); return (v > 0 ? '+' : '') +
 const fitBar = (v, w = 34) => `<span class="bar" style="display:inline-block;width:${w}px;vertical-align:middle"><i style="width:${v}%;background:${v > 75 ? 'var(--green)' : v > 55 ? 'var(--gold)' : 'var(--hot)'}"></i></span>`;
 function tabs() {
   const t = [['home', 'ZEITUNG'], ['squad', 'KADER'], ['train', 'TRAINING'], ['market', `TRANSFERS${CAREER.offers.length ? ` (${CAREER.offers.length})` : ''}`], ['table', 'TABELLE'], ['cup', 'POKAL'], ['euro', 'EUROPA'], ['stats', 'STATISTIK'], ['trophy', 'ERFOLGE'], ['hist', 'HISTORIE']];
-  return `<div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div>`;
+  return `<div class="ctabw"><div class="row ctabs">${t.map(([k, n]) => `<button class="small ${CTAB === k ? 'on' : ''}" data-act="cTab" data-v="${k}" ${k === 'home' && CTAB !== 'home' ? 'data-back' : ''}>${n}</button>`).join('')}</div></div>`;
 }
+// Reiterleiste breiter als der Bildschirm (Handy): Pfeil und Verlauf an der Seite, auf der noch Reiter liegen (#39)
+function tabHint() {
+  const w = menu.querySelector('.ctabw'), t = w && w.firstChild; if (!t) return;
+  w.classList.toggle('more-l', t.scrollLeft > 2); w.classList.toggle('more-r', t.scrollLeft + t.clientWidth < t.scrollWidth - 2);
+}
+addEventListener('resize', () => tabHint());
 function leagueTable(hl, rows, compact) {
   const S = CAREER.season, st = standingsOf(S.table), n = st.length, lg = S.lg;
   const show = st.map((r, k) => [r, k]).filter(([r, k]) => !rows || rows(k, r));
@@ -4162,6 +4199,7 @@ function careerHub(tab) {
   else if (c && CSCOUT) { const m = CAREER.market.find(x => x.pid === CSCOUT), p = m && marketPlayer(m), T = m && m.from >= 0 ? TEAMS[m.from] : null;   // im Trikot seines Vereins, vereinslos in Grau
     if (p) c.getContext('2d').drawImage(portrait(p, T ? { c1: T.home.c1, c2: T.home.c2, gk: T.gkc } : { c1: '#6d6878', c2: '#d9d4e3', gk: '#3d3a46' }), 0, 0); }
   const on = menu.querySelector('.ctabs .on'); if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+  const ct = menu.querySelector('.ctabs'); if (ct) { ct.addEventListener('scroll', tabHint, { passive: true }); tabHint(); }
   if (keep) { const same = a => a === keep[0] || (/^c(Bench|Start)$/.test(a) && /^c(Bench|Start)$/.test(keep[0])), k = [...menu.querySelectorAll('.pcard [data-act]')].find(b => same(b.dataset.act) && (b.dataset.v || '') === keep[1]); if (k) k.focus({ preventScroll: true }); }
   CMSG = ''; if (CTAB !== 'hist') CDEL = false;
 }
