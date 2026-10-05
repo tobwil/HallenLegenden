@@ -179,7 +179,7 @@ const ACT = {
       ${TOUCHDEV ? `<div class="row"><span class="tag" style="min-width:150px">TOUCH-KNÖPFE</span>${[['s', 'KLEIN'], ['m', 'NORMAL'], ['l', 'GROSS']].map(([k, n]) => `<button class="small ${(SETTINGS.btn || 'm') === k ? 'on' : ''}" data-act="btnSize" data-v="${k}">${n}</button>`).join('')}</div>` : ''}
       <div class="row"><span class="tag" style="min-width:150px">TON</span><button class="small ${AU.on ? 'on' : ''}" data-act="sound">${AU.on ? 'AN' : 'AUS'}</button></div>
       <div class="row"><span class="tag" style="min-width:150px">HALLENSPRECHER</span><button class="small ${AU.vol.speaker ? 'on' : ''}" data-act="speaker">${AU.vol.speaker ? 'AN' : 'AUS'}</button><button class="small" data-act="sndTest">PROBE</button></div>
-      <p class="muted">Der Hallensprecher nutzt die Sprachausgabe deines Browsers. Je nach Gerät klingt die Stimme anders oder fehlt ganz.</p>
+      <p class="muted">Der Hallensprecher nutzt die Sprachausgabe deines ${ON_WEB ? 'Browsers' : 'Geräts'}. Je nach Gerät klingt die Stimme anders oder fehlt ganz.</p>
       <div class="row"><button class="main" data-act="main">ZURÜCK</button></div></div>`);
     ['master', 'music', 'sfx', 'crowd'].forEach(k => { const el = menu.querySelector('#vol_' + k); el.oninput = () => { AU.setVol(k, el.value / 100); menu.querySelector('#vv_' + k).textContent = el.value; }; });
   },
@@ -221,7 +221,7 @@ const ACT = {
     const T = TEAMS[tid];
     const row = (p, id, lbl) => `<span class="tag">${p.role}</span><input id="${id}N" value="${esc(p.name)}" maxlength="16" aria-label="Name ${lbl}"><input id="${id}Z" value="${p.num}" inputmode="numeric" maxlength="2" aria-label="Nummer ${lbl}">`;
     showMenu(`<div class="panel"><h2>EDITOR</h2>
-      <p class="muted">Vereins- und Spielernamen sind Platzhalter. Hier kannst du alles umbenennen und die Farben anpassen. Gespeichert wird nur in diesem Browser.</p>
+      <p class="muted">Vereins- und Spielernamen sind Platzhalter. Hier kannst du alles umbenennen und die Farben anpassen. Gespeichert wird nur ${ON_WEB ? 'in diesem Browser' : 'auf diesem Gerät'}.</p>
       <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg === 3 ? 'International' : X.lg + '. Liga'} · ${esc(X.n)}</option>`).join('')}</select>
       <h3>VEREIN</h3>
       <div class="ed"><span class="tag">NAME</span><input id="edTn" value="${esc(T.n)}" maxlength="30" aria-label="Vereinsname"><input id="edTk" value="${esc(T.k)}" maxlength="3" aria-label="Kürzel"></div>

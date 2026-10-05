@@ -155,11 +155,12 @@ Im Browser speichert das Spiel in `localStorage`. Eine Hülle wie eine Desktop-V
 
 | Feld | Zweck |
 |---|---|
-| `name` | Name der Plattform, im Browser `'web'` |
+| `name` | Name der Plattform, im Browser `'web'`. Außerhalb des Browsers sagen Optionen und Editor „Gerät“ statt „Browser“, der Teilen-Text lässt „im Browser“ weg |
 | `storage` | Speicher mit `getItem`, `setItem`, `removeItem`, synchron wie `localStorage` |
 | `event(name, data)` | bekommt dieselben Ereignisse wie die Statistik, zum Beispiel `spiel-ende` mit `{ ergebnis }` und `titel` mit `{ art }` (`meister`, `pokal`, `euro`, `meister2`, `aufstieg`) |
 | `quit()` | zeigt BEENDEN im Hauptmenü |
 | `legal` | ersetzt die Copyright-Zeile auf dem Titelbildschirm |
+| `shareUrl` | Adresse im Teilen-Text, Standard `https://hallenlegenden.de` |
 
 #### Tests
 
@@ -169,7 +170,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Si
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 43 Tests, etwa eine Minute
+npm test                             # alle 45 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 9 tiefe Tests, etwa drei Minuten (vor größeren Versionen)
@@ -338,11 +339,12 @@ In the browser the game saves to `localStorage`. A wrapper such as a desktop ver
 
 | Field | Purpose |
 |---|---|
-| `name` | platform name, `'web'` in the browser |
+| `name` | platform name, `'web'` in the browser. Outside the browser, options and editor say “device” instead of “browser” and the share text drops “in the browser” |
 | `storage` | storage with `getItem`, `setItem`, `removeItem`, synchronous like `localStorage` |
 | `event(name, data)` | receives the same events as the analytics, for example `spiel-ende` with `{ ergebnis }` and `titel` with `{ art }` (`meister`, `pokal`, `euro`, `meister2`, `aufstieg`) |
 | `quit()` | shows QUIT (BEENDEN) in the main menu |
 | `legal` | replaces the copyright line on the title screen |
+| `shareUrl` | address in the share text, default `https://hallenlegenden.de` |
 
 #### Tests
 
@@ -352,7 +354,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). They 
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 43 tests, about one minute
+npm test                             # all 45 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 9 deep tests, about three minutes (before bigger releases)

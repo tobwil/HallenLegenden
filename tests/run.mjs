@@ -3,7 +3,7 @@
 // Optional: CHROMIUM_PATH=/pfad/zu/chromium, GAME=/pfad/zu/index.html oder GAME=https://…/game/ (z. B. Netlify-Vorschau), nur bestimmte Tests: npm test -- pass zoom
 // Wo möglich laufen die Tests Frame für Frame (readInput + step) mit festem Zufall, damit sie nicht vom Timing abhängen.
 import { chromium } from 'playwright-core';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -805,6 +805,44 @@ async function openPhone(w, h, insets, seed = 7) {
   await o.page.evaluate(() => { document.body.classList.add('touch'); dispatchEvent(new Event('resize')); });
   return o;
 }
+test('Plattform-Texte: im Browser „Browser“, in App und Desktop-Version „Gerät“, Teilen-Adresse wählbar; Datenschutz mit Abschnitt #ios (#45, #46)', async () => {
+  const texts = async plat => {
+    const ctx = await browser.newContext(DESKTOP);
+    if (plat) await ctx.addInitScript(p => { window.HL_PLATFORM = p; }, plat);
+    const page = await ctx.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message)); await page.goto(GAME); await page.waitForTimeout(500);
+    const r = await page.evaluate(() => { ACT.options(); const opt = menu.innerText; ACT.main(); ACT.quick(); ACT.editor(); const ed = menu.innerText;
+      careerCreate(TEAM_BASE.findIndex(b => b[0] === 'KIE'), 1, 1, 1); CAREER.summary = { year: 2026, lg: 1, pos: 3, titles: [], move: null }; const share = shareText('season');
+      return { opt: /Sprachausgabe deines (Browsers|Geräts)/.exec(opt)?.[1], ed: /Gespeichert wird nur (in diesem Browser|auf diesem Gerät)/.exec(ed)?.[1], share }; });
+    r.errors = errors; await ctx.close(); return r;
+  };
+  const web = await texts(null), ios = await texts({ name: 'ios', shareUrl: 'https://apps.apple.com/app/hallen-legenden' }), desk = await texts({ name: 'desktop' });
+  ok(web.opt === 'Browsers' && web.ed === 'in diesem Browser' && /dem Handball-Spiel im Browser: https:\/\/hallenlegenden\.de$/.test(web.share), 'Browser: ' + JSON.stringify(web));
+  ok(ios.opt === 'Geräts' && ios.ed === 'auf diesem Gerät' && /dem Handball-Spiel: https:\/\/apps\.apple\.com\/app\/hallen-legenden$/.test(ios.share), 'iOS: ' + JSON.stringify(ios));
+  ok(desk.opt === 'Geräts' && desk.ed === 'auf diesem Gerät' && /dem Handball-Spiel: https:\/\/hallenlegenden\.de$/.test(desk.share), 'Desktop: ' + JSON.stringify(desk));
+  ok(![web, ios, desk].some(r => r.errors.length), [web, ios, desk].flatMap(r => r.errors).join('; '));
+  // Datenschutzerklärung: App Store Connect verlinkt auf datenschutz.html#ios
+  const ds = readFileSync(path.join(root, 'datenschutz.html'), 'utf8');
+  ok(/<h2 id="ios">[^<]*iOS-APP<\/h2>/.test(ds) && /href="#ios"/.test(ds) && /Game Center/.test(ds) && /keine Daten/.test(ds), 'Datenschutz: Abschnitt #ios fehlt oder unvollständig');
+});
+
+test('Tablets: Menüs über den ganzen Bildschirm, Inhalt wächst mit, nichts scrollt seitlich; Desktop und Handy unverändert (#47)', async () => {
+  const bad = [];
+  for (const [lbl, w, h, touch, minShare, zoom] of [['iPad Air 11 hoch', 820, 1180, 1, 80, [1, 1.1]], ['iPad Air 11 quer', 1180, 820, 1, 80, [1.25, 1.4]], ['iPad Pro 13 hoch', 1032, 1376, 1, 80, [1.2, 1.35]], ['iPad Pro 13 quer', 1376, 1032, 1, 80, [1.45, 1.5]], ['Desktop', 1440, 900, 0, 0, [1, 1]], ['Handy hoch', 390, 844, 1, 0, [1, 1]]]) {
+    const o = touch ? await openPhone(w, h, { top: 24, bottom: 20 }) : await open({ viewport: { width: w, height: h } }, 7);
+    const r = await o.page.evaluate(() => { fitView(); const out = [];
+      for (const fn of [() => ACT.main(), () => { ACT.main(); ACT.quick(); }, () => { G = null; careerCreate(TEAM_BASE.findIndex(b => b[0] === 'MAG'), 1, 1, 1); ACT.cTab('squad'); }, () => ACT.cTab('table'), () => ACT.cPick(CAREER.squads[CAREER.team][2].pid)]) {
+        fn(); const pn = [...menu.querySelectorAll('.panel')][0], q = pn.getBoundingClientRect();
+        out.push({ share: Math.round(100 * q.width * q.height / (innerWidth * innerHeight)), quer: pn.scrollWidth > pn.clientWidth + 2 || document.documentElement.scrollWidth > innerWidth + 1, back: (menu.querySelector('.mbar .mback') || { getBoundingClientRect: () => ({ top: 99 }) }).getBoundingClientRect().top });
+      }
+      return { mz: +getComputedStyle(document.documentElement).getPropertyValue('--mz'), out };
+    });
+    if (r.mz < zoom[0] - 0.01 || r.mz > zoom[1] + 0.01) bad.push(`${lbl}: Faktor ${r.mz}`);
+    r.out.forEach((x, i) => { if (x.share < minShare) bad.push(`${lbl} Menü ${i}: nur ${x.share} %`); if (x.quer) bad.push(`${lbl} Menü ${i}: scrollt seitlich`); if (touch && x.back < 24) bad.push(`${lbl} Menü ${i}: ZURÜCK im Sicherheitsbereich (${Math.round(x.back)})`); });
+    ok(!o.errors.length, o.errors.join('; ')); await o.ctx.close();
+  }
+  ok(!bad.length, bad.join(' | '));
+});
+
 test('iOS-Sicherheitsbereich: ZURÜCK-Leiste unter der Dynamic Island, Kopfzeile ohne Lücke; Reiterleiste zeigt weitere Reiter an (#38, #39, #40)', async () => {
   const res = [];
   for (const [lbl, w, h, ins] of [['17 Pro hoch', 402, 874, { top: 62, bottom: 34 }], ['SE hoch', 375, 667, { top: 20 }], ['17 Pro quer', 874, 402, { left: 62, right: 62, bottom: 21 }]]) {

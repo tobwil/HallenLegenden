@@ -24,6 +24,9 @@ function fitView() {
   const cs = getComputedStyle(document.body), aw = innerWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const ah = innerHeight - (document.body.classList.contains('touch') ? 0 : 24), w = Math.min(800, Math.max(640, Math.round(H * aw / Math.max(1, ah) / 2) * 2));
   document.documentElement.style.setProperty('--ar', `${w} / ${H}`);
+  // Tablets: Menü-Inhalt wächst mit dem Bildschirm, höchstens so weit, dass er wie heute mindestens ~780 px breit bleibt (#47)
+  const tab = document.body.classList.contains('touch') && innerWidth > 760 && innerHeight > 540;
+  document.documentElement.style.setProperty('--mz', tab ? Math.max(1, Math.min(1.5, innerWidth / 800, innerHeight / 620)).toFixed(3) : '1');
   if (w === W) return;
   W = w; VIEW_HALF = W / 2 / PX; cv.width = W; ctx.imageSmoothingEnabled = false;   // neue Canvas-Breite setzt den Zeichenzustand zurück
 }
@@ -63,7 +66,9 @@ const lum = h => { const c = hexRgb(h); return (c[0] * 0.3 + c[1] * 0.59 + c[2] 
 //   storage: Speicher mit getItem/setItem/removeItem, synchron wie localStorage (z. B. Dateien für die Steam Cloud)
 //   event(name, data): Ereignisse aus dem Spiel (dieselben wie für die Statistik), z. B. für Erfolge der Plattform
 //   quit(): Spiel beenden (Knopf BEENDEN im Hauptmenü) · legal: Copyright-Zeile auf dem Titelbildschirm
-const PLATFORM = Object.assign({ name: 'web', storage: null, event: null, quit: null, legal: null }, window.HL_PLATFORM);
+//   shareUrl: Adresse im Teilen-Text (Standard https://hallenlegenden.de, z. B. später ein Store-Link)
+const PLATFORM = Object.assign({ name: 'web', storage: null, event: null, quit: null, legal: null, shareUrl: null }, window.HL_PLATFORM);
+const ON_WEB = PLATFORM.name === 'web';   // Texte wie „in diesem Browser“ nur im Browser, in App und Desktop-Version „auf diesem Gerät“ (#46)
 const store = {
   get(k, d = null) { try { const v = (PLATFORM.storage || localStorage).getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { (PLATFORM.storage || localStorage).setItem(k, JSON.stringify(v)); } catch (e) { } },
