@@ -2,6 +2,12 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.23: iPad, Plattform-Texte, Datenschutz für die iOS-App
+- **Neu (#47): Menüs auf Tablets über den ganzen Bildschirm.** Auf dem iPad steckten die Menüs im 16:9-Bereich der Spielfläche: hochkant nutzten sie nur 28 bis 35 % des Bildschirms, darüber und darunter blieb alles leer, und die Schrift war klein. Auf Touch-Geräten, die größer als ein Handy sind, liegen die Menüs jetzt wie am Handy über dem ganzen Bildschirm (83 bis 95 %), und der Inhalt wächst mit dem Bildschirm, bis zum 1,5-Fachen (iPad Pro 13 quer). Die Grenze ist so gesetzt, dass nirgends seitlich gescrollt werden muss. Die ZURÜCK-Leiste deckt den Sicherheitsbereich oben ab. Desktop und Handy bleiben unverändert.
+- **Behoben (#46): Texte „im Browser“ in App und Desktop-Version.** Optionen („Sprachausgabe deines Geräts“) und Editor („Gespeichert wird nur auf diesem Gerät“) sagen außerhalb des Browsers „Gerät“, der Teilen-Text lässt „im Browser“ weg. Neu in der Plattform-Schnittstelle: `shareUrl` für eine eigene Adresse im Teilen-Text, zum Beispiel einen App-Store-Link. Im Browser bleibt alles wortgleich.
+- **Neu (#45): Datenschutzerklärung mit Abschnitt für die iOS-App** (`datenschutz.html#ios`): keine Datenerfassung durch uns, Spielstände auf dem Gerät, Game Center, App Store, Teilen, Links nach außen. Die Kurzfassung oben verweist darauf.
+- 2 neue Regressionstests (Plattform-Texte im Browser, in der iOS- und der Desktop-Version samt Datenschutz-Anker; Tablets hochkant und quer mit Flächenanteil, Vergrößerung, ohne Querscrollen, Desktop und Handy unverändert), insgesamt 45
+
 ## v8.22: Tor auch in der Abwehr frei
 - **Geändert (#41):** Der Kamera-Anschlag aus v8.20 gilt jetzt für beide Tore, im Angriff wie in der Abwehr. Bisher fuhr die Kamera nur beim eigenen Angriff weiter, vor dem eigenen Tor verdeckten Knöpfe bzw. Stick weiter Torwart und Torraum. Am Spielfeldende liegt das Tor jetzt immer neben Knöpfen und Stick. Am Desktop und mit Gamepad (Touch-Knöpfe aus) bleibt die Kamera wie bisher.
 - Regressionstest prüft beide Tore im Angriff und in der Abwehr auf fünf Handy-Größen in allen Knopfgrößen

@@ -244,6 +244,14 @@ button:focus-visible{box-shadow:0 0 0 3px var(--cyan),3px 3px 0 #000}
   .logo{font-size:clamp(24px,9vw,52px)}
   .paper{padding:10px}
 }
+/* Tablets (Touch, größer als ein Handy, z. B. iPad): Menüs über den ganzen Bildschirm statt nur im 16:9-Bereich der Spielfläche,
+   der Inhalt wächst mit dem Bildschirm (--mz aus fitView, #47). Die ZURÜCK-Leiste deckt wie am Handy den Sicherheitsbereich oben ab */
+@media (min-width:761px) and (min-height:541px){
+  body.touch #menu{position:fixed;inset:0;z-index:20;
+    padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  body.touch #menu > :not(.mbar){zoom:var(--mz,1)}
+  body.touch #menu .mbar{margin-top:calc(-10px - env(safe-area-inset-top,0px));padding-top:calc(6px + env(safe-area-inset-top,0px))}
+}
 /* Handy: Spielfeld ohne Rahmen bis an den Rand, nur Notch und Home-Leiste bleiben frei */
 body.touch{padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px);gap:0}
 body.touch #wrap{width:min(100%, calc(100vh * var(--ar, 16 / 9)));width:min(100%, calc(100dvh * var(--ar, 16 / 9)));box-shadow:none}

@@ -244,6 +244,14 @@ button:focus-visible{box-shadow:0 0 0 3px var(--cyan),3px 3px 0 #000}
   .logo{font-size:clamp(24px,9vw,52px)}
   .paper{padding:10px}
 }
+/* Tablets (Touch, größer als ein Handy, z. B. iPad): Menüs über den ganzen Bildschirm statt nur im 16:9-Bereich der Spielfläche,
+   der Inhalt wächst mit dem Bildschirm (--mz aus fitView, #47). Die ZURÜCK-Leiste deckt wie am Handy den Sicherheitsbereich oben ab */
+@media (min-width:761px) and (min-height:541px){
+  body.touch #menu{position:fixed;inset:0;z-index:20;
+    padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  body.touch #menu > :not(.mbar){zoom:var(--mz,1)}
+  body.touch #menu .mbar{margin-top:calc(-10px - env(safe-area-inset-top,0px));padding-top:calc(6px + env(safe-area-inset-top,0px))}
+}
 /* Handy: Spielfeld ohne Rahmen bis an den Rand, nur Notch und Home-Leiste bleiben frei */
 body.touch{padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px);gap:0}
 body.touch #wrap{width:min(100%, calc(100vh * var(--ar, 16 / 9)));width:min(100%, calc(100dvh * var(--ar, 16 / 9)));box-shadow:none}
@@ -368,6 +376,9 @@ function fitView() {
   const cs = getComputedStyle(document.body), aw = innerWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const ah = innerHeight - (document.body.classList.contains('touch') ? 0 : 24), w = Math.min(800, Math.max(640, Math.round(H * aw / Math.max(1, ah) / 2) * 2));
   document.documentElement.style.setProperty('--ar', `${w} / ${H}`);
+  // Tablets: Menü-Inhalt wächst mit dem Bildschirm, höchstens so weit, dass er wie heute mindestens ~780 px breit bleibt (#47)
+  const tab = document.body.classList.contains('touch') && innerWidth > 760 && innerHeight > 540;
+  document.documentElement.style.setProperty('--mz', tab ? Math.max(1, Math.min(1.5, innerWidth / 800, innerHeight / 620)).toFixed(3) : '1');
   if (w === W) return;
   W = w; VIEW_HALF = W / 2 / PX; cv.width = W; ctx.imageSmoothingEnabled = false;   // neue Canvas-Breite setzt den Zeichenzustand zurück
 }
@@ -407,7 +418,9 @@ const lum = h => { const c = hexRgb(h); return (c[0] * 0.3 + c[1] * 0.59 + c[2] 
 //   storage: Speicher mit getItem/setItem/removeItem, synchron wie localStorage (z. B. Dateien für die Steam Cloud)
 //   event(name, data): Ereignisse aus dem Spiel (dieselben wie für die Statistik), z. B. für Erfolge der Plattform
 //   quit(): Spiel beenden (Knopf BEENDEN im Hauptmenü) · legal: Copyright-Zeile auf dem Titelbildschirm
-const PLATFORM = Object.assign({ name: 'web', storage: null, event: null, quit: null, legal: null }, window.HL_PLATFORM);
+//   shareUrl: Adresse im Teilen-Text (Standard https://hallenlegenden.de, z. B. später ein Store-Link)
+const PLATFORM = Object.assign({ name: 'web', storage: null, event: null, quit: null, legal: null, shareUrl: null }, window.HL_PLATFORM);
+const ON_WEB = PLATFORM.name === 'web';   // Texte wie „in diesem Browser“ nur im Browser, in App und Desktop-Version „auf diesem Gerät“ (#46)
 const store = {
   get(k, d = null) { try { const v = (PLATFORM.storage || localStorage).getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { (PLATFORM.storage || localStorage).setItem(k, JSON.stringify(v)); } catch (e) { } },
@@ -2588,7 +2601,7 @@ const ACT = {
       ${TOUCHDEV ? `<div class="row"><span class="tag" style="min-width:150px">TOUCH-KNÖPFE</span>${[['s', 'KLEIN'], ['m', 'NORMAL'], ['l', 'GROSS']].map(([k, n]) => `<button class="small ${(SETTINGS.btn || 'm') === k ? 'on' : ''}" data-act="btnSize" data-v="${k}">${n}</button>`).join('')}</div>` : ''}
       <div class="row"><span class="tag" style="min-width:150px">TON</span><button class="small ${AU.on ? 'on' : ''}" data-act="sound">${AU.on ? 'AN' : 'AUS'}</button></div>
       <div class="row"><span class="tag" style="min-width:150px">HALLENSPRECHER</span><button class="small ${AU.vol.speaker ? 'on' : ''}" data-act="speaker">${AU.vol.speaker ? 'AN' : 'AUS'}</button><button class="small" data-act="sndTest">PROBE</button></div>
-      <p class="muted">Der Hallensprecher nutzt die Sprachausgabe deines Browsers. Je nach Gerät klingt die Stimme anders oder fehlt ganz.</p>
+      <p class="muted">Der Hallensprecher nutzt die Sprachausgabe deines ${ON_WEB ? 'Browsers' : 'Geräts'}. Je nach Gerät klingt die Stimme anders oder fehlt ganz.</p>
       <div class="row"><button class="main" data-act="main">ZURÜCK</button></div></div>`);
     ['master', 'music', 'sfx', 'crowd'].forEach(k => { const el = menu.querySelector('#vol_' + k); el.oninput = () => { AU.setVol(k, el.value / 100); menu.querySelector('#vv_' + k).textContent = el.value; }; });
   },
@@ -2630,7 +2643,7 @@ const ACT = {
     const T = TEAMS[tid];
     const row = (p, id, lbl) => `<span class="tag">${p.role}</span><input id="${id}N" value="${esc(p.name)}" maxlength="16" aria-label="Name ${lbl}"><input id="${id}Z" value="${p.num}" inputmode="numeric" maxlength="2" aria-label="Nummer ${lbl}">`;
     showMenu(`<div class="panel"><h2>EDITOR</h2>
-      <p class="muted">Vereins- und Spielernamen sind Platzhalter. Hier kannst du alles umbenennen und die Farben anpassen. Gespeichert wird nur in diesem Browser.</p>
+      <p class="muted">Vereins- und Spielernamen sind Platzhalter. Hier kannst du alles umbenennen und die Farben anpassen. Gespeichert wird nur ${ON_WEB ? 'in diesem Browser' : 'auf diesem Gerät'}.</p>
       <select id="edTeam" aria-label="Verein">${TEAMS.map(X => `<option value="${X.id}" ${X.id === tid ? 'selected' : ''}>${X.lg === 3 ? 'International' : X.lg + '. Liga'} · ${esc(X.n)}</option>`).join('')}</select>
       <h3>VEREIN</h3>
       <div class="ed"><span class="tag">NAME</span><input id="edTn" value="${esc(T.n)}" maxlength="30" aria-label="Vereinsname"><input id="edTk" value="${esc(T.k)}" maxlength="3" aria-label="Kürzel"></div>
@@ -3821,12 +3834,12 @@ function drawTrophy(g, x, y, col) {
   R(3, 1, 8, 1, d); R(2, 2, 10, 5, col); R(0, 2, 2, 3, col); R(12, 2, 2, 3, col); R(1, 4, 1, 2, col); R(12, 4, 1, 2, col); R(3, 7, 8, 1, col); R(5, 8, 4, 2, col); R(6, 10, 2, 2, d); R(4, 12, 6, 1, col); R(3, 13, 8, 2, d); R(4, 3, 2, 3, '#ffffff');
 }
 function shareText(kind) {
-  const T = TEAMS[CAREER.team], url = 'https://hallenlegenden.de';
+  const T = TEAMS[CAREER.team], url = PLATFORM.shareUrl || 'https://hallenlegenden.de';
   if (kind === 'season') {
     const s = CAREER.summary, head = seasonHead(s).replace(/!$/, ''), big = (s.titles || []).length || s.move === 'auf';
     const NICE = { 'TRIPLE': 'Triple', 'DOUBLE': 'Double', 'EUROPAPOKALSIEGER': 'Europapokalsieger', 'DEUTSCHER MEISTER': 'Deutscher Meister', 'POKALSIEGER': 'Pokalsieger', 'MEISTER 2. LIGA': 'Meister der 2. Liga', 'AUFSTIEG': 'Aufstieg' };
     const what = big ? `${NICE[head] || head} mit ${T.n}!` : s.move === 'ab' ? `Abgestiegen mit ${T.n}, aber wir kommen wieder!` : `Platz ${s.pos} in der ${s.lg}. Liga mit ${T.n}.`;
-    return `${what} Saison ${seasonName(s.year)} bei Hallen-Legenden, dem Handball-Spiel im Browser: ${url}`;
+    return `${what} Saison ${seasonName(s.year)} bei Hallen-Legenden, dem Handball-Spiel${ON_WEB ? ' im Browser' : ''}: ${url}`;
   }
   const n = (CAREER.titles || []).length, y = (CAREER.history || []).length;
   const what = n ? `${n} Titel in ${y} ${y === 1 ? 'Saison' : 'Saisons'}` : y ? `${y} ${y === 1 ? 'Saison' : 'Saisons'} als Trainer, der erste Titel kommt bald` : `Meine Karriere bei ${T.n} beginnt`;

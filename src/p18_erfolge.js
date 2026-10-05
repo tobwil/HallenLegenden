@@ -171,12 +171,12 @@ function drawTrophy(g, x, y, col) {
   R(3, 1, 8, 1, d); R(2, 2, 10, 5, col); R(0, 2, 2, 3, col); R(12, 2, 2, 3, col); R(1, 4, 1, 2, col); R(12, 4, 1, 2, col); R(3, 7, 8, 1, col); R(5, 8, 4, 2, col); R(6, 10, 2, 2, d); R(4, 12, 6, 1, col); R(3, 13, 8, 2, d); R(4, 3, 2, 3, '#ffffff');
 }
 function shareText(kind) {
-  const T = TEAMS[CAREER.team], url = 'https://hallenlegenden.de';
+  const T = TEAMS[CAREER.team], url = PLATFORM.shareUrl || 'https://hallenlegenden.de';
   if (kind === 'season') {
     const s = CAREER.summary, head = seasonHead(s).replace(/!$/, ''), big = (s.titles || []).length || s.move === 'auf';
     const NICE = { 'TRIPLE': 'Triple', 'DOUBLE': 'Double', 'EUROPAPOKALSIEGER': 'Europapokalsieger', 'DEUTSCHER MEISTER': 'Deutscher Meister', 'POKALSIEGER': 'Pokalsieger', 'MEISTER 2. LIGA': 'Meister der 2. Liga', 'AUFSTIEG': 'Aufstieg' };
     const what = big ? `${NICE[head] || head} mit ${T.n}!` : s.move === 'ab' ? `Abgestiegen mit ${T.n}, aber wir kommen wieder!` : `Platz ${s.pos} in der ${s.lg}. Liga mit ${T.n}.`;
-    return `${what} Saison ${seasonName(s.year)} bei Hallen-Legenden, dem Handball-Spiel im Browser: ${url}`;
+    return `${what} Saison ${seasonName(s.year)} bei Hallen-Legenden, dem Handball-Spiel${ON_WEB ? ' im Browser' : ''}: ${url}`;
   }
   const n = (CAREER.titles || []).length, y = (CAREER.history || []).length;
   const what = n ? `${n} Titel in ${y} ${y === 1 ? 'Saison' : 'Saisons'}` : y ? `${y} ${y === 1 ? 'Saison' : 'Saisons'} als Trainer, der erste Titel kommt bald` : `Meine Karriere bei ${T.n} beginnt`;
