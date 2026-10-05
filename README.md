@@ -131,7 +131,7 @@ netlify.toml          Einstellungen für Netlify (Hosting von hallenlegenden.de)
 hallen-legenden.html  dieselbe Seite ohne <html>-Gerüst (für die Veröffentlichung als Claude-Artifact)
 src/                  Quellcode in Modulen, wird per build.sh zusammengesetzt
 docs/screenshots/     echte Spielaufnahmen für README und Landingpage
-docs/presse/          Pressekit: Teaser, Spielclips (Final Four, Aufstellungen, Europapokal), GIFs, Kurzbeschreibung
+docs/presse/          Pressekit: Teaser, Spielclips (Final Four, Aufstellungen, Europapokal), GIFs, Kurzbeschreibung, Profilbild und Banner
 docs/LANDINGPAGE.md   Landingpage, Wunsch-Formular und eigene Domain einrichten
 docs/ARCHITEKTUR.md   Aufbau des Codes, Datenmodell, Speicher-Schlüssel
 docs/ENTWICKLUNG.md   Entwicklungsgeschichte: Wünsche, Entscheidungen, Tests
@@ -314,7 +314,7 @@ netlify.toml          Netlify settings (hosting for hallenlegenden.de)
 hallen-legenden.html  same page without the <html> wrapper (for publishing as a Claude Artifact)
 src/                  modular source code, assembled by build.sh
 docs/screenshots/     actual game screenshots used in this README and the landing page
-docs/presse/          press kit: teaser, game clips (Final Four, line-ups, European cup), GIFs, short description
+docs/presse/          press kit: teaser, game clips (Final Four, line-ups, European cup), GIFs, short description, profile picture and banner
 docs/LANDINGPAGE.md   landing page, form and custom domain setup (German)
 docs/ARCHITEKTUR.md   code architecture, data model, storage keys (German)
 docs/ENTWICKLUNG.md   development history: requests, decisions, tests (German)
