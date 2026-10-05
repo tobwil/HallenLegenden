@@ -868,6 +868,35 @@ test('iOS-Sicherheitsbereich: ZURÜCK-Leiste unter der Dynamic Island, Kopfzeile
   ok(d === 'ctabw', 'Desktop: ' + d); await ctx.close();
 });
 
+test('Touch-Tipp: mit Gamepad oder Tastatur kein Tipp; offen schließen ihn A, B, Start, Enter und Esc, ohne Anwurf-Pass (#49)', async () => {
+  const PAD = () => { window.__pad = new Array(17).fill(0); window.__padOn = false; Object.defineProperty(navigator, 'getGamepads', { value: () => [window.__padOn ? { id: 'x', index: 0, connected: true, mapping: 'standard', axes: [0, 0, 0, 0], buttons: window.__pad.map(v => ({ pressed: !!v, value: v })) } : null] }); };
+  const run = async (mode, close) => {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, hasTouch: true, isMobile: true });
+    await ctx.addInitScript(PAD); const page = await ctx.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message)); await page.goto(GAME); await page.waitForTimeout(500);
+    if (mode === 'pad') { await page.evaluate(() => { window.__padOn = true; window.__pad[13] = 1; }); await page.waitForTimeout(150); await page.evaluate(() => { window.__pad[13] = 0; }); await page.waitForTimeout(100); }   // Menü mit dem Steuerkreuz bedient
+    if (mode === 'key') { await page.keyboard.press('ArrowDown'); await page.waitForTimeout(100); }
+    const before = await page.evaluate(() => ({ lastin: LASTIN, n: store.get('hl4_touchtip', 0) }));
+    await page.evaluate(() => { startMatch(TEAMS[0].id, TEAMS[1].id, { human: 0, halfLen: 180 }); G.introT = 99; });
+    await page.waitForFunction(() => G && (G.phase === 'kickoff' || G.phase === 'play'), null, { timeout: 15000 }); await page.waitForTimeout(400);
+    const shown = await page.evaluate(() => ({ tip: !!document.getElementById('ttip'), paused: G.paused, n: store.get('hl4_touchtip', 0) }));
+    let after = null;
+    if (close) {
+      const owner = await page.evaluate(() => G.ball.owner && G.ball.owner.name);
+      if (close === 'Enter' || close === 'Escape') await page.keyboard.press(close);
+      else { const i = { A: 0, B: 1, Start: 9 }[close]; await page.evaluate(i => { window.__padOn = true; window.__pad[i] = 1; }, i); await page.waitForTimeout(150); await page.evaluate(i => { window.__pad[i] = 0; }, i); }
+      await page.waitForTimeout(250);
+      after = await page.evaluate(o => ({ tip: !!document.getElementById('ttip'), paused: G.paused, menu: !menu.hidden, pass: !!(G.ball.owner ? G.ball.owner.name !== o : G.ball.passTo) }), owner);
+    }
+    await ctx.close(); return { before, shown, after, errors };
+  };
+  for (const mode of ['pad', 'key']) { const r = await run(mode); ok(r.before.lastin === mode && !r.shown.tip && !r.shown.paused && r.shown.n === 0 && !r.errors.length, `${mode}: ${JSON.stringify(r)}`); }
+  for (const close of ['A', 'B', 'Start', 'Enter', 'Escape']) {
+    const r = await run('touch', close);
+    ok(r.shown.tip && r.shown.paused && r.shown.n === 1, `Touch: Tipp erscheint nicht ${JSON.stringify(r.shown)}`);
+    ok(!r.after.tip && !r.after.paused && !r.after.menu && !r.after.pass && !r.errors.length, `${close} schließt den Tipp nicht sauber: ${JSON.stringify(r.after)} ${r.errors.join('; ')}`);
+  }
+});
+
 test('Touch: Am Spielfeldende liegt das Tor neben Knöpfen und Stick, im Angriff und in der Abwehr, auf schmalen Handys, mit Notch und in allen Knopfgrößen (#41)', async () => {
   const bad = [];
   for (const [lbl, w, h, ins] of [['iPhone SE quer', 667, 375, {}], ['iPhone SE Safari', 667, 331, {}], ['iPhone 17 Pro quer', 874, 402, { left: 62, right: 62, bottom: 21 }], ['Android 16:9', 640, 360, {}], ['Android 20:9', 915, 412, {}]]) {

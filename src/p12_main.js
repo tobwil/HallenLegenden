@@ -75,14 +75,24 @@ function applyBtnSize() { document.getElementById('pad').style.setProperty('--tb
 applyBtnSize();
 // Tipp in den ersten beiden Spielen auf dem Handy: Antippen geht oft schneller als die Knöpfe
 let tipG = null;
+// Touch-Tipp nur für Touch-Bedienung: Wer zuletzt Gamepad oder Tastatur benutzt hat oder ein Gamepad angeschlossen hat (Steam Deck,
+// Tablet mit Controller), bekommt ihn nicht, der Zähler läuft dann nicht hoch (#49). Offen schließen ihn VERSTANDEN, A, B, Start, Enter, Leertaste, Esc
+let TTIP = null;
+const padConnected = () => !!(navigator.getGamepads && [...navigator.getGamepads()].some(Boolean));
+function closeTouchTip() {
+  if (!TTIP) return false;
+  TTIP.remove(); TTIP = null; clearEdges();   // der Druck, der schließt, löst im Spiel nichts aus (z. B. keinen Anwurf-Pass)
+  if (G && menu.hidden) G.paused = false;
+  return true;
+}
 function touchTip() {
   if (!TOUCHDEV || !G || G.demo || G === tipG || G.phase !== 'kickoff' || !menu.hidden) return;
-  tipG = G; const n = store.get('hl4_touchtip', 0); if (n >= 2) return; store.set('hl4_touchtip', n + 1);
+  tipG = G; if (LASTIN !== 'touch' || padConnected()) return;
+  const n = store.get('hl4_touchtip', 0); if (n >= 2) return; store.set('hl4_touchtip', n + 1);
   const el = document.createElement('div'); el.id = 'ttip'; el.setAttribute('role', 'dialog');
   el.innerHTML = '<b>TIPP: EINFACH ANTIPPEN</b><ul><li>Mitspieler antippen = Pass zu ihm</li><li>Tor antippen = Wurf in diese Ecke</li><li>In der Abwehr: Spieler antippen = zu ihm wechseln</li><li>PASS lang drücken = Kempa · Stick weit ziehen = Sprint</li></ul><button>VERSTANDEN</button>';
-  G.paused = true;
-  const close = () => { el.remove(); if (G && menu.hidden) G.paused = false; };
-  el.querySelector('button').addEventListener('click', close); el.addEventListener('pointerdown', e => e.stopPropagation());
+  G.paused = true; TTIP = el;
+  el.querySelector('button').addEventListener('click', closeTouchTip); el.addEventListener('pointerdown', e => e.stopPropagation());
   document.body.appendChild(el);
 }
 const TBL = { a: document.querySelector('.tb-a'), b: document.querySelector('.tb-b'), c: document.querySelector('.tb-c') }; let tbMode = '';
@@ -138,6 +148,7 @@ function menuPad() {
     if (gp.buttons.some(x => x && x.pressed) || Math.hypot(ax, ay) > 0.5) setInput('pad');
     const st = { up: b(12) || ay < -0.6, down: b(13) || ay > 0.6, left: b(14) || ax < -0.6, right: b(15) || ax > 0.6, a: b(0), b: b(1) }, now = performance.now();
     // im Spiel gehaltene Knöpfe gelten erst nach dem Loslassen im Menü (sonst klickt ein Pass beim Abpfiff gleich etwas an)
+    if (TTIP && ((st.a && !PADM.a) || (st.b && !PADM.b))) closeTouchTip();   // Touch-Tipp offen: A oder B wie VERSTANDEN
     if (menu.hidden) { for (const k in st) PADM[k] = st[k] ? Infinity : false; return; }
     for (const k in st) {
       if (!st[k]) { PADM[k] = false; continue; }

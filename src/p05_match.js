@@ -178,6 +178,7 @@ const TOUCH = { x: 0, y: 0, a: false, b: false, c: false, s: false };
 addEventListener('keydown', e => {
   const inField = document.activeElement && (document.activeElement.tagName === 'INPUT');
   if (inField) return;
+  if (TTIP && ['Enter', 'NumpadEnter', 'Space', 'Escape', 'KeyP'].includes(e.code)) { e.preventDefault(); e.stopImmediatePropagation(); closeTouchTip(); return; }   // Touch-Tipp offen: schließen statt spielen
   const onBtn = document.activeElement && document.activeElement.tagName === 'BUTTON' && !menu.hidden;
   if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code) && !onBtn) e.preventDefault();
   KEY[e.code] = true; if (!e.repeat) KEYP[e.code] = true; AU.init();
@@ -203,7 +204,7 @@ function readInput(dt) {
     const bt = i => gp.buttons[i] && gp.buttons[i].pressed;
     if (bt(14)) x -= 1; if (bt(15)) x += 1; if (bt(12)) y -= 1; if (bt(13)) y += 1;
     a = a || bt(0); b = b || bt(2) || bt(7); c = c || bt(1) || bt(3); s = s || bt(5) || bt(4); km = km || bt(5) || bt(4);
-    if (bt(9) && !prevIN.st && G && !G.demo) togglePause(); prevIN.st = bt(9);
+    if (bt(9) && !prevIN.st && G && !G.demo && !closeTouchTip()) togglePause(); prevIN.st = bt(9);
   }
   x += TOUCH.x; y += TOUCH.y; b = b || TOUCH.b; c = c || TOUCH.c; s = s || TOUCH.s;
   if (TOUCH.pulseA) { a = true; TOUCH.pulseA = 0; }
