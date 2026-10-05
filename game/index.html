@@ -2178,11 +2178,34 @@ function pstar(x, y) { rect(x + 3, y, 2, 2, '#0c0a12'); rect(x, y + 2, 8, 2, '#0
 const rect = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
 const tcol = t => { const c = kit(t).c1; return lum(c) > 0.85 ? '#e8e8e0' : c; };
 
+// Touch: Kamera-Anschlag beim eigenen Angriff aus der echten Lage von Knöpfen und Stick (#41). Hat dein Team den Ball, fährt die
+// Kamera am Spielfeldende so weit, dass das angegriffene Tor samt etwas Netz links der Knöpfe auf Torhöhe liegt (rechtes Tor) bzw.
+// rechts vom Stick (linkes Tor). Auf schmalen Handys (16:9, Sicherheitsabstände) reichte der feste Anschlag nicht. In der Abwehr
+// bleibt der Anschlag wie bisher. Gemessen wird nur, wenn sich Bild, Fenster oder Knopfgröße ändern.
+let CAMLIM = { key: '' };
+function camLimits() {
+  const lo = camHalf() - 3, hi = CW - camHalf() + 3;
+  if (!TOUCHDEV || !document.body.classList.contains('touch')) return [lo, hi];
+  const key = `${W}|${innerWidth}|${innerHeight}|${SETTINGS.btn}`;
+  if (CAMLIM.key === key) return CAMLIM.v;
+  const pad = document.getElementById('pad'), cr = cv.getBoundingClientRect();
+  if (!pad || !pad.getBoundingClientRect().width || !cr.width) return [lo, hi];   // Steuerung gerade nicht zu sehen: nicht merken
+  const k = cr.width / W, kk = kOf(GY2), M = 6;                                 // CSS-Pixel je Leinwand-Pixel; vorderer Pfosten am breitesten
+  const top = cr.top + sy(GY1, GH) * k, bot = cr.top + sy(GY2) * k;             // Tor auf dem Bildschirm, von oben bis zum Boden
+  const onGoal = q => q.width && q.bottom > top && q.top < bot;
+  const btn = [...pad.querySelectorAll('.tb')].map(e => e.getBoundingClientRect()).filter(onGoal), st = document.getElementById('stick').getBoundingClientRect();
+  let l = lo, h = hi;
+  if (btn.length) { const T = (Math.min(...btn.map(q => q.left)) - cr.left) / k - M; h = Math.max(hi, CW + 0.6 - (T - W / 2) / (PX * kk)); }
+  if (onGoal(st)) { const T = (st.right - cr.left) / k + M; l = Math.min(lo, -0.6 - (T - W / 2) / (PX * kk)); }
+  CAMLIM = { key, v: [Math.max(l, 4), Math.min(h, CW - 4)] };
+  return CAMLIM.v;
+}
 function updateCamera() {
   const b = G.ball; let tgt;
   if (G.phase === 'intro') tgt = G.introT < 3.4 ? lerp(4, 36, ease(G.introT / 3.4)) : 20;
   else { const lead = G.poss >= 0 && G.phase === 'play' ? sgn(G.poss) * 3 : 0; tgt = b.x + lead; }
-  tgt = clamp(tgt, camHalf() - 3, CW - camHalf() + 3);
+  const [lo, hi] = camLimits(), att = G.human >= 0 && G.poss === G.human ? sgn(G.human) : 0;
+  tgt = clamp(tgt, att < 0 ? lo : camHalf() - 3, att > 0 ? hi : CW - camHalf() + 3);
   CAMX = G.phase === 'intro' ? tgt : lerp(CAMX, tgt, 0.075);
 }
 function render() {
