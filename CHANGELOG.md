@@ -2,6 +2,14 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.27: Der Dreher
+- **Neu: Dreher vom Flügel.** Wurf aufladen und dabei Pass drücken: Tastatur Leertaste halten + S, Gamepad X halten + A, Touch WURF halten + PASS tippen. Der Ball fliegt erst auf den Torwart zu, springt knapp vor ihm auf und dreht dann zur Seite weg. Der Torwart muss den Ball nach dem Aufsprung neu lesen, und den Drall bekommt er schwer zu fassen.
+- **Nur aus spitzem Winkel:** Auf dem Flügel geht der Dreher, aber nicht aus der Ecke an der Torauslinie. Dort passt er nicht ins Tor. Beim Aufladen zeigt der Hinweis über dem Spieler „S=DREHER“ (bzw. A bzw. PASS) nur, wo er möglich ist. An allen anderen Stellen tut Pass beim Aufladen nichts, wie bisher.
+- **Die Eigenschaft „Dreher-Künstler“ wirkt jetzt.** Bisher hatte sie keine Wirkung. Dreher-Künstler werfen den Dreher genauer und mit mehr Drall. Aus denselben Flügelpositionen treffen sie in CPU-Spielen mit dem Dreher 69 % (normaler Wurf 51 %). Andere Spieler treffen mit dem Dreher 45 % (normaler Wurf 48 %), für sie ist er also eher eine Stilfrage. Die CPU wirft ihn auch: Dreher-Künstler bei 40 % ihrer Würfe aus diesen Positionen, andere bei 8 %.
+- Torjubel „DREHER!“, eigener Kommentar und „DREHER“ in der Wiederholung, rosa Funken beim Aufsprung, Ballspur im Flug
+- **Balance:** Im Mittel 15,6 Tore pro CPU-Spiel (vorher 15,1, die Streuung zwischen Läufen liegt bei etwa ±0,5). Simulierte Spiele in der Karriere ändern sich nicht.
+- Steuerungshilfe, README und Startseite erklären den Dreher. 1 neuer Regressionstest (Tastatur-Eingabe auf dem Flügel, Aufsprung zwischen Werfer und Torwart, kein Dreher aus dem Rückraum oder aus der Ecke, Dreher-Künstler treffen klar öfter, Torjubel und Wiederholung), insgesamt 48
+
 ## v8.26: Mehr Namen, keine fremden Sonderzeichen
 - **Gut 400 Nachnamen statt 105.** Vorher trug jeder Name im Schnitt fast 7 der rund 730 Spieler, und 12 von 17 Ligagegnern von Kiel hatten einen Spieler mit gleichem Namen wie Kiel. Jetzt teilen sich im Schnitt 2 Spieler einen Namen, und nur noch 1 Gegner hat einen Namensvetter. Dazu kommen deutsche Namen und Namen aus Österreich, Skandinavien, Island, vom Balkan, aus Polen, Tschechien, Ungarn, den Niederlanden, Belgien, Frankreich, Spanien, Portugal und Italien. Drei sehr markante Namen echter Handballer sind nicht mehr dabei.
 - **Keine fremden Sonderzeichen mehr:** nur noch A–Z und deutsche Umlaute (Gislason statt Gíslason, Dvorak statt Dvořák).

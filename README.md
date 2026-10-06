@@ -49,7 +49,7 @@ Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerun
 
 #### Spiel
 - **7 gegen 7** mit echten Handballregeln: 6-m-Torraum, Sprungwurf über den Kreis, Freiwurf an der 9-m-Linie, 7-Meter, 2-Minuten-Strafen, passives Spiel, Einwurf, Ecke, Abwurf und Team-Timeout
-- **Aktionen:** Pass mit Vorschau (wer den Ball bekommt), Wurf mit Zielkreuz und Aufladen, Heber, Kempa-Trick, Finte, Ball herausspielen und Blocksprung
+- **Aktionen:** Pass mit Vorschau (wer den Ball bekommt), Wurf mit Zielkreuz und Aufladen, Heber, Dreher vom Flügel (springt vor dem Torwart auf und dreht weg, am besten können ihn Dreher-Künstler), Kempa-Trick, Finte, Ball herausspielen und Blocksprung
 - **Torwart:** Paraden als „Hampelmann“ oder im Spagat. Beim 7-Meter rätst du als Torwart die Ecke
 - **KI:** Abwehrsysteme 6:0, 5:1 und 3:2:1, Kreuzen im Rückraum, Einläufer, Tempogegenstoß, eigene Timeouts
 - **Kraft und Auswechseln:** Spieler ermüden über die Spielzeit (Ausdauer bremst den Abbau). Wechsel per Menü (Q) oder automatisch über den Co-Trainer. Verletzungen nach Fouls
@@ -93,7 +93,7 @@ Rechte Hand auf den Pfeiltasten zum Laufen, linke Hand auf WASD und Leertaste f�
 |---|---|---|
 | Pfeile | Laufen | Laufen |
 | W / Shift | Sprint | Sprint |
-| S | Pass (Richtung = Laufrichtung) | Spieler wechseln: erst zum ballnächsten, mehrmals drücken = der Nähe nach weiter |
+| S | Pass (Richtung = Laufrichtung), beim Aufladen auf dem Flügel: Dreher | Spieler wechseln: erst zum ballnächsten, mehrmals drücken = der Nähe nach weiter |
 | A | Kempa-Trick (auch Shift + S) | wie S |
 | Leertaste | Wurf (antippen = schnell, halten = mehr Wucht, hoch/runter = Ecke) | Blocksprung |
 | D | Finte, beim Aufladen: Heber | Ball herausspielen |
@@ -108,12 +108,12 @@ In der Abwehr und bei freiem Ball steuerst du ohne Wechseltaste automatisch den 
 
 **Menüs:** Pfeiltasten wählen, Enter bestätigt, Esc oder Backspace geht zurück.
 
-**Gamepad:** A Pass, X Wurf, B Finte/Klau, RB Sprint, Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück. Links/rechts ändert Lautstärke-Regler und Vereinsliste (gehalten geht es schneller). Trikotfarben: A drücken, dann links/rechts, mit A oder B fertig. Das ganze Spiel ist ohne Maus und Tastatur bedienbar, die Hinweise zeigen dann die Controller-Tasten.
+**Gamepad:** A Pass (beim Aufladen auf dem Flügel: Dreher), X Wurf, B Finte/Klau, RB Sprint, Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück. Links/rechts ändert Lautstärke-Regler und Vereinsliste (gehalten geht es schneller). Trikotfarben: A drücken, dann links/rechts, mit A oder B fertig. Das ganze Spiel ist ohne Maus und Tastatur bedienbar, die Hinweise zeigen dann die Controller-Tasten.
 
 **Touch (Handy):**
 - Stick erscheint dort, wo der Daumen links aufsetzt. Voll ausgelenkt sprintet der Spieler
 - Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. Ein Tipp in den ersten beiden Spielen erklärt das
-- Knöpfe je nach Lage: PASS/WURF/FINTE oder WECHSEL/BLOCK/KLAU. Langer Druck auf PASS spielt Kempa. Im Ruhezustand sind die Knöpfe durchscheinend, damit man das Feld darunter sieht; die Größe (klein, normal, groß) steht unter Optionen
+- Knöpfe je nach Lage: PASS/WURF/FINTE oder WECHSEL/BLOCK/KLAU. Langer Druck auf PASS spielt Kempa. WURF halten und PASS tippen = Dreher (nur vom Flügel). Im Ruhezustand sind die Knöpfe durchscheinend, damit man das Feld darunter sieht; die Größe (klein, normal, groß) steht unter Optionen
 - Pause (II) oben rechts, Zurück-Leiste in allen Menüs
 
 ### Projektstruktur
@@ -170,7 +170,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Si
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 47 Tests, etwa eine Minute
+npm test                             # alle 48 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 9 tiefe Tests, etwa drei Minuten (vor größeren Versionen)
@@ -233,7 +233,7 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
 
 #### Gameplay
 - **7 vs 7** with real handball rules: 6 m goal area, jump shots over the line, free throw at the 9 m line, 7 m penalties, 2-minute suspensions, passive play, throw-ins, corners, goalkeeper throws and team timeouts
-- **Actions:** pass with preview (shows who receives the ball), shot with aiming reticle and charge-up, lob, Kempa trick, feint, stealing the ball and block jump
+- **Actions:** pass with preview (shows who receives the ball), shot with aiming reticle and charge-up, lob, spin shot from the wing (bounces in front of the keeper and spins away, best by Dreher-Künstler players), Kempa trick, feint, stealing the ball and block jump
 - **Goalkeeper:** saves as "starfish" or in the splits. On a 7 m penalty you guess the corner as the keeper
 - **AI:** 6-0, 5-1 and 3-2-1 defence systems, back-court crossings, wing cut-ins, fast breaks, its own timeouts
 - **Stamina and substitutions:** players tire over the course of the match (stamina slows the decline). Substitute via menu (Q) or automatically through the assistant coach. Injuries after fouls
@@ -277,7 +277,7 @@ Right hand on the arrow keys to move, left hand on WASD and Space for the action
 |---|---|---|
 | Arrows | Move | Move |
 | W / Shift | Sprint | Sprint |
-| S | Pass (direction = movement direction) | Switch player: first to the one closest to the ball, press again = next closest |
+| S | Pass (direction = movement direction), while charging on the wing: spin shot | Switch player: first to the one closest to the ball, press again = next closest |
 | A | Kempa trick (also Shift + S) | same as S |
 | Space | Shoot (tap = quick, hold = more power, up/down = corner) | Block jump |
 | D | Feint, while charging: lob | Steal the ball |
@@ -292,12 +292,12 @@ In defence and on loose balls you automatically control the player closest to th
 
 **Menus:** arrow keys to select, Enter to confirm, Esc or Backspace to go back.
 
-**Gamepad:** A pass, X shoot, B feint/steal, RB sprint, Start pause. In menus: D-pad to select, A to confirm, B to go back. Left/right change volume sliders and the club list (hold to go faster). Kit colours: press A, then left/right, A or B when done. The whole game works without mouse and keyboard, and the on-screen hints then show controller buttons.
+**Gamepad:** A pass (while charging on the wing: spin shot), X shoot, B feint/steal, RB sprint, Start pause. In menus: D-pad to select, A to confirm, B to go back. Left/right change volume sliders and the club list (hold to go faster). Kit colours: press A, then left/right, A or B when done. The whole game works without mouse and keyboard, and the on-screen hints then show controller buttons.
 
 **Touch (phone):**
 - The stick appears wherever your left thumb touches down. Full deflection makes the player sprint
 - Tapping: a teammate = pass to him, the goal = shot into that corner, in defence a player = switch to him. A tip explains this in your first two matches
-- Buttons change with the situation: PASS/WURF/FINTE (pass/shoot/feint) or WECHSEL/BLOCK/KLAU (switch/block/steal). Long-press PASS for a Kempa. At rest the buttons are see-through so the pitch stays visible; their size (small, normal, large) is in the options
+- Buttons change with the situation: PASS/WURF/FINTE (pass/shoot/feint) or WECHSEL/BLOCK/KLAU (switch/block/steal). Long-press PASS for a Kempa. Hold WURF and tap PASS for a spin shot (wing only). At rest the buttons are see-through so the pitch stays visible; their size (small, normal, large) is in the options
 - Pause (II) top right, back bar in all menus
 
 ### Project structure
@@ -354,7 +354,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). They 
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 47 tests, about one minute
+npm test                             # all 48 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 9 deep tests, about three minutes (before bigger releases)

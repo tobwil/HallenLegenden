@@ -24,7 +24,7 @@ function aiCarrier(p, dt) {
         (G.possT > 24 && d < 12 && r < 0.5) || (d < 11.5 && lane > 2.2 && r < 0.28) || (p.trait === 'Kanonier' && d < 11 && lane > 1.4 && r < 0.4)) {
       const gk = G.goalie[1 - p.team];
       if (d < 8.5 && Math.abs(gk.x - ownX(gk.team)) > 1.4 && Math.random() < 0.3) shoot(p, null, 0.5, true);
-      else shoot(p, null, clamp(rnd(0.25, 1.05), 0, 1));
+      else shoot(p, null, clamp(rnd(0.25, 1.05), 0, 1), false, dreherSpot(p, gx) && Math.random() < (p.trait === 'Dreher-Künstler' ? 0.4 : 0.08));
       return [p.x, p.y, false];
     }
     if (press < 1.3 && r < 0.12 * p.att / 80) feint(p, 0, Math.random() < 0.5 ? -1 : 1);
@@ -107,6 +107,7 @@ function humanControl(p, dt) {
     if (IN.pb && G.phase === 'play') { p.charging = true; p.charge = 0.3; p.aim = IN.y; }            // kurzes Antippen = schneller Wurf
     else if (IN.b && p.charging) { p.charge = Math.min(1, p.charge + dt / 0.8); p.aim = lerp(p.aim || 0, IN.y, Math.min(1, dt * 10)); }
     if (p.charging && IN.pc) { shoot(p, p.aim, p.charge, true); return [0, 0]; }
+    if (p.charging && IN.pa && dreherSpot(p, goalX(p.team))) { shoot(p, p.aim, p.charge, false, true); return [0, 0]; }   // Dreher (nur vom Flügel)
     if (IN.rb && p.charging && b.owner === p) shoot(p, p.aim, p.charge);
     else if (IN.pc && !p.charging) feint(p, IN.x, IN.y);
     if (p.role === 'TW' && p.hold > 1.5) pass(p, choosePass(p, 0, 0));

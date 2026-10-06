@@ -287,6 +287,66 @@ test('Aktionen mit Ball: Pass, Kempa, Shift+S, W+S ohne Kempa, Finte, Wurf', asy
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Dreher: nur vom Flügel (Wurf halten + Pass), springt vor dem Torwart auf und dreht weg, Dreher-Künstler treffen öfter', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 5150);
+  const r = await page.evaluate(STEP + `(() => {
+    hideMenu(); if (G) G.paused = true;
+    let sd = 5150; Math.random = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // Demo-Spiel verbraucht Zufall in Echtzeit: hier fest neu setzen
+    // Werfer allein gegen den Torwart, alle anderen weit weg
+    const setup = (role, x, y, trait) => {
+      if (G) G.paused = true; newMatch(0, 1, { human: 0, halfLen: 600 }); G.paused = true; G.introT = 99;
+      let n = 0; while (G.phase !== 'play' && n++ < 3000) __run(1);
+      const gx = goalX(0), s = sgn(0), p = G.players.find(q => q.team === 0 && q.role === role);
+      for (const q of G.players) if (q !== p && q.role !== 'TW') place(q, 20, q.team ? 2 : 18);
+      p.trait = trait; p.att = 80; place(p, gx - s * x, y); giveBall(p); G.ctrl = p; G.phase = 'play';
+      const gk = G.goalie[1]; place(gk, gx - s * 0.7, clamp(10 + (y - 10) * 0.25, GY1, GY2));
+      return { p, gx, gk };
+    };
+    // echte Eingabe: Leertaste halten (aufladen), dann S
+    const chord = () => { KEY.Space = true; KEYP.Space = true; __run(15); KEY.KeyS = true; KEYP.KeyS = true; __run(1); KEY.KeyS = false; __run(1); KEY.Space = false; };
+    const out = {};
+    // 1. Flügel: Dreher fliegt, springt zwischen Werfer und Torwart auf
+    let { p, gx, gk } = setup('LA', 3, 3, 'Dreher-Künstler'); const gkX = gk.x;
+    chord(); const sh = G.ball.shot; out.wingSpin = !!(sh && sh.spin);
+    let bx = null, k = 0; while (sh && G.ball.shot === sh && k++ < 300) { const was = sh.bounced; __run(1); if (!was && sh.bounced) bx = G.ball.x; }
+    out.bounceBeforeGk = bx !== null && Math.abs(bx - gx) > Math.abs(gkX - gx);
+    // 2. Rückraum und Ecke an der Torauslinie: kein Dreher, Pass beim Aufladen tut nichts (wie bisher)
+    for (const [key, x, y] of [['back', 9, 10], ['corner', 0.6, 1.5]]) {
+      ({ p } = setup(key === 'back' ? 'RM' : 'LA', x, y, ''));
+      const calls = []; const o = { pass, shoot }; window.pass = (...a) => { calls.push('pass'); return o.pass(...a); }; window.shoot = (...a) => { calls.push('shoot'); return o.shoot(...a); };
+      KEY.Space = true; KEYP.Space = true; __run(15); KEY.KeyS = true; KEYP.KeyS = true; __run(1); KEY.KeyS = false; __run(1);
+      out[key] = { calls: calls.join(','), charging: p.charging, owner: G.ball.owner === p };
+      KEY.Space = false; __run(1); out[key].released = calls.join(','); out[key].spin = !!(G.ball.shot && G.ball.shot.spin);
+      window.pass = o.pass; window.shoot = o.shoot;
+    }
+    // 3. Quote: 120 Dreher je Dreher-Künstler und andere, dazu Torjubel DREHER!
+    const titles = new Set(), oB = banner; window.banner = (t, ...a) => { titles.add(t); return oB(t, ...a); };
+    for (const trait of ['Dreher-Künstler', '']) {
+      let goals = 0, n = 0;
+      for (let i = 0; i < 120; i++) {
+        const top = i % 2 === 0, x = 1.6 + (i % 5) * 0.5, y = top ? 2 + (i % 3) * 0.6 : 18 - (i % 3) * 0.6;
+        ({ p } = setup('LA', x, y, trait)); shoot(p, null, 0.6, false, true); n++;
+        let j = 0; while (G.phase === 'play' && G.ball.shot && j++ < 400) __run(1);
+        if (G.phase === 'goal') { goals++; if (G.replayMeta && G.replayMeta.dreher) out.meta = true; }
+      }
+      out[trait || 'andere'] = goals / n;
+    }
+    window.banner = oB; out.title = titles.has('DREHER!');
+    return out;
+  })()`);
+  ok(r.wingSpin, 'Flügel: Leertaste halten + S wirft keinen Dreher');
+  ok(r.bounceBeforeGk, 'Dreher springt nicht zwischen Werfer und Torwart auf');
+  for (const k of ['back', 'corner']) {
+    ok(r[k].calls === '' && r[k].charging && r[k].owner, `${k}: Pass beim Aufladen löst etwas aus (${JSON.stringify(r[k])})`);
+    ok(r[k].released === 'shoot' && !r[k].spin, `${k}: Loslassen wirft keinen normalen Wurf (${JSON.stringify(r[k])})`);
+  }
+  console.log(`      Dreher-Quote allein gegen den Torwart: Dreher-Künstler ${Math.round(r['Dreher-Künstler'] * 100)} %, andere ${Math.round(r.andere * 100)} %`);
+  ok(r['Dreher-Künstler'] >= r.andere + 0.1, 'Dreher-Künstler treffen nicht klar öfter');
+  ok(r['Dreher-Künstler'] > 0.35 && r['Dreher-Künstler'] < 0.85 && r.andere > 0.15, 'Dreher-Quote unplausibel');
+  ok(r.title && r.meta, 'Torjubel DREHER! bzw. Wiederholung fehlt');
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Eingabepuffer: Druck während des Passflugs wird beim Fangen ausgeführt, genau einmal', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 777);
   const r = await page.evaluate(STEP + `(() => {

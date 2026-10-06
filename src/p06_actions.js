@@ -44,9 +44,13 @@ function kempa(p) {
   if (G.human === p.team) G.ctrl = q;
   AU.pass(); say(`${p.name} lupft in den Kreis... KEMPA?`, 2);
 }
-function shoot(p, aimY, charge, lob = false) {
+// Dreher vom Flügel: Der Ball fliegt erst auf den Torwart zu, springt kurz vor ihm auf und dreht dann zur Seite weg.
+// Nur aus spitzem Winkel, aber nicht aus der Ecke an der Torauslinie (da passt er nicht ins Tor). Dreher-Künstler treffen ihn sicherer
+const dreherSpot = (p, gx) => Math.abs(p.y - 10) > 5 && goalDist(p.x, p.y, gx) < 9.5 && Math.abs(p.x - gx) > 1.2;
+function shoot(p, aimY, charge, lob = false, dreher = false) {
   const b = G.ball, gx = goalX(p.team), s = sgn(p.team), gk = G.goalie[1 - p.team];
   const d = goalDist(p.x, p.y, gx), wing = Math.abs(p.y - 10) > 6 && d < 9.5, close = d < 7.6;
+  dreher = dreher && !lob && dreherSpot(p, gx); const artist = p.trait === 'Dreher-Künstler';
   if (p.z <= 0.01 && G.phase !== 'penalty') {
     if (wing || close) { p.vz = 2.9; p.vx = s * 3.2; p.vy = (10 - p.y) * 0.25; p.fallShot = true; }
     else { p.vz = 3.9; p.vx = s * 1.7 + p.vx * 0.3; p.vy *= 0.3; p.shotJump = true; }
@@ -61,11 +65,17 @@ function shoot(p, aimY, charge, lob = false) {
   let err = (0.06 + d * 0.022) * (1.45 - p.att / 100) * (press < 1.2 ? 1.6 : 1) * (p.st < 0.25 ? 1.35 : 1) * (charge > 0.92 ? 1.3 : 1) * (p.energy < 0.5 ? 1.25 : 1) * (p.team === G.human && TOUCHDEV ? 0.8 : 1);
   if (G.phase === 'penalty') err *= 0.55;
   if (p.trait === 'Kanonier') err *= 0.85;
+  if (dreher) { err *= artist ? 0.85 : 1.45; tz = rnd(0.45, 1.1); }   // Höhe nach dem Aufsprung
   ty += rnd(-1, 1) * err * 1.3; tz = Math.max(0.05, tz + rnd(-1, 1) * err * 0.8);
   let speed = 15 + charge * 10 + p.att / 100 * 4 + (p.trait === 'Kanonier' ? 3 : 0);
   if (lob) { speed = 8.5; tz = rnd(1.55, 1.85); ty = 10 + rnd(-0.6, 0.6); }
-  launch(p.x + s * 0.3, p.y, p.z + 2.1, gx + s * 0.15, ty, tz, speed);
-  b.shot = { by: p, team: p.team, speed, d, gkDone: false, lob, react: rnd(0.08, 0.2) * (1.3 - gk.gk / 200) * (G.human === gk.team ? 1 : DIFF[G.diff].react) * (lob ? 2.2 : 1), blocked: new Set() };
+  const react = rnd(0.08, 0.2) * (1.3 - gk.gk / 200) * (G.human === gk.team ? 1 : DIFF[G.diff].react);
+  if (dreher) {   // erst Richtung Torwart, Aufsprung knapp 1 m vor ihm
+    const gkOut = gk.out ? 0.5 : Math.abs(gk.x - gx), pre = clamp(gk.out ? 10 : gk.y, GY1 + 0.3, GY2 - 0.3), f = clamp(1 - (gkOut + 0.9) / Math.abs(p.x - gx), 0.4, 0.8);
+    launch(p.x + s * 0.3, p.y, p.z + 2.1, lerp(p.x, gx, f), lerp(p.y, pre, f), 0, speed * 0.9);
+  } else launch(p.x + s * 0.3, p.y, p.z + 2.1, gx + s * 0.15, ty, tz, speed);
+  b.shot = { by: p, team: p.team, speed, d, gkDone: false, lob, react: react * (lob ? 2.2 : 1), blocked: new Set() };
+  if (dreher) Object.assign(b.shot, { ty, tz, sp2: speed * (artist ? 0.8 : 0.72), spin: artist ? 1 : 0.4, react2: react });
   if (d > 12) b.shot.react *= 0.45;
   // Statistik: 7-Meter, Tempogegenstoß (kurz nach Ballgewinn im laufenden Spiel), Vorlage (letzter Pass eines Mitspielers)
   b.shot.pen = !!(G.pen && G.pen.shooter === p && !G.shootout); b.shot.fb = !G.pen && G.possSrc === 'live' && G.possT < 4.5; b.shot.assist = p.assistFrom || null;

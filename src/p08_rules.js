@@ -13,17 +13,19 @@ function updateBall(dt) {
     return;
   }
   const spd = Math.hypot(b.vx, b.vy);
-  if (spd > 15) { b.trail.push([b.x, b.y, b.z]); if (b.trail.length > 7) b.trail.shift(); } else if (b.trail.length) b.trail.shift();
+  if (spd > 15 || (b.shot && b.shot.spin)) { b.trail.push([b.x, b.y, b.z]); if (b.trail.length > 7) b.trail.shift(); } else if (b.trail.length) b.trail.shift();
   if (G.phase !== 'play') {
     b.vx *= 0.92; b.vy *= 0.92; b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z = Math.max(0, b.z + b.vz * dt); if (b.z === 0) b.vz = Math.abs(b.vz) > 2 ? -b.vz * 0.4 : 0;
     if (G.phase === 'goal') { const gx = b.x < 20 ? 0 : CW; b.x = gx === 0 ? Math.max(b.x, -0.9) : Math.min(b.x, CW + 0.9); }
     return;
   }
   b.ncT -= dt;
-  b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
+  const ay = b.shot && b.shot.ay ? b.shot.ay * dt * 0.5 : 0;   // Drall des Drehers (halb vor, halb nach dem Schritt: landet genau im Ziel)
+  b.vy += ay; b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; b.vy += ay;
   if (b.z <= 0) {
     b.z = 0;
-    if (b.vz < -1.2) { b.vz = -b.vz * 0.55; b.vx *= 0.82; b.vy *= 0.82; AU.bounce(); G.parts.push(...burst(b.x, b.y, 0, '#cfc6b0', 3)); if (b.shot && Math.abs(b.vx) < 6) b.shot = null; }
+    if (b.shot && b.shot.spin && !b.shot.bounced) bounceShot(b);
+    else if (b.vz < -1.2) { b.vz = -b.vz * 0.55; b.vx *= 0.82; b.vy *= 0.82; AU.bounce(); G.parts.push(...burst(b.x, b.y, 0, '#cfc6b0', 3)); if (b.shot && Math.abs(b.vx) < 6) b.shot = null; }
     else { b.vz = 0; const f = Math.max(0, 1 - 1.6 * dt); b.vx *= f; b.vy *= f; b.passTo = null; b.lob = false; }
   }
   if (b.shot && !b.shot.gkDone) {
@@ -34,6 +36,7 @@ function updateBall(dt) {
       if (dy < reach && b.z < 2.3 && !(b.shot.lob && b.z > 2.0)) {
         let pr = (1 - dy / reach * 0.7) * (0.4 + g.gk / 100 * 0.4) * clamp(1.25 - b.shot.speed / 40, 0.5, 1);
         if (dy < 0.35) pr += 0.15; if (g.trait === 'Reflexmonster') pr += 0.06;
+        if (b.shot.spin) pr *= 1 - 0.5 * b.shot.spin;   // Drall des Drehers: schwer zu greifen, beim Dreher-Künstler besonders
         pr += clamp((b.shot.d - 12) / 6, 0, 0.6);            // Fernwürfe sieht der Torwart kommen
         if (G.pen && G.pen.gkGuess && G.human === g.team) pr = Math.sign(b.y - 10) === Math.sign(G.pen.gkGuess) || Math.abs(b.y - 10) < 0.5 ? 0.85 : 0.05;
         if (Math.random() < pr) return save(g);
@@ -99,6 +102,15 @@ function updateBall(dt) {
     G.phase = 'whistle'; G.phaseT = 0; b.shot = null; b.vx *= 0.2; b.vy *= 0.2;
   }
 }
+// Dreher am Boden: neu Richtung Tor, etwas langsamer. Der Torwart muss den Ball neu lesen (kurz keine Reaktion),
+// der Drall zieht den Ball zur Seite, die Flugbahn ist für ihn schwer vorherzusehen
+function bounceShot(b) {
+  const sh = b.shot, gx = goalX(sh.team), t = Math.max(Math.hypot(gx - b.x, sh.ty - b.y) / sh.sp2, 0.12), dy = sh.ty - b.y;
+  sh.bounced = true; sh.speed = sh.sp2; sh.react = sh.react2;
+  b.vx = (gx - b.x) / t; b.vz = (sh.tz + 0.5 * GRAV * t * t) / t;
+  b.vy = dy * (1 - 0.65 * sh.spin) / t; sh.ay = 2 * (dy - b.vy * t) / (t * t);
+  AU.bounce(); G.parts.push(...burst(b.x, b.y, 0, '#ff8bd1', 9));
+}
 function save(g) {
   const b = G.ball, sh = b.shot; G.stats.saves[g.team]++; g.saves++;
   banner('GEHALTEN!', '#ffc83a', g.name, 1, true); AU.save(); AU.crowd(0.22, 0.4); G.shake = 0.15; G.slowT = 0.45; G.flash = 0.25;
@@ -113,7 +125,7 @@ function scoreGoal(team, gx) {
   if (G.shootout) { AU.net(); G.netKick[gx === 0 ? 0 : 1] = 1; G.ball.shot = null; G.ball.vx *= 0.2; return soResolve(true); }
   const b = G.ball, sc = b.last && b.last.team === team ? b.last : null, shot = b.shot;
   G.score[team]++; G.stats.goals[team]++; G.phase = 'goal'; G.phaseT = 0; G.lastScorer = sc; G.lastConcede = 1 - team;
-  G.replay = G.rec.slice(); G.rec = []; G.replayMeta = { scorer: sc, kempa: G.kempa && G.kempa.to === sc };
+  G.replay = G.rec.slice(); G.rec = []; G.replayMeta = { scorer: sc, kempa: G.kempa && G.kempa.to === sc, dreher: !!(shot && shot.spin) };
   b.shot = null; b.vx *= 0.25; b.vy *= 0.3; G.netKick[gx === 0 ? 0 : 1] = 1;
   const k = kit(team), wasPen = !!G.pen; G.pen = null;
   if (sc) sc.goals++;
@@ -123,14 +135,15 @@ function scoreGoal(team, gx) {
   if (sc && shot && shot.assist && shot.assist !== sc && shot.assist.team === team) shot.assist.as = (shot.assist.as || 0) + 1;
   const gkC = G.goalie[1 - team]; if (gkC) gkC.ga = (gkC.ga || 0) + 1;
   const kempaGoal = G.kempa && G.kempa.to === sc; G.kempa = null;
-  const title = !sc ? 'EIGENTOR' : kempaGoal ? 'KEMPA-TOR!' : wasPen ? 'VERWANDELT!' : 'TOR!';
+  const dreher = !!(sc && shot && shot.spin), title = !sc ? 'EIGENTOR' : kempaGoal ? 'KEMPA-TOR!' : wasPen ? 'VERWANDELT!' : dreher ? 'DREHER!' : 'TOR!';
   banner(title, k.c1, sc ? `#${sc.num} ${sc.name}` : TEAMS[G.tid[team]].n, 2.1, true);
   G.cut = sc ? { kind: 'goal', p: sc, t: 0, dur: 2.4, title, col: k.c1 } : null;
   ledFlash(`TOR  ${TEAMS[G.tid[team]].short.toUpperCase()}  ${G.score[0]}:${G.score[1]}`, k.c1 === '#f4f4f0' ? '#ffffff' : k.c1, 4);
   AU.net(); AU.horn(); buzz(60); AU.cheer(team === 0 ? 1 : 0.55); AU.jingle('goal'); AU.exc = 1; G.shake = 0.5; G.excite = 3.5; G.flash = 0.4; G.wave = G.score[team] % 5 === 0 ? 6 : G.wave;
   G.parts.push(...confetti(gx, [k.c1, k.c2, '#ffffff', '#ffc83a']));
   const s = `${G.score[0]}:${G.score[1]}`;
-  say(sc ? pick([`${sc.name} trifft zum ${s}!`, `Tor durch ${sc.name}! Es steht ${s}.`, `Eiskalt, ${sc.name}! ${s}.`, `Der sitzt! ${sc.name}, ${s}.`, `Unhaltbar! ${sc.name} zum ${s}.`]) : `Eigentor! ${s}.`);
+  if (dreher) say(pick([`Was für ein Dreher von ${sc.name}! ${s}.`, `${sc.name} dreht ihn rein, ${s}!`, `Der Ball dreht am Torwart vorbei! ${s}.`]));
+  else say(sc ? pick([`${sc.name} trifft zum ${s}!`, `Tor durch ${sc.name}! Es steht ${s}.`, `Eiskalt, ${sc.name}! ${s}.`, `Der sitzt! ${sc.name}, ${s}.`, `Unhaltbar! ${sc.name} zum ${s}.`]) : `Eigentor! ${s}.`);
   G.log.push({ team, name: sc ? sc.name : 'Eigentor', min: Math.floor(gameMinute()) });
   if (sc && !G.demo && AU.vol.speaker) { const line = team === 0 ? `Tor für ${TEAMS[G.tid[0]].short}! Torschütze mit der Nummer ${sc.num}: ${sc.name}! Es steht ${G.score[0]} zu ${G.score[1]}.` : `Tor für die Gäste. Nummer ${sc.num}, ${sc.name}. ${G.score[0]} zu ${G.score[1]}.`; setTimeout(() => AU.say(line), 900); }
 }
