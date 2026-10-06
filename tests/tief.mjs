@@ -376,7 +376,8 @@ test('Update von der Vorversion: laufendes Spiel, simuliertes Pokalspiel, Karrie
     return { team: CAREER.team, year: CAREER.year, money: CAREER.money, hist: JSON.stringify(CAREER.history), titles: JSON.stringify(CAREER.titles || []), rec: JSON.stringify(CAREER.rec || {}), sq };
   }), async (p, b) => p.evaluate(b => {
     const sq = TEAMS.flatMap(t => CAREER.squads[t.id].map(p => p.pid)).sort((a, b) => a - b).join();
-    const now = { team: CAREER.team === b.team, year: CAREER.year === b.year, money: CAREER.money === b.money, hist: JSON.stringify(CAREER.history) === b.hist, titles: JSON.stringify(CAREER.titles || []) === b.titles, rec: JSON.stringify(CAREER.rec || {}) === b.rec, kader: sq === b.sq, tempo: SETTINGS.speed === 2, defekt: !localStorage.getItem('hl3_karriere_defekt') };
+    const A = typeof asciiNames === 'function' ? asciiNames : x => x;   // ab v8.26: Namen mit fremden Sonderzeichen werden beim Laden umgeschrieben (Gíslason → Gislason)
+    const now = { team: CAREER.team === b.team, year: CAREER.year === b.year, money: CAREER.money === b.money, hist: JSON.stringify(CAREER.history) === A(b.hist), titles: JSON.stringify(CAREER.titles || []) === A(b.titles), rec: JSON.stringify(CAREER.rec || {}) === A(b.rec), kader: sq === b.sq, tempo: SETTINGS.speed === 2, defekt: !localStorage.getItem('hl3_karriere_defekt') };
     const bad = []; for (let i = 0; i < 10; i++) { ACT.cSim(); bad.push(...__inv('Spieltag nach Update')); }
     return { ok: Object.values(now).every(Boolean) && !bad.length, now, bad: bad.slice(0, 3) };
   }, b));
