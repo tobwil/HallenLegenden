@@ -2194,14 +2194,16 @@ const tcol = t => { const c = kit(t).c1; return lum(c) > 0.85 ? '#e8e8e0' : c; }
 
 // Touch: Kamera-Anschlag aus der echten Lage von Knöpfen und Stick (#41). Am Spielfeldende fährt die Kamera so weit, dass das Tor
 // samt etwas Netz links der Knöpfe auf Torhöhe liegt (rechtes Tor) bzw. rechts vom Stick (linkes Tor), im Angriff wie in der Abwehr.
-// Auf schmalen Handys (16:9, Sicherheitsabstände) reichte der feste Anschlag nicht. Gemessen wird nur, wenn sich Bild, Fenster oder
-// Knopfgröße ändern.
+// Auf schmalen Handys (16:9, Sicherheitsabstände) reichte der feste Anschlag nicht. Gemerkt wird der Wert je Bild, Fenster und
+// Knopfgröße, aber höchstens eine Sekunde und nur bis zum nächsten Drehen: Beim Drehen (iOS-App beim Anpfiff) liegen die Knöpfe ein paar
+// Bilder lang noch nicht an ihrem Platz, ein dort gemessener Wert darf nicht hängen bleiben (#52).
 let CAMLIM = { key: '' };
+for (const ev of ['resize', 'orientationchange']) addEventListener(ev, () => { CAMLIM = { key: '' }; });
 function camLimits() {
   const lo = camHalf() - 3, hi = CW - camHalf() + 3;
   if (!TOUCHDEV || !document.body.classList.contains('touch')) return [lo, hi];
   const key = `${W}|${innerWidth}|${innerHeight}|${SETTINGS.btn}`;
-  if (CAMLIM.key === key) return CAMLIM.v;
+  if (CAMLIM.key === key && performance.now() - CAMLIM.t < 1000) return CAMLIM.v;
   const pad = document.getElementById('pad'), cr = cv.getBoundingClientRect();
   if (!pad || !pad.getBoundingClientRect().width || !cr.width) return [lo, hi];   // Steuerung gerade nicht zu sehen: nicht merken
   const k = cr.width / W, kk = kOf(GY2), M = 6;                                 // CSS-Pixel je Leinwand-Pixel; vorderer Pfosten am breitesten
@@ -2211,13 +2213,20 @@ function camLimits() {
   let l = lo, h = hi;
   if (btn.length) { const T = (Math.min(...btn.map(q => q.left)) - cr.left) / k - M; h = Math.max(hi, CW + 0.6 - (T - W / 2) / (PX * kk)); }
   if (onGoal(st)) { const T = (st.right - cr.left) / k + M; l = Math.min(lo, -0.6 - (T - W / 2) / (PX * kk)); }
-  CAMLIM = { key, v: [Math.max(l, 4), Math.min(h, CW - 4)] };
+  CAMLIM = { key, t: performance.now(), v: [Math.max(l, 4), Math.min(h, CW - 4)] };
   return CAMLIM.v;
 }
 function updateCamera() {
   const b = G.ball; let tgt;
   if (G.phase === 'intro') tgt = G.introT < 3.4 ? lerp(4, 36, ease(G.introT / 3.4)) : 20;
-  else { const lead = G.poss >= 0 && G.phase === 'play' ? sgn(G.poss) * 3 : 0; tgt = b.x + lead; }
+  else {
+    // Vorlauf 3 m in Angriffsrichtung des Ballbesitzers. Auf Touch-Geräten zeigt er nahe einem Tor immer zu diesem Tor, auch wenn die
+    // Mannschaft vor dem eigenen Tor den Ball hat (Aufbau nach Parade oder Fehlwurf), sonst bliebe die Kamera bis zu 3 m vor dem Anschlag
+    // stehen und das Tor unter den Knöpfen (#51). Fließender Übergang 4 bis 10 m von der Mitte, am Desktop wie bisher
+    let lead = G.poss >= 0 && G.phase === 'play' ? sgn(G.poss) * 3 : 0;
+    if (lead && TOUCHDEV && document.body.classList.contains('touch')) lead = lerp(lead, Math.sign(b.x - CW / 2) * 3, clamp((Math.abs(b.x - CW / 2) - 4) / 6, 0, 1));
+    tgt = b.x + lead;
+  }
   const [lo, hi] = camLimits(); tgt = clamp(tgt, lo, hi);
   CAMX = G.phase === 'intro' ? tgt : lerp(CAMX, tgt, 0.075);
 }

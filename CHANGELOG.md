@@ -2,6 +2,11 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.25: Kamera erreicht den Anschlag immer
+- **Behoben (#51): In der Abwehr verdeckten die Knöpfe weiter das Tor.** Die Kamera fährt 3 m voraus in Angriffsrichtung des Ballbesitzers. Baute eine Mannschaft vor dem eigenen Tor auf, etwa nach einer Parade oder einem Fehlwurf, zeigte der Vorlauf vom Tor weg. Die Kamera blieb bis zu 3 m vor dem Anschlag stehen, auf dem iPhone SE lag KLAU schon mit normalen Knöpfen über dem Tor. Auf Touch-Geräten zeigt der Vorlauf jetzt nahe einem Tor immer zu diesem Tor, mit fließendem Übergang zwischen 4 und 10 m von der Mitte. Am Desktop bleibt die Kamera wie bisher.
+- **Behoben (#52): Falscher Anschlag nach dem Drehen beim Anpfiff.** Die iOS-App dreht beim Anpfiff ins Querformat. In diesen Bildern lagen die Knöpfe noch nicht an ihrem Platz, und der dort gemessene Anschlag blieb bis zum Neustart gemerkt. Jetzt wird er bei jedem Drehen bzw. jeder Größenänderung verworfen und spätestens nach einer Sekunde neu gemessen.
+- Der Kamera-Test prüft jetzt jede Ballposition 1 und 6 m vor beiden Toren mit Ballbesitz bei beiden Mannschaften, dazu einen beim Umbau gemessenen Anschlag, der nach dem Drehen bzw. nach einer Sekunde verschwunden sein muss
+
 ## v8.24: Touch-Tipp mit Gamepad und Tastatur
 - **Behoben (#49): Der Touch-Tipp „Einfach antippen“ ließ sich mit dem Gamepad nicht schließen.** Auf Touch-Geräten mit Controller (Steam Deck, Tablet) hielt er beim Anwurf das Spiel an. A und B taten nichts, Start ließ das Spiel weiterlaufen, der Tipp blieb aber stehen. Weg ging er nur durch Antippen. Jetzt gilt:
   - Wer zuletzt mit Gamepad oder Tastatur bedient hat oder ein Gamepad angeschlossen hat, bekommt den Tipp gar nicht. Er erklärt nur Touch-Bedienung. Der Zähler läuft dann nicht hoch, der Tipp kommt später bei echter Touch-Bedienung.
