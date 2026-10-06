@@ -897,7 +897,7 @@ test('Touch-Tipp: mit Gamepad oder Tastatur kein Tipp; offen schließen ihn A, B
   }
 });
 
-test('Touch: Am Spielfeldende liegt das Tor neben Knöpfen und Stick, im Angriff und in der Abwehr, auf schmalen Handys, mit Notch und in allen Knopfgrößen (#41)', async () => {
+test('Touch: Am Spielfeldende liegt das Tor neben Knöpfen und Stick, egal wer den Ball hat, auf schmalen Handys, mit Notch und in allen Knopfgrößen; kein hängender Anschlag nach dem Drehen (#41, #51, #52)', async () => {
   const bad = [];
   for (const [lbl, w, h, ins] of [['iPhone SE quer', 667, 375, {}], ['iPhone SE Safari', 667, 331, {}], ['iPhone 17 Pro quer', 874, 402, { left: 62, right: 62, bottom: 21 }], ['Android 16:9', 640, 360, {}], ['Android 20:9', 915, 412, {}]]) {
     const { page, ctx, errors } = await openPhone(w, h, ins, 3);
@@ -906,13 +906,14 @@ test('Touch: Am Spielfeldende liegt das Tor neben Knöpfen und Stick, im Angriff
       for (const size of Object.keys(BTN_SCALE)) {
         SETTINGS.btn = size; applyBtnSize();
         startMatch(TEAMS[0].id, TEAMS[1].id, { human: 0, halfLen: 180 }); G.introT = 99; G.phase = 'play'; G.paused = true; document.body.classList.add('ingame'); document.body.classList.remove('menuopen');
-        for (const side of [1, 0]) for (const angriff of [true, false]) {
+        for (const side of [1, 0]) for (const angriff of [true, false]) for (const besitz of ['ich', 'Gegner']) for (const d of [1, 6]) {
           G.swap = (G.human === 0) !== (side === (angriff ? 1 : 0));   // eigenes Team greift auf dieses Tor an oder verteidigt es
-          G.ball.owner = null; G.ball.x = side ? 39 : 1; G.poss = angriff ? G.human : 1 - G.human; for (let i = 0; i < 300; i++) updateCamera();   // Kamera fährt wie im Spiel ans Ende
+          // Ball d Meter vor dem Tor, bei beiden Mannschaften: auch wer vor dem eigenen Tor aufbaut, zieht die Kamera bis zum Anschlag (#51)
+          G.ball.owner = null; G.ball.x = side ? CW - d : d; G.poss = besitz === 'ich' ? G.human : 1 - G.human; for (let i = 0; i < 300; i++) updateCamera();
           const cr = cv.getBoundingClientRect(), k = cr.width / W, gx = side ? CW : 0, xs = [], ys = [];
           for (const y of [GY1, GY2]) for (const z of [0, GH]) for (const dx of [0, side ? 0.5 : -0.5]) { xs.push(sx(gx + dx, y)); ys.push(sy(y, z)); }
           const g = { l: cr.left + Math.min(...xs) * k, r: cr.left + Math.max(...xs) * k, t: cr.top + Math.min(...ys) * k, b: cr.top + Math.max(...ys) * k };
-          for (const e of document.querySelectorAll('#pad .tb, #stick')) { const q = e.getBoundingClientRect(); if (Math.min(g.r, q.right) > Math.max(g.l, q.left) && Math.min(g.b, q.bottom) > Math.max(g.t, q.top)) out.push(`${size} ${side ? 'rechts' : 'links'} ${angriff ? 'Angriff' : 'Abwehr'}: ${e.textContent.trim() || 'Stick'}`); }
+          for (const e of document.querySelectorAll('#pad .tb, #stick')) { const q = e.getBoundingClientRect(); if (Math.min(g.r, q.right) > Math.max(g.l, q.left) && Math.min(g.b, q.bottom) > Math.max(g.t, q.top)) out.push(`${size} ${side ? 'rechts' : 'links'} ${angriff ? 'Angriff' : 'Abwehr'} Ball ${besitz} ${d} m: ${e.textContent.trim() || 'Stick'}`); }
         }
       }
       return out;
@@ -920,6 +921,15 @@ test('Touch: Am Spielfeldende liegt das Tor neben Knöpfen und Stick, im Angriff
     if (r.length) bad.push(`${lbl}: ${r.join(', ')}`); ok(!errors.length, errors.join('; ')); await ctx.close();
   }
   ok(!bad.length, 'Tor verdeckt: ' + bad.join(' | '));
+  // #52: Ein Anschlag, der gemessen wird, während die Knöpfe noch nicht an ihrem Platz sind (Drehen beim Anpfiff), darf nicht hängen bleiben
+  const { page, ctx } = await openPhone(667, 375, {}, 3);
+  const stale = () => page.evaluate(() => { CAMLIM = { key: '' }; document.querySelectorAll('#pad .tb').forEach(e => e.style.display = 'none'); const a = camLimits()[1]; document.querySelectorAll('#pad .tb').forEach(e => e.style.display = ''); return a; });
+  await page.evaluate(() => { startMatch(TEAMS[0].id, TEAMS[1].id, { human: 0, halfLen: 180 }); G.introT = 99; G.phase = 'play'; G.paused = true; document.body.classList.add('ingame'); document.body.classList.remove('menuopen'); });
+  const fresh = await page.evaluate(() => { CAMLIM = { key: '' }; return camLimits()[1]; });
+  const a1 = await stale(), r1 = await page.evaluate(() => { dispatchEvent(new Event('resize')); return camLimits()[1]; });   // nach dem Drehen
+  const a2 = await stale(); await page.waitForTimeout(1100); const r2 = await page.evaluate(() => camLimits()[1]);            // ohne Ereignis: nach einer Sekunde
+  ok(a1 < fresh - 1 && Math.abs(r1 - fresh) < 0.01 && a2 < fresh - 1 && Math.abs(r2 - fresh) < 0.01, `Anschlag hängt: richtig ${fresh}, beim Umbau ${a1}/${a2}, danach ${r1} (Drehen) / ${r2} (1 s)`);
+  await ctx.close();
 });
 
 test('Breite Handys: Spielfeld füllt den Bildschirm, Desktop und Hochformat bleiben 16:9', async () => {
