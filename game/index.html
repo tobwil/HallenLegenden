@@ -499,13 +499,15 @@ const LEAGUE = lg => TEAMS.filter(t => t.lg === lg);
 const ROLES = ['TW', 'LA', 'RL', 'RM', 'RR', 'RA', 'KM'];
 const ROLE_LONG = { TW: 'Torwart', LA: 'Linksaußen', RL: 'Rückraum links', RM: 'Rückraum Mitte', RR: 'Rückraum rechts', RA: 'Rechtsaußen', KM: 'Kreisläufer' };
 const TRAITS = { TW: ['Krake', 'Reflexmonster'], LA: ['Flügelflitzer', 'Dreher-Künstler'], RA: ['Flügelflitzer', 'Dreher-Künstler'], RL: ['Kanonier', 'Spielmacher'], RR: ['Kanonier', 'Spielmacher'], RM: ['Spielmacher', 'Kanonier'], KM: ['Kreis-Turm', 'Sperren-König'] };
-const SUR = ['Becker','Hoffmann','Krüger','Lehmann','Brandt','Vogel','Hartmann','Kühn','Seidel','Franke','Lorenz','Arnold','Pohl','Ziegler','Böhm','Sauer',
-  'Haas','Kaiser','Keller','Roth','Graf','Jäger','Winter','Sommer','Busch','Engel','Horn','Voigt','Petersen','Jansen','Thiele','Kruse','Brinkmann',
-  'Lange','Peters','Möller','Schulte','Wendt','Rademacher','Ott','Stein','Fuchs','Wolter','Kraft','Hein','Mertens','Ludwig','Behrens','Ehlers',
-  'Larsen','Hansen','Dahl','Holm','Iversen','Strand','Lindqvist','Berglund','Nyborg','Kjær','Sørlie','Aalto','Virtanen','Eriksen','Mikkelsen',
-  'Novak','Marić','Horvat','Kovač','Babić','Petrović','Jurić','Radić','Lazović','Duvnjak','Kos','Zorman','Blažek','Dvořák','Kowalski','Nowicki',
-  'Garcia','Ruiz','Navarro','Moreno','Duarte','Fabregas','Dupont','Lefèvre','Moreau','Girard','Fontaine','Pires','Costa','Silva','Magnusson',
-  'Jónsson','Gíslason','Sigurdsson','Halldórsson','Tønnesen','Østergaard','Svensson','Lund','Eklund','Arvidsson'];
+// Nachnamen der Spieler (v8.26: gut 400, nur A–Z und deutsche Umlaute, damit sich Namen selten doppeln und überall sauber darstellen)
+const SUR = ['Becker','Hoffmann','Krüger','Lehmann','Brandt','Vogel','Hartmann','Kühn','Seidel','Franke','Lorenz','Arnold','Pohl','Ziegler','Böhm','Sauer','Haas','Kaiser','Keller','Roth','Graf','Jäger','Winter','Sommer','Busch','Engel','Horn','Voigt','Petersen','Jansen','Thiele','Kruse','Brinkmann','Lange','Peters','Möller','Schulte','Wendt','Rademacher','Ott','Stein','Fuchs','Wolter','Kraft','Hein','Mertens','Ludwig','Behrens','Ehlers','Larsen','Hansen','Dahl','Holm','Iversen','Strand','Lindqvist','Berglund','Nyborg','Kjaer','Sorlie','Aalto','Virtanen','Eriksen','Mikkelsen','Novak','Maric','Horvat','Kovac','Babic','Petrovic','Juric','Radic','Lazovic','Kos','Blazek','Dvorak','Kowalski','Nowicki','Garcia','Ruiz','Navarro','Moreno','Duarte','Dupont','Lefevre','Moreau','Girard','Fontaine','Pires','Costa','Silva','Magnusson','Jonsson','Gislason','Sigurdsson','Halldorsson','Tonnesen','Ostergaard','Svensson','Lund','Eklund','Arvidsson','Schneider','Fischer','Weber','Meyer','Wagner','Schulz','Koch','Richter','Klein','Wolf','Schröder','Neumann','Schwarz','Zimmermann','Braun','Hofmann','Schmitt','Werner','Krause','Meier','Schmid','Schulze','Maier','Köhler','Herrmann','König','Walter','Mayer','Huber','Lang','Scholz','Weiß','Jung','Hahn','Schubert','Winkler','Frank','Berger','Beck','Baumann','Albrecht','Schuster','Simon','Kraus','Schumacher','Krämer','Vogt','Otto','Groß','Seifert','Heinrich','Schreiber','Dietrich','Kuhn','Bergmann','Thomas','Pfeiffer','Ernst','Kirchner','Hesse','Stephan','Beyer','Thiel','Kunz','Kühne','Marx','Böttcher','Siebert','Dittrich','Rieger','Lindner','Kern','Fiedler','Haase','Brenner','Gerlach','Hübner','Reuter','Wenzel','Schilling','Bischoff','Kluge','Jost','Friedrich','Pietsch','Martens','Riedel','Eckert','Ebert','Kolb','Scherer','Rösler','Schäfer','Wirth','Rudolph','Kurz','Wilke','Lorenzen','Brandes','Nagel','Paul','Hauser','Ullrich','Wiese','Witt','Schütz','Stark','Hartung','Funk','Freitag','Esser','Wegner','Dreher','Jahn','Mohr','Moritz','Bader','Reinhardt','Wittmann','Marquardt','Seidl','Hecht','Ahrens','Diehl','Kessler','Raab','Steffens','Röder','Heller','Bock','Gruber','Wimmer','Egger','Steiner','Moser','Hofer','Brunner','Lehner','Pichler','Ebner','Aigner','Haller','Leitner','Mayr','Unger','Gärtner','Hirsch','Fink','Lux','Kopp','Andersen','Christensen','Johansen','Pedersen','Nielsen','Jensen','Sorensen','Rasmussen','Jorgensen','Madsen','Kristensen','Olsen','Thomsen','Poulsen','Knudsen','Mortensen','Berg','Bakke','Haugen','Moe','Solberg','Nygaard','Lindberg','Nilsson','Karlsson','Persson','Gustafsson','Olsson','Larsson','Jakobsson','Holmberg','Ekman','Sundberg','Forsberg','Wallin','Bergqvist','Gudmundsson','Einarsson','Thorsson','Kristjansson','Olafsson','Palsson','Arnarsson','Stefansson','Haraldsson','Kovacevic','Jovanovic','Nikolic','Markovic','Simic','Pavlovic','Tomic','Vukovic','Ilic','Knezevic','Popovic','Zoric','Mandic','Bozic','Peric','Matic','Vidic','Rakic','Fernandez','Lopez','Sanchez','Romero','Torres','Ortega','Castillo','Laurent','Roux','Bernard','Leroy','Lambert','Rousseau','Morel','Mercier','Blanc','Guerin','Faure','Chevalier','Santos','Ferreira','Pereira','Oliveira','Rossi','Bianchi','Ricci','Conti','Marino','Kaminski','Zielinski','Szymanski','Wozniak','Dabrowski','Jankowski','Mazur','Krawczyk','Svoboda','Cerny','Prochazka','Kucera','Vesely','Hajek','Nagy','Toth','Szabo','Horvath','Kiss','Varga','Molnar','Farkas','Balogh','Papp','Takacs','Visser','Smit','Bakker','Mulder','Bos','Vos','Hendriks','Dekker','Brouwer','Peeters','Maes','Janssens','Claes','Wouters','Lindholm','Mattsson','Hedlund','Nordin','Sandberg','Lundgren','Bergman','Fredriksen','Halvorsen','Amundsen','Lindahl','Krogh','Juhl','Bech','Vestergaard','Damgaard','Kjeldsen','Ravn','Skov','Frost'];
+// Bis v8.25 kamen die Namen aus dieser kürzeren Liste (hier ohne Sonderzeichen). Die festen Kader ziehen ihre Namen weiter auch hieraus,
+// nur um die Zufallsfolge zu halten: Werte, Rückennummern und Aussehen bleiben so wie bisher. Alte Karrieren erkennen daran ihre Stammspieler
+const SUR_V1 = ['Becker','Hoffmann','Krüger','Lehmann','Brandt','Vogel','Hartmann','Kühn','Seidel','Franke','Lorenz','Arnold','Pohl','Ziegler','Böhm','Sauer','Haas','Kaiser','Keller','Roth','Graf','Jäger','Winter','Sommer','Busch','Engel','Horn','Voigt','Petersen','Jansen','Thiele','Kruse','Brinkmann','Lange','Peters','Möller','Schulte','Wendt','Rademacher','Ott','Stein','Fuchs','Wolter','Kraft','Hein','Mertens','Ludwig','Behrens','Ehlers','Larsen','Hansen','Dahl','Holm','Iversen','Strand','Lindqvist','Berglund','Nyborg','Kjaer','Sorlie','Aalto','Virtanen','Eriksen','Mikkelsen','Novak','Maric','Horvat','Kovac','Babic','Petrovic','Juric','Radic','Lazovic','Duvnjak','Kos','Zorman','Blazek','Dvorak','Kowalski','Nowicki','Garcia','Ruiz','Navarro','Moreno','Duarte','Fabregas','Dupont','Lefevre','Moreau','Girard','Fontaine','Pires','Costa','Silva','Magnusson','Jonsson','Gislason','Sigurdsson','Halldorsson','Tonnesen','Ostergaard','Svensson','Lund','Eklund','Arvidsson'];
+// Fremde Sonderzeichen in Namen alter Spielstände (bis v8.25): einmalig umgeschrieben, die Spieler bleiben dieselben
+const NAME_ASCII = { 'Kjær': 'Kjaer', 'Sørlie': 'Sorlie', 'Marić': 'Maric', 'Kovač': 'Kovac', 'Babić': 'Babic', 'Petrović': 'Petrovic', 'Jurić': 'Juric', 'Radić': 'Radic', 'Lazović': 'Lazovic', 'Blažek': 'Blazek',
+  'Dvořák': 'Dvorak', 'Lefèvre': 'Lefevre', 'Jónsson': 'Jonsson', 'Gíslason': 'Gislason', 'Halldórsson': 'Halldorsson', 'Tønnesen': 'Tonnesen', 'Østergaard': 'Ostergaard' };
+const asciiNames = txt => txt.replace(new RegExp(`(?<!\\p{L})(${Object.keys(NAME_ASCII).join('|')})(?!\\p{L})`, 'gu'), m => NAME_ASCII[m]);
 const SKIN = [['#f3c9a2', '#d9a47c'], ['#e6b085', '#c98d62'], ['#c98c5c', '#a96d43'], ['#9a6440', '#7a4a2c'], ['#6e4428', '#52301b']];
 const HAIR = ['#2a1a10', '#4a2e18', '#7a4a20', '#c9a050', '#e3c27a', '#1a1a1a', '#8a3a18', '#b8b0a0'];
 const ROSTER_KEY = 'hl3_kader';
@@ -524,11 +526,13 @@ const LEGEND_KEYS = ['name', 'skin', 'hair', 'style', 'beard', 'band', 'tall', '
 const LEGENDS_VER = 3;   // bei neuen Legenden erhöhen: laufende Karrieren rüsten sie dann beim Laden nach
 const LEGEND_RENAMED = { 3: ['Hebbe', 'Schülein'] };   // umbenannte Legenden: Version, alter Name, neuer Name
 const legendSlot = (L, ro) => L.slot ?? ro.findIndex((p, i) => i > 0 && p.star && p.role !== 'TW');
-function roster(tid, plain) {
+function roster(tid, plain, v1) {   // v1: Namen wie bis v8.25 (alte Karrieren)
   const t = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#kader')), used = new Set(), nums = new Set(), legend = !plain && LEGENDS[TEAM_BASE[tid][0]];
+  const nr = seeded(hashStr(TEAM_BASE[tid][1] + '#namen')), usedN = new Set();
   const starIdx = 1 + ((r() * 6) | 0), gkStar = r() < 0.35;
   return ROLES.map((role, i) => {
-    let n; do { n = SUR[(r() * SUR.length) | 0]; } while (used.has(n)); used.add(n);
+    let n; do { n = SUR_V1[(r() * SUR_V1.length) | 0]; } while (used.has(n)); used.add(n);   // alte Ziehung: hält die Zufallsfolge
+    if (!v1) { do { n = SUR[(nr() * SUR.length) | 0]; } while (usedN.has(n)); usedN.add(n); }
     let num; do { num = role === 'TW' ? [1, 12, 16, 33][(r() * 4) | 0] : 2 + ((r() * 70) | 0); } while (nums.has(num)); nums.add(num);
     const v = () => Math.round((r() - 0.5) * 12);
     const star = i === starIdx || (role === 'TW' && gkStar);
@@ -1359,9 +1363,11 @@ function matchData(r, boost) {
 }
 // Ersatzbank für Spiele ohne Karriere: je Position ein etwas schwächerer Spieler
 function quickBench(tid) {
-  const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#ersatz')), used = new Set(roster(tid).map(p => p.name)), nums = new Set(roster(tid).map(p => p.num));
+  const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#ersatz')), used = new Set(roster(tid, false, true).map(p => p.name)), nums = new Set(roster(tid).map(p => p.num));
+  const nr = seeded(hashStr(TEAM_BASE[tid][1] + '#ersatznamen')), usedN = new Set(roster(tid).map(p => p.name));
   return ROLES.map((role, i) => {
-    let n; do { n = SUR[(r() * SUR.length) | 0]; } while (used.has(n)); used.add(n);
+    let n; do { n = SUR_V1[(r() * SUR_V1.length) | 0]; } while (used.has(n)); used.add(n);   // alte Ziehung: hält die Zufallsfolge (siehe SUR_V1)
+    do { n = SUR[(nr() * SUR.length) | 0]; } while (usedN.has(n)); usedN.add(n);
     let num; do { num = role === 'TW' ? [12, 16, 33, 30][(r() * 4) | 0] : 2 + ((r() * 70) | 0); } while (nums.has(num)); nums.add(num);
     const ed = ROSTER_EDIT[tid] && ROSTER_EDIT[tid][ROLES.length + i];   // Editor: Plätze 8 bis 14 sind die Ersatzbank
     if (ed) { if (ed.name) n = ed.name; if (ed.num) num = ed.num; }
@@ -2447,6 +2453,7 @@ const ICONS = new Map();
 const kitIcon = K => { const key = K.c1 + K.c2; if (!ICONS.has(key)) ICONS.set(key, jerseyIcon(K).toDataURL()); return ICONS.get(key); };
 const icon = T => kitIcon(T.home);
 const SAVE_KEY = 'hl3_spielstand';
+{ const sv = store.get(SAVE_KEY); if (sv) { const t = JSON.stringify(sv), u = asciiNames(t); if (u !== t) store.set(SAVE_KEY, JSON.parse(u)); } }   // unterbrochenes Spiel aus v8.25: Namen ohne fremde Sonderzeichen
 let PM = null;   // Vor-dem-Spiel-Auswahl
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -2870,9 +2877,9 @@ const POT_TXT = { up: 'entwickelt sich noch', peak: 'auf dem Höhepunkt', down: 
 const potCell = p => { const t = potTrend(p), v = potOf(p); return `<span class="pot pot-${t}" title="${POT_TXT[t]}">${v}${t === 'up' ? '↗' : t === 'down' ? '↘' : ''}</span>`; };
 const euro = v => v >= 1e6 ? (v / 1e6).toFixed(2).replace('.', ',') + ' Mio €' : Math.round(v / 1000) + ' Tsd €';
 
-function genPlayer(role, level, r, ageMin = 18, ageMax = 33) {
+function genPlayer(role, level, r, ageMin = 18, ageMax = 33, names = SUR) {
   const age = ageMin + Math.floor(r() * (ageMax - ageMin + 1)), v = () => Math.round((r() - 0.5) * 10), lv = Math.round(level);
-  const p = { name: SUR[(r() * SUR.length) | 0], num: 0, role, age, att: lv + v(), pas: lv + v(), def: lv + v() + (role === 'KM' ? 3 : 0), gk: role === 'TW' ? lv + v() : 40,
+  const p = { name: names[(r() * names.length) | 0], num: 0, role, age, att: lv + v(), pas: lv + v(), def: lv + v() + (role === 'KM' ? 3 : 0), gk: role === 'TW' ? lv + v() : 40,
     spd: lv + v() + (role === 'LA' || role === 'RA' ? 4 : 0), sta: lv + v(), skin: (r() * SKIN.length) | 0, hair: HAIR[(r() * HAIR.length) | 0], style: (r() * 6) | 0,
     beard: r() < 0.35, band: r() < 0.2, tall: role === 'KM' || role === 'RL' || role === 'RR', star: false, trait: '' };
   p.pot = Math.min(97, ovr(p) + (age < 22 ? 6 + r() * 14 : age < 26 ? r() * 7 : 0));
@@ -2889,8 +2896,12 @@ function fixNumbers(sq) {
 function makeSquad(tid) {
   const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#bank'));
   const sq = roster(tid).map(p => { const q = { ...p, age: 22 + ((r() * 11) | 0) }; if (p.age) q.age = p.age; /* Hallen-Legenden: festes Alter, gleicher Zufallsverlauf */ q.pot = Math.min(97, ovr(q) + (q.age < 25 ? 3 + r() * 6 : 0)); if (p.potPlus) q.pot = Math.min(99, ovr(q) + p.potPlus); delete q.potPlus; return finalize(q, true); });
-  const names = new Set(sq.map(p => p.name));
-  for (const role of ROLES) { const q = genPlayer(role, T.r - 7 - r() * 5, r, 18, 32); while (names.has(q.name)) q.name = SUR[(r() * SUR.length) | 0]; names.add(q.name); sq.push(finalize(q)); }
+  // Ersatzbank: Ziehung mit der Liste bis v8.25, damit die Zufallsfolge (und damit jede neue Karriere) gleich bleibt; Namen aus eigener Folge
+  const names = new Set(sq.map(p => p.name)), namesV1 = new Set(roster(tid, false, true).map(p => p.name)), nr = seeded(hashStr(TEAM_BASE[tid][1] + '#banknamen'));
+  for (const role of ROLES) {
+    const q = genPlayer(role, T.r - 7 - r() * 5, r, 18, 32, SUR_V1); while (namesV1.has(q.name)) q.name = SUR_V1[(r() * SUR_V1.length) | 0]; namesV1.add(q.name);
+    do { q.name = SUR[(nr() * SUR.length) | 0]; } while (names.has(q.name)); names.add(q.name); sq.push(finalize(q));
+  }
   fixNumbers(sq); return sq;
 }
 function ensureStarters(tid) {
@@ -2924,7 +2935,7 @@ const findCareerPlayer = (tid, pid) => CAREER && CAREER.squads[tid] ? CAREER.squ
 
 function careerCreate(team, lenIdx, half, diff, aiTransfers = true, coach = 0) {
   CAREER = { v: 1, year: 2026, team, len: SEASON_LENS[lenIdx].v, half, diff, nextPid: 1, training: 'balance', lgOf: {}, squads: {}, history: [], news: [], free: [], market: [], form5: [], season: null, summary: null,
-    aiTransfers, aiMoney: {}, offers: [], legends: LEGENDS_VER, statFrom: { year: 2026, round: 0 }, seven: null, capt: null, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
+    aiTransfers, aiMoney: {}, offers: [], legends: LEGENDS_VER, names: 2, statFrom: { year: 2026, round: 0 }, seven: null, capt: null, board: { miss: 0 }, debt: 0, streak: 0, lastMatch: null, goal: null, issue: 1, coach: { lineup: coach === 1 || coach === 3, training: coach === 2 || coach === 3 } };
   TEAMS.forEach(t => { CAREER.lgOf[t.id] = TEAM_BASE[t.id][4]; CAREER.squads[t.id] = makeSquad(t.id); CAREER.aiMoney[t.id] = Math.round((t.r - 60) * (t.lg === 2 ? 12000 : 25000)) + 50000; });
   const T = TEAMS[team]; CAREER.money = Math.round((T.r - 60) * (T.lg === 1 ? 25000 : 12000) / 5000) * 5000 + 50000;
   newSeason(); news(`Willkommen bei ${T.n}! Saison ${CAREER.year}/${String(CAREER.year + 1).slice(2)} in der ${CAREER.season.lg}. Liga.`);
@@ -3350,11 +3361,14 @@ if (CAREER) {
   if (!CAREER.goal) CAREER.goal = { txt: 'Obere Tabellenhälfte', pos: 9, rank: 9 };
   // umbenannte Legenden: überall im Spielstand (Kader, Torjäger, Ehrenhalle, Rekorde, Zeitung, Historie)
   for (const [v, [from, to]] of Object.entries(LEGEND_RENAMED)) if ((CAREER.legends || 0) < +v) CAREER = JSON.parse(JSON.stringify(CAREER).replace(new RegExp(`\\b${from}\\b`, 'g'), to));
+  // v8.26: Namen ohne fremde Sonderzeichen (Gíslason → Gislason …), überall im Spielstand (Kader, Zeitung, Torjäger, Rekorde, Historie)
+  if ((CAREER.names || 0) < 2) { CAREER = JSON.parse(asciiNames(JSON.stringify(CAREER))); CAREER.names = 2; saveCareer(); }
   // Hallen-Legenden nachrüsten: der Spieler auf ihrem Platz bekommt Namen und Aussehen (falls er noch im Verein ist und es sie noch nicht gibt)
   if ((CAREER.legends || 0) < LEGENDS_VER) {
     for (const [k, L] of Object.entries(LEGENDS)) {
       const tid = TEAM_BASE.findIndex(b => b[0] === k), plain = roster(tid, true), orig = plain[legendSlot(L, plain)], sq = CAREER.squads[tid];
-      const p = orig && !TEAMS.some(t => CAREER.squads[t.id].some(x => x.name === L.name)) && sq.find(x => x.name === orig.name && x.role === orig.role);
+      const old = roster(tid, true, true)[legendSlot(L, plain)];   // Karrieren bis v8.25 kennen den Stammspieler unter dem alten Namen
+      const p = orig && !TEAMS.some(t => CAREER.squads[t.id].some(x => x.name === L.name)) && sq.find(x => (x.name === orig.name || x.name === old.name) && x.role === orig.role);
       if (p) LEGEND_KEYS.forEach(key => { if (L[key] !== undefined) p[key] = L[key]; });
     }
     CAREER.legends = LEGENDS_VER; saveCareer();

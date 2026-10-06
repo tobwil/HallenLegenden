@@ -6,6 +6,7 @@ const ICONS = new Map();
 const kitIcon = K => { const key = K.c1 + K.c2; if (!ICONS.has(key)) ICONS.set(key, jerseyIcon(K).toDataURL()); return ICONS.get(key); };
 const icon = T => kitIcon(T.home);
 const SAVE_KEY = 'hl3_spielstand';
+{ const sv = store.get(SAVE_KEY); if (sv) { const t = JSON.stringify(sv), u = asciiNames(t); if (u !== t) store.set(SAVE_KEY, JSON.parse(u)); } }   // unterbrochenes Spiel aus v8.25: Namen ohne fremde Sonderzeichen
 let PM = null;   // Vor-dem-Spiel-Auswahl
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

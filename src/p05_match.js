@@ -229,9 +229,11 @@ function matchData(r, boost) {
 }
 // Ersatzbank für Spiele ohne Karriere: je Position ein etwas schwächerer Spieler
 function quickBench(tid) {
-  const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#ersatz')), used = new Set(roster(tid).map(p => p.name)), nums = new Set(roster(tid).map(p => p.num));
+  const T = TEAMS[tid], r = seeded(hashStr(TEAM_BASE[tid][1] + '#ersatz')), used = new Set(roster(tid, false, true).map(p => p.name)), nums = new Set(roster(tid).map(p => p.num));
+  const nr = seeded(hashStr(TEAM_BASE[tid][1] + '#ersatznamen')), usedN = new Set(roster(tid).map(p => p.name));
   return ROLES.map((role, i) => {
-    let n; do { n = SUR[(r() * SUR.length) | 0]; } while (used.has(n)); used.add(n);
+    let n; do { n = SUR_V1[(r() * SUR_V1.length) | 0]; } while (used.has(n)); used.add(n);   // alte Ziehung: hält die Zufallsfolge (siehe SUR_V1)
+    do { n = SUR[(nr() * SUR.length) | 0]; } while (usedN.has(n)); usedN.add(n);
     let num; do { num = role === 'TW' ? [12, 16, 33, 30][(r() * 4) | 0] : 2 + ((r() * 70) | 0); } while (nums.has(num)); nums.add(num);
     const ed = ROSTER_EDIT[tid] && ROSTER_EDIT[tid][ROLES.length + i];   // Editor: Plätze 8 bis 14 sind die Ersatzbank
     if (ed) { if (ed.name) n = ed.name; if (ed.num) num = ed.num; }

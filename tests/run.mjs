@@ -645,6 +645,31 @@ test('Final Four: Nach eigenem Halbfinal-Aus wird das Finale sofort gespielt (Po
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Namen: gut 400 Nachnamen ohne fremde Sonderzeichen, feste Kader sonst unverändert, alte Spielstände umgeschrieben', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 5);
+  const r = await page.evaluate(() => {
+    if (G) G.paused = true;
+    const LEG = ['Weidenhammer', 'Schülein', 'Richardson', 'Schörner'], list = { n: SUR.length, uniq: new Set(SUR).size, bad: SUR.filter(n => !/^[A-Za-zÄÖÜäöüß]+$/.test(n) || LEG.includes(n)) };
+    // feste Kader (Schnelles Spiel, Grundlage jeder neuen Karriere): Werte, Nummern und Aussehen wie bis v8.25, nur die Namen sind neu
+    const sum = hashStr(TEAMS.map(t => roster(t.id).concat(quickBench(t.id)).map(q => { const { name, ...rest } = q; return JSON.stringify(rest); }).join('|')).join('\n'));
+    const dupTeam = TEAMS.filter(t => { const n = roster(t.id).concat(quickBench(t.id)).map(q => q.name); return new Set(n).size !== n.length; }).length;
+    // neue Karriere: Namen doppeln sich selten
+    G = null; careerCreate(TEAM_BASE.findIndex(b => b[0] === 'KIE'), 1, 1, 1);
+    const all = TEAMS.flatMap(t => CAREER.squads[t.id]), cnt = {}; all.forEach(q => cnt[q.name] = (cnt[q.name] || 0) + 1);
+    const me = new Set(CAREER.squads[CAREER.team].map(q => q.name)), opp = TEAMS.filter(t => CAREER.lgOf[t.id] === 1 && t.id !== CAREER.team), clash = opp.filter(t => CAREER.squads[t.id].some(q => me.has(q.name))).length;
+    // Spielstand aus v8.25 mit Sonderzeichen in Kader, Zeitung und Historie
+    const q = CAREER.squads[CAREER.team][3]; q.name = 'Gíslason'; CAREER.news.unshift('Dvořák und Gíslason treffen.'); CAREER.history.unshift({ year: 2025, top: 'Østergaard' }); CAREER.names = 1; saveCareer();
+    return { list, sum, dupTeam, perName: all.length / Object.keys(cnt).length, clash, pid: q.pid };
+  });
+  await page.reload(); await page.waitForTimeout(500);
+  const m = await page.evaluate(pid => { const txt = JSON.stringify(CAREER); return { left: /Gíslason|Dvořák|Østergaard/.test(txt), name: CAREER.squads[CAREER.team].find(q => q.pid === pid).name, news: CAREER.news[0], hist: CAREER.history[0].top, names: CAREER.names }; }, r.pid);
+  ok(r.list.n >= 350 && r.list.uniq === r.list.n && !r.list.bad.length, 'Namensliste: ' + JSON.stringify(r.list));
+  ok(r.sum === 1461078894, `Feste Kader verändert (Prüfsumme ${r.sum} statt 1461078894): Werte, Nummern oder Aussehen weichen von v8.25 ab`);
+  ok(!r.dupTeam && r.perName < 3 && r.clash <= 4, `Doppelte Namen: ${r.dupTeam} Kader, ${r.perName.toFixed(1)} je Name, ${r.clash} Ligagegner mit gleichem Namen`);
+  ok(!m.left && m.name === 'Gislason' && m.news === 'Dvorak und Gislason treffen.' && m.hist === 'Ostergaard' && m.names === 2, 'Umschreiben alter Spielstände: ' + JSON.stringify(m));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Hallen-Legenden: Weidenhammer, Schülein, Richardson und Schörner im Kader, auch in laufenden Karrieren', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 5);
   const NAMES = [['KIE', 'Weidenhammer'], ['COB', 'Schülein'], ['BER', 'Richardson'], ['ERL', 'Schörner']];
