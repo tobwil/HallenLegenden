@@ -2,6 +2,17 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.28: Platzieren lohnt sich
+- **Behoben: Würfe ließen sich kaum platzieren.** Der Torwart kam aus der Mitte an beide Pfosten: Er lief mit 7,5 m/s in die Ecke, und seine Reichweite bei der Parade (rund 1,6 m) war größer als die halbe Torbreite (1,5 m). Auf Profi und Legende traf ein Wurf in die Ecke kaum öfter als einer auf den Torwart. Jetzt ist der Torwart beim Abwehren etwas langsamer (6 m/s), und seine Reichweite deckt nicht mehr beide Pfosten. Eine gut platzierte Ecke erreicht er sichtbar nicht mehr. Die volle Ecke ist dafür riskanter, sie geht öfter knapp daneben.
+- **Zielen mit Pfeilen und Stick:**
+  - Hoch/runter wählt die Ecke, schräge Pfeiltasten (→ + ↑) jetzt ganz statt nur zu 71 %. Am Handy- und Gamepad-Stick reichen 30 % Auslenkung für die volle Ecke, ein leichter Druck gibt ein Stück in diese Richtung.
+  - Ohne hoch/runter, etwa wenn man nur Richtung Tor läuft, geht der Wurf ein Stück in die Ecke weg vom Torwart statt genau auf ihn.
+  - Das Zielkreuz zeigt immer genau, wohin der Wurf geht. Gilt auch beim 7-Meter.
+- **Touch:** Beim Aufladen erinnert „TOR ANTIPPEN = ECKE“ daran, dass Antippen des Tors genau in diese Ecke wirft, auch während WURF gehalten wird.
+- **Wirkung (Profi, aufgeladener Wurf aus dem Rückraum):** nur Richtung Tor 44 % (vorher 37 %), schräg in eine Ecke 50–52 % (vorher 43–48 %), auf Legende 41 % gegen 51 %. Gegenüber einem Wurf genau auf den Torwart (39–43 %) bringt die volle Ecke im Schnitt rund 15 Prozentpunkte, von der Seite vor allem die kurze Ecke. Die lange Ecke von der Seite geht öfter daneben.
+- **Balance:** Die CPU zielt etwas weniger extrem in die Ecken. CPU gegen CPU bleiben es etwa 15 Tore pro Spiel (15,2, vorher 15,6), der Dreher-Abstand bleibt (Dreher-Künstler 74 %, andere 48 %). 7-Meter: CPU 61 % (vorher 55 %), in die Ecke 70 %, auf den Torwart 38 %. Simulierte Karriere-Spiele ändern sich nicht.
+- 1 neuer Regressionstest (Pfeile, schräge Pfeile, Touch-Stick, Zielkreuz gleich Wurf, Ecke mindestens 10 Prozentpunkte besser als Mitte), insgesamt 49. Der Pass-Test wertet Pässe, die an Pfosten oder Torlinie abprallen, nicht mehr als Kurve.
+
 ## v8.27: Der Dreher
 - **Neu: Dreher vom Flügel.** Wurf aufladen und dabei Pass drücken: Tastatur Leertaste halten + S, Gamepad X halten + A, Touch WURF halten + PASS tippen. Der Ball fliegt erst auf den Torwart zu, springt knapp vor ihm auf und dreht dann zur Seite weg. Der Torwart muss den Ball nach dem Aufsprung neu lesen, und den Drall bekommt er schwer zu fassen.
 - **Nur aus spitzem Winkel:** Auf dem Flügel geht der Dreher, aber nicht aus der Ecke an der Torauslinie. Dort passt er nicht ins Tor. Beim Aufladen zeigt der Hinweis über dem Spieler „S=DREHER“ (bzw. A bzw. PASS) nur, wo er möglich ist. An allen anderen Stellen tut Pass beim Aufladen nichts, wie bisher.

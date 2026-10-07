@@ -72,6 +72,9 @@ function aiTarget(p, dt) {
   const [x, y] = defendSpot(p);
   return [x, y, dist(p.x, p.y, x, y) > 3];
 }
+// Torwart beim Abwehren: Tempo, mit dem er in die Ecke kommt, und Reichweite der Parade (dazu Grundreichweite und Torwartwert).
+// So bemessen, dass er aus der Mitte nicht beide Pfosten erreicht: Eine gut platzierte Ecke ist schwerer zu halten als ein Wurf auf ihn
+const GK_DIVE = 6, GK_REACH = 0.6;
 function updateGK(g, dt) {
   const b = G.ball, gx = ownX(g.team), s2 = gx === 0 ? 1 : -1;
   if (b.owner === g) { if (G.human === g.team && G.ctrl === g) return null; const t = aiCarrier(g, dt); return [t[0], t[1], false]; }
@@ -83,7 +86,7 @@ function updateGK(g, dt) {
         let py = b.y + b.vy * t, pz = b.z + b.vz * t - 0.5 * GRAV * t * t;
         if (G.pen && G.pen.gkGuess && G.human === g.team) py = 10 + G.pen.gkGuess * 1.2;       // Spieler-Torwart rät beim 7-Meter
         if (!g.save) { g.save = 0.6; g.saveType = pz < 0.75 ? 'split' : 'star'; }
-        return [g.x, clamp(py, GY1 - 0.4, GY2 + 0.4), true, 7.5];
+        return [g.x, clamp(py, GY1 - 0.4, GY2 + 0.4), true, GK_DIVE];
       }
     }
     return [g.x, g.y, false];
@@ -100,15 +103,15 @@ function humanControl(p, dt) {
     G.inUsedT = G.t;   // Eingaben dieses Frames gehören dem Ballführer, nicht dem nächsten Empfänger
     const buf = G.inBuf && G.inBuf.p === p && G.t - G.inBuf.t < 0.25 ? G.inBuf.k : null; G.inBufK = buf && G.inBuf.kempa; G.inBuf = null;   // vor dem Fangen gedrückt
     if (buf === 'a') { IN.pa = true; IN.k = IN.k || G.inBufK; }
-    else if (buf === 'b' && !p.airCatch && G.phase === 'play') { if (IN.b) IN.pb = true; else { shoot(p, IN.y, 0.3); return [0, 0]; } }
+    else if (buf === 'b' && !p.airCatch && G.phase === 'play') { if (IN.b) IN.pb = true; else { shoot(p, humanAim(p, IN.y), 0.3); return [0, 0]; } }
     else if (buf === 'c') IN.pc = true;
-    if (p.airCatch) { if (IN.pb || p.airT > 0.24) shoot(p, IN.y || null, 0.7); return [0, 0]; }
+    if (p.airCatch) { if (IN.pb || p.airT > 0.24) shoot(p, Math.abs(IN.y) >= 0.3 ? Math.sign(IN.y) : null, 0.7); return [0, 0]; }   // Kempa: ohne Richtung freie Ecke
     if (IN.pa && !p.charging) { if (IN.k && p.role !== 'TW') kempa(p); else pass(p, choosePass(p, IN.x, IN.y, true)); buzz(12); return [IN.x * sp, IN.y * sp]; }
     if (IN.pb && G.phase === 'play') { p.charging = true; p.charge = 0.3; p.aim = IN.y; }            // kurzes Antippen = schneller Wurf
     else if (IN.b && p.charging) { p.charge = Math.min(1, p.charge + dt / 0.8); p.aim = lerp(p.aim || 0, IN.y, Math.min(1, dt * 10)); }
     if (p.charging && IN.pc) { shoot(p, p.aim, p.charge, true); return [0, 0]; }
-    if (p.charging && IN.pa && dreherSpot(p, goalX(p.team))) { shoot(p, p.aim, p.charge, false, true); return [0, 0]; }   // Dreher (nur vom Flügel)
-    if (IN.rb && p.charging && b.owner === p) shoot(p, p.aim, p.charge);
+    if (p.charging && IN.pa && dreherSpot(p, goalX(p.team))) { shoot(p, humanAim(p, p.aim), p.charge, false, true); return [0, 0]; }   // Dreher (nur vom Flügel)
+    if (IN.rb && p.charging && b.owner === p) shoot(p, humanAim(p, p.aim), p.charge);
     else if (IN.pc && !p.charging) feint(p, IN.x, IN.y);
     if (p.role === 'TW' && p.hold > 1.5) pass(p, choosePass(p, 0, 0));
   } else {
@@ -131,7 +134,7 @@ function updatePlayer(p, dt) {
   const ph = G.phase, frozen = ['kickoff', 'penalty', 'goal', 'halftime', 'fulltime', 'whistle', 'timeout', 'intro'].includes(ph);
   let dvx = 0, dvy = 0, sprint = false;
   if (p.z > 0 || p.vz > 0) {
-    if (G.ball.owner === p && p.airCatch && ph === 'play') { const hum = G.human === p.team && G.ctrl === p; if ((hum && IN.pb) || p.airT > (hum ? 0.26 : 0.12)) shoot(p, hum ? (IN.y || null) : null, 0.75); }
+    if (G.ball.owner === p && p.airCatch && ph === 'play') { const hum = G.human === p.team && G.ctrl === p; if ((hum && IN.pb) || p.airT > (hum ? 0.26 : 0.12)) shoot(p, hum && Math.abs(IN.y) >= 0.3 ? Math.sign(IN.y) : null, 0.75); }
     p.vz -= GRAV * dt; p.z += p.vz * dt; p.x += p.vx * dt; p.y += p.vy * dt;
     if (p.z <= 0) {
       p.z = 0; p.vz = 0; p.vx *= 0.4; p.vy *= 0.4;

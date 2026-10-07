@@ -1448,6 +1448,15 @@ function kempa(p) {
   if (G.human === p.team) G.ctrl = q;
   AU.pass(); say(`${p.name} lupft in den Kreis... KEMPA?`, 2);
 }
+// Zielen des Spielers: hoch/runter wählt die Ecke, ab 30 % Auslenkung ganz (Handy-Stick; schräge Pfeiltasten kämen sonst nur auf 71 %).
+// Ohne hoch/runter ein Stück (30 %) Richtung der Ecke, die weiter vom Torwart weg ist: Wer nur aufs Tor zuläuft, wirft nicht genau auf
+// den Torwart, gezieltes Werfen in die Ecke bringt aber deutlich mehr
+function humanAim(p, y) {
+  if (Math.abs(y || 0) >= 0.3) return Math.sign(y);
+  if (Math.abs(y || 0) >= 0.1) return 0.3 * Math.sign(y);   // leicht gedrückt: ein Stück in diese Richtung, nie entgegen
+  const gk = G.goalie[1 - p.team], off = gk && !gk.out ? gk.y - 10 : 0;
+  return 0.3 * (Math.abs(off) > 0.15 ? -Math.sign(off) : p.y < 10 ? 1 : -1);
+}
 // Dreher vom Flügel: Der Ball fliegt erst auf den Torwart zu, springt kurz vor ihm auf und dreht dann zur Seite weg.
 // Nur aus spitzem Winkel, aber nicht aus der Ecke an der Torauslinie (da passt er nicht ins Tor). Dreher-Künstler treffen ihn sicherer
 const dreherSpot = (p, gx) => Math.abs(p.y - 10) > 5 && goalDist(p.x, p.y, gx) < 9.5 && Math.abs(p.x - gx) > 1.2;
@@ -1461,7 +1470,7 @@ function shoot(p, aimY, charge, lob = false, dreher = false) {
   }
   let ty, tz;
   if (aimY === null) {           // KI zielt in die freie Ecke
-    const far = gk.y > 10 ? rnd(9.0, 9.5) : rnd(10.5, 11.0);
+    const far = gk.y > 10 ? rnd(9.2, 9.7) : rnd(10.3, 10.8);
     ty = Math.random() < 0.8 ? far : rnd(9.3, 10.7);
     tz = Math.random() < 0.5 ? rnd(0.25, 0.7) : rnd(1.2, 1.65);
   } else { ty = 10 + clamp(aimY, -1, 1) * 1.25; tz = 0.25 + charge * 1.5; }
@@ -1620,6 +1629,9 @@ function aiTarget(p, dt) {
   const [x, y] = defendSpot(p);
   return [x, y, dist(p.x, p.y, x, y) > 3];
 }
+// Torwart beim Abwehren: Tempo, mit dem er in die Ecke kommt, und Reichweite der Parade (dazu Grundreichweite und Torwartwert).
+// So bemessen, dass er aus der Mitte nicht beide Pfosten erreicht: Eine gut platzierte Ecke ist schwerer zu halten als ein Wurf auf ihn
+const GK_DIVE = 6, GK_REACH = 0.6;
 function updateGK(g, dt) {
   const b = G.ball, gx = ownX(g.team), s2 = gx === 0 ? 1 : -1;
   if (b.owner === g) { if (G.human === g.team && G.ctrl === g) return null; const t = aiCarrier(g, dt); return [t[0], t[1], false]; }
@@ -1631,7 +1643,7 @@ function updateGK(g, dt) {
         let py = b.y + b.vy * t, pz = b.z + b.vz * t - 0.5 * GRAV * t * t;
         if (G.pen && G.pen.gkGuess && G.human === g.team) py = 10 + G.pen.gkGuess * 1.2;       // Spieler-Torwart rät beim 7-Meter
         if (!g.save) { g.save = 0.6; g.saveType = pz < 0.75 ? 'split' : 'star'; }
-        return [g.x, clamp(py, GY1 - 0.4, GY2 + 0.4), true, 7.5];
+        return [g.x, clamp(py, GY1 - 0.4, GY2 + 0.4), true, GK_DIVE];
       }
     }
     return [g.x, g.y, false];
@@ -1648,15 +1660,15 @@ function humanControl(p, dt) {
     G.inUsedT = G.t;   // Eingaben dieses Frames gehören dem Ballführer, nicht dem nächsten Empfänger
     const buf = G.inBuf && G.inBuf.p === p && G.t - G.inBuf.t < 0.25 ? G.inBuf.k : null; G.inBufK = buf && G.inBuf.kempa; G.inBuf = null;   // vor dem Fangen gedrückt
     if (buf === 'a') { IN.pa = true; IN.k = IN.k || G.inBufK; }
-    else if (buf === 'b' && !p.airCatch && G.phase === 'play') { if (IN.b) IN.pb = true; else { shoot(p, IN.y, 0.3); return [0, 0]; } }
+    else if (buf === 'b' && !p.airCatch && G.phase === 'play') { if (IN.b) IN.pb = true; else { shoot(p, humanAim(p, IN.y), 0.3); return [0, 0]; } }
     else if (buf === 'c') IN.pc = true;
-    if (p.airCatch) { if (IN.pb || p.airT > 0.24) shoot(p, IN.y || null, 0.7); return [0, 0]; }
+    if (p.airCatch) { if (IN.pb || p.airT > 0.24) shoot(p, Math.abs(IN.y) >= 0.3 ? Math.sign(IN.y) : null, 0.7); return [0, 0]; }   // Kempa: ohne Richtung freie Ecke
     if (IN.pa && !p.charging) { if (IN.k && p.role !== 'TW') kempa(p); else pass(p, choosePass(p, IN.x, IN.y, true)); buzz(12); return [IN.x * sp, IN.y * sp]; }
     if (IN.pb && G.phase === 'play') { p.charging = true; p.charge = 0.3; p.aim = IN.y; }            // kurzes Antippen = schneller Wurf
     else if (IN.b && p.charging) { p.charge = Math.min(1, p.charge + dt / 0.8); p.aim = lerp(p.aim || 0, IN.y, Math.min(1, dt * 10)); }
     if (p.charging && IN.pc) { shoot(p, p.aim, p.charge, true); return [0, 0]; }
-    if (p.charging && IN.pa && dreherSpot(p, goalX(p.team))) { shoot(p, p.aim, p.charge, false, true); return [0, 0]; }   // Dreher (nur vom Flügel)
-    if (IN.rb && p.charging && b.owner === p) shoot(p, p.aim, p.charge);
+    if (p.charging && IN.pa && dreherSpot(p, goalX(p.team))) { shoot(p, humanAim(p, p.aim), p.charge, false, true); return [0, 0]; }   // Dreher (nur vom Flügel)
+    if (IN.rb && p.charging && b.owner === p) shoot(p, humanAim(p, p.aim), p.charge);
     else if (IN.pc && !p.charging) feint(p, IN.x, IN.y);
     if (p.role === 'TW' && p.hold > 1.5) pass(p, choosePass(p, 0, 0));
   } else {
@@ -1679,7 +1691,7 @@ function updatePlayer(p, dt) {
   const ph = G.phase, frozen = ['kickoff', 'penalty', 'goal', 'halftime', 'fulltime', 'whistle', 'timeout', 'intro'].includes(ph);
   let dvx = 0, dvy = 0, sprint = false;
   if (p.z > 0 || p.vz > 0) {
-    if (G.ball.owner === p && p.airCatch && ph === 'play') { const hum = G.human === p.team && G.ctrl === p; if ((hum && IN.pb) || p.airT > (hum ? 0.26 : 0.12)) shoot(p, hum ? (IN.y || null) : null, 0.75); }
+    if (G.ball.owner === p && p.airCatch && ph === 'play') { const hum = G.human === p.team && G.ctrl === p; if ((hum && IN.pb) || p.airT > (hum ? 0.26 : 0.12)) shoot(p, hum && Math.abs(IN.y) >= 0.3 ? Math.sign(IN.y) : null, 0.75); }
     p.vz -= GRAV * dt; p.z += p.vz * dt; p.x += p.vx * dt; p.y += p.vy * dt;
     if (p.z <= 0) {
       p.z = 0; p.vz = 0; p.vx *= 0.4; p.vy *= 0.4;
@@ -1806,7 +1818,7 @@ function updateBall(dt) {
     const g = G.goalie[1 - b.shot.team];
     if (!g.out && (b.px - g.x) * (b.x - g.x) <= 0) {
       b.shot.gkDone = true;
-      const dy = Math.abs(b.y - g.y), reach = 0.55 + (g.save > 0 ? 0.85 : 0.2) + g.gk / 400 + (g.trait === 'Krake' ? 0.15 : 0);
+      const dy = Math.abs(b.y - g.y), reach = 0.55 + (g.save > 0 ? GK_REACH : 0.2) + g.gk / 400 + (g.trait === 'Krake' ? 0.15 : 0);
       if (dy < reach && b.z < 2.3 && !(b.shot.lob && b.z > 2.0)) {
         let pr = (1 - dy / reach * 0.7) * (0.4 + g.gk / 100 * 0.4) * clamp(1.25 - b.shot.speed / 40, 0.5, 1);
         if (dy < 0.35) pr += 0.15; if (g.trait === 'Reflexmonster') pr += 0.06;
@@ -2003,7 +2015,7 @@ function step(dt) {
       if (G.human === sh.team) {
         G.pen.aim = lerp(G.pen.aim, IN.y, Math.min(1, dt * 8));
         if (IN.b) { sh.charging = true; sh.charge = Math.min(1, sh.charge + dt / 0.8); }
-        if (IN.rb && sh.charging) { shoot(sh, G.pen.aim, sh.charge); G.phase = 'play'; }
+        if (IN.rb && sh.charging) { shoot(sh, humanAim(sh, G.pen.aim), sh.charge); G.phase = 'play'; }
       } else {
         if (G.human >= 0) { if (IN.y < -0.4) G.pen.gkGuess = -1; else if (IN.y > 0.4) G.pen.gkGuess = 1; }
         if ((G.pen.aiT -= dt) <= 0) { shoot(sh, pick([-1, 1, 0.5, -0.5, 0]), rnd(0.45, 0.95)); G.phase = 'play'; }
@@ -2329,11 +2341,12 @@ function hud() {
     if (c.charging) {
       rect(x - 16, y - 62, 32, 5, OUTLINE); rect(x - 15, y - 61, Math.round(30 * c.charge), 3, c.charge > 0.92 ? '#ff4f3a' : c.charge > 0.6 ? '#ffc83a' : '#9cff57');
       // Zielkreuz am Tor
-      const gx = goalX(c.team), ty = 10 + clamp(c.aim || 0, -1, 1) * 1.25, tz = 0.25 + c.charge * 1.5;
+      const gx = goalX(c.team), ty = 10 + humanAim(c, c.aim) * 1.25, tz = 0.25 + c.charge * 1.5;   // genau dorthin geht der Wurf
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
       text(usePad() ? 'B=HEBER' : TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
       if (dreherSpot(c, gx)) text(usePad() ? 'A=DREHER' : TOUCHDEV ? 'PASS=DREHER' : 'S=DREHER', x, y - 92, '#ff8bd1', 8, 'center');   // nur wo er geht
+      else if (TOUCHDEV && !usePad()) text('TOR ANTIPPEN = ECKE', x, y - 92, '#ffc83a', 8, 'center');   // genauer als der Stick
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
@@ -2347,7 +2360,7 @@ function hud() {
   if (G.phase === 'penalty' && G.pen) {
     const sh = G.pen.shooter, gx = goalX(sh.team);
     if (G.human === sh.team) {
-      const ty = 10 + G.pen.aim * 1.25, tz = 0.25 + sh.charge * 1.5, rx = sx(gx, ty), ry = sy(ty, tz);
+      const ty = 10 + humanAim(sh, G.pen.aim) * 1.25, tz = 0.25 + sh.charge * 1.5, rx = sx(gx, ty), ry = sy(ty, tz);
       rect(rx - 6, ry, 4, 1, '#ffc83a'); rect(rx + 3, ry, 4, 1, '#ffc83a'); rect(rx, ry - 6, 1, 4, '#ffc83a'); rect(rx, ry + 3, 1, 4, '#ffc83a');
       banner7('ZIELEN: HOCH/RUNTER · K HALTEN & LOSLASSEN');
     } else if (G.human >= 0) {
@@ -2632,14 +2645,14 @@ const ACT = {
       <b>W / SHIFT</b><span>Sprinten (kostet Puste)</span>
       <b>S</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: Spieler wechseln. Erst zum ballnächsten, jedes weitere Drücken zum nächstnäheren. Ohne Wechseltaste steuerst du automatisch den ballnächsten Spieler</span>
       <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: wie S</span>
-      <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe). Auf dem Flügel beim Aufladen S = Dreher: Der Ball springt vor dem Torwart auf und dreht weg, am besten können das Dreher-Künstler · Abwehr: Blocksprung</span>
+      <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt, wohin der Wurf geht: hoch/runter (auch schräg) = ganz in diese Ecke, ohne hoch/runter ein Stück in die Ecke weg vom Torwart, Aufladen = Höhe. Platzierte Ecken hält der Torwart schwerer. Auf dem Flügel beim Aufladen S = Dreher: Der Ball springt vor dem Torwart auf und dreht weg, am besten können das Dreher-Künstler · Abwehr: Blocksprung</span>
       <b>D</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
       <b>Q</b><span>Wechselmenü</span>
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
       <b>GAMEPAD</b><span>A Pass (beim Aufladen auf dem Flügel: Dreher) · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler und Listen, Trikotfarbe: A, dann links/rechts</span>
-      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht, dazu PASS = Dreher vom Flügel), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
+      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht, Stick hoch/runter = Ecke, dazu PASS = Dreher vom Flügel), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf genau in diese Ecke (auch beim Aufladen), in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
   },
