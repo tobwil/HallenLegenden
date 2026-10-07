@@ -160,14 +160,14 @@ const ACT = {
       <b>W / SHIFT</b><span>Sprinten (kostet Puste)</span>
       <b>S</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: Spieler wechseln. Erst zum ballnächsten, jedes weitere Drücken zum nächstnäheren. Ohne Wechseltaste steuerst du automatisch den ballnächsten Spieler</span>
       <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: wie S</span>
-      <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe) · Abwehr: Blocksprung</span>
+      <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe). Auf dem Flügel beim Aufladen S = Dreher: Der Ball springt vor dem Torwart auf und dreht weg, am besten können das Dreher-Künstler · Abwehr: Blocksprung</span>
       <b>D</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
       <b>Q</b><span>Wechselmenü</span>
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
-      <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler und Listen, Trikotfarbe: A, dann links/rechts</span>
-      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
+      <b>GAMEPAD</b><span>A Pass (beim Aufladen auf dem Flügel: Dreher) · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler und Listen, Trikotfarbe: A, dann links/rechts</span>
+      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht, dazu PASS = Dreher vom Flügel), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
   },

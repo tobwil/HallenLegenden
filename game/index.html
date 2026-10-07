@@ -1448,9 +1448,13 @@ function kempa(p) {
   if (G.human === p.team) G.ctrl = q;
   AU.pass(); say(`${p.name} lupft in den Kreis... KEMPA?`, 2);
 }
-function shoot(p, aimY, charge, lob = false) {
+// Dreher vom Flügel: Der Ball fliegt erst auf den Torwart zu, springt kurz vor ihm auf und dreht dann zur Seite weg.
+// Nur aus spitzem Winkel, aber nicht aus der Ecke an der Torauslinie (da passt er nicht ins Tor). Dreher-Künstler treffen ihn sicherer
+const dreherSpot = (p, gx) => Math.abs(p.y - 10) > 5 && goalDist(p.x, p.y, gx) < 9.5 && Math.abs(p.x - gx) > 1.2;
+function shoot(p, aimY, charge, lob = false, dreher = false) {
   const b = G.ball, gx = goalX(p.team), s = sgn(p.team), gk = G.goalie[1 - p.team];
   const d = goalDist(p.x, p.y, gx), wing = Math.abs(p.y - 10) > 6 && d < 9.5, close = d < 7.6;
+  dreher = dreher && !lob && dreherSpot(p, gx); const artist = p.trait === 'Dreher-Künstler';
   if (p.z <= 0.01 && G.phase !== 'penalty') {
     if (wing || close) { p.vz = 2.9; p.vx = s * 3.2; p.vy = (10 - p.y) * 0.25; p.fallShot = true; }
     else { p.vz = 3.9; p.vx = s * 1.7 + p.vx * 0.3; p.vy *= 0.3; p.shotJump = true; }
@@ -1465,11 +1469,17 @@ function shoot(p, aimY, charge, lob = false) {
   let err = (0.06 + d * 0.022) * (1.45 - p.att / 100) * (press < 1.2 ? 1.6 : 1) * (p.st < 0.25 ? 1.35 : 1) * (charge > 0.92 ? 1.3 : 1) * (p.energy < 0.5 ? 1.25 : 1) * (p.team === G.human && TOUCHDEV ? 0.8 : 1);
   if (G.phase === 'penalty') err *= 0.55;
   if (p.trait === 'Kanonier') err *= 0.85;
+  if (dreher) { err *= artist ? 0.85 : 1.45; tz = rnd(0.45, 1.1); }   // Höhe nach dem Aufsprung
   ty += rnd(-1, 1) * err * 1.3; tz = Math.max(0.05, tz + rnd(-1, 1) * err * 0.8);
   let speed = 15 + charge * 10 + p.att / 100 * 4 + (p.trait === 'Kanonier' ? 3 : 0);
   if (lob) { speed = 8.5; tz = rnd(1.55, 1.85); ty = 10 + rnd(-0.6, 0.6); }
-  launch(p.x + s * 0.3, p.y, p.z + 2.1, gx + s * 0.15, ty, tz, speed);
-  b.shot = { by: p, team: p.team, speed, d, gkDone: false, lob, react: rnd(0.08, 0.2) * (1.3 - gk.gk / 200) * (G.human === gk.team ? 1 : DIFF[G.diff].react) * (lob ? 2.2 : 1), blocked: new Set() };
+  const react = rnd(0.08, 0.2) * (1.3 - gk.gk / 200) * (G.human === gk.team ? 1 : DIFF[G.diff].react);
+  if (dreher) {   // erst Richtung Torwart, Aufsprung knapp 1 m vor ihm
+    const gkOut = gk.out ? 0.5 : Math.abs(gk.x - gx), pre = clamp(gk.out ? 10 : gk.y, GY1 + 0.3, GY2 - 0.3), f = clamp(1 - (gkOut + 0.9) / Math.abs(p.x - gx), 0.4, 0.8);
+    launch(p.x + s * 0.3, p.y, p.z + 2.1, lerp(p.x, gx, f), lerp(p.y, pre, f), 0, speed * 0.9);
+  } else launch(p.x + s * 0.3, p.y, p.z + 2.1, gx + s * 0.15, ty, tz, speed);
+  b.shot = { by: p, team: p.team, speed, d, gkDone: false, lob, react: react * (lob ? 2.2 : 1), blocked: new Set() };
+  if (dreher) Object.assign(b.shot, { ty, tz, sp2: speed * (artist ? 0.8 : 0.72), spin: artist ? 1 : 0.4, react2: react });
   if (d > 12) b.shot.react *= 0.45;
   // Statistik: 7-Meter, Tempogegenstoß (kurz nach Ballgewinn im laufenden Spiel), Vorlage (letzter Pass eines Mitspielers)
   b.shot.pen = !!(G.pen && G.pen.shooter === p && !G.shootout); b.shot.fb = !G.pen && G.possSrc === 'live' && G.possT < 4.5; b.shot.assist = p.assistFrom || null;
@@ -1562,7 +1572,7 @@ function aiCarrier(p, dt) {
         (G.possT > 24 && d < 12 && r < 0.5) || (d < 11.5 && lane > 2.2 && r < 0.28) || (p.trait === 'Kanonier' && d < 11 && lane > 1.4 && r < 0.4)) {
       const gk = G.goalie[1 - p.team];
       if (d < 8.5 && Math.abs(gk.x - ownX(gk.team)) > 1.4 && Math.random() < 0.3) shoot(p, null, 0.5, true);
-      else shoot(p, null, clamp(rnd(0.25, 1.05), 0, 1));
+      else shoot(p, null, clamp(rnd(0.25, 1.05), 0, 1), false, dreherSpot(p, gx) && Math.random() < (p.trait === 'Dreher-Künstler' ? 0.4 : 0.08));
       return [p.x, p.y, false];
     }
     if (press < 1.3 && r < 0.12 * p.att / 80) feint(p, 0, Math.random() < 0.5 ? -1 : 1);
@@ -1645,6 +1655,7 @@ function humanControl(p, dt) {
     if (IN.pb && G.phase === 'play') { p.charging = true; p.charge = 0.3; p.aim = IN.y; }            // kurzes Antippen = schneller Wurf
     else if (IN.b && p.charging) { p.charge = Math.min(1, p.charge + dt / 0.8); p.aim = lerp(p.aim || 0, IN.y, Math.min(1, dt * 10)); }
     if (p.charging && IN.pc) { shoot(p, p.aim, p.charge, true); return [0, 0]; }
+    if (p.charging && IN.pa && dreherSpot(p, goalX(p.team))) { shoot(p, p.aim, p.charge, false, true); return [0, 0]; }   // Dreher (nur vom Flügel)
     if (IN.rb && p.charging && b.owner === p) shoot(p, p.aim, p.charge);
     else if (IN.pc && !p.charging) feint(p, IN.x, IN.y);
     if (p.role === 'TW' && p.hold > 1.5) pass(p, choosePass(p, 0, 0));
@@ -1776,17 +1787,19 @@ function updateBall(dt) {
     return;
   }
   const spd = Math.hypot(b.vx, b.vy);
-  if (spd > 15) { b.trail.push([b.x, b.y, b.z]); if (b.trail.length > 7) b.trail.shift(); } else if (b.trail.length) b.trail.shift();
+  if (spd > 15 || (b.shot && b.shot.spin)) { b.trail.push([b.x, b.y, b.z]); if (b.trail.length > 7) b.trail.shift(); } else if (b.trail.length) b.trail.shift();
   if (G.phase !== 'play') {
     b.vx *= 0.92; b.vy *= 0.92; b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z = Math.max(0, b.z + b.vz * dt); if (b.z === 0) b.vz = Math.abs(b.vz) > 2 ? -b.vz * 0.4 : 0;
     if (G.phase === 'goal') { const gx = b.x < 20 ? 0 : CW; b.x = gx === 0 ? Math.max(b.x, -0.9) : Math.min(b.x, CW + 0.9); }
     return;
   }
   b.ncT -= dt;
-  b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
+  const ay = b.shot && b.shot.ay ? b.shot.ay * dt * 0.5 : 0;   // Drall des Drehers (halb vor, halb nach dem Schritt: landet genau im Ziel)
+  b.vy += ay; b.vz -= GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt; b.vy += ay;
   if (b.z <= 0) {
     b.z = 0;
-    if (b.vz < -1.2) { b.vz = -b.vz * 0.55; b.vx *= 0.82; b.vy *= 0.82; AU.bounce(); G.parts.push(...burst(b.x, b.y, 0, '#cfc6b0', 3)); if (b.shot && Math.abs(b.vx) < 6) b.shot = null; }
+    if (b.shot && b.shot.spin && !b.shot.bounced) bounceShot(b);
+    else if (b.vz < -1.2) { b.vz = -b.vz * 0.55; b.vx *= 0.82; b.vy *= 0.82; AU.bounce(); G.parts.push(...burst(b.x, b.y, 0, '#cfc6b0', 3)); if (b.shot && Math.abs(b.vx) < 6) b.shot = null; }
     else { b.vz = 0; const f = Math.max(0, 1 - 1.6 * dt); b.vx *= f; b.vy *= f; b.passTo = null; b.lob = false; }
   }
   if (b.shot && !b.shot.gkDone) {
@@ -1797,6 +1810,7 @@ function updateBall(dt) {
       if (dy < reach && b.z < 2.3 && !(b.shot.lob && b.z > 2.0)) {
         let pr = (1 - dy / reach * 0.7) * (0.4 + g.gk / 100 * 0.4) * clamp(1.25 - b.shot.speed / 40, 0.5, 1);
         if (dy < 0.35) pr += 0.15; if (g.trait === 'Reflexmonster') pr += 0.06;
+        if (b.shot.spin) pr *= 1 - 0.5 * b.shot.spin;   // Drall des Drehers: schwer zu greifen, beim Dreher-Künstler besonders
         pr += clamp((b.shot.d - 12) / 6, 0, 0.6);            // Fernwürfe sieht der Torwart kommen
         if (G.pen && G.pen.gkGuess && G.human === g.team) pr = Math.sign(b.y - 10) === Math.sign(G.pen.gkGuess) || Math.abs(b.y - 10) < 0.5 ? 0.85 : 0.05;
         if (Math.random() < pr) return save(g);
@@ -1862,6 +1876,15 @@ function updateBall(dt) {
     G.phase = 'whistle'; G.phaseT = 0; b.shot = null; b.vx *= 0.2; b.vy *= 0.2;
   }
 }
+// Dreher am Boden: neu Richtung Tor, etwas langsamer. Der Torwart muss den Ball neu lesen (kurz keine Reaktion),
+// der Drall zieht den Ball zur Seite, die Flugbahn ist für ihn schwer vorherzusehen
+function bounceShot(b) {
+  const sh = b.shot, gx = goalX(sh.team), t = Math.max(Math.hypot(gx - b.x, sh.ty - b.y) / sh.sp2, 0.12), dy = sh.ty - b.y;
+  sh.bounced = true; sh.speed = sh.sp2; sh.react = sh.react2;
+  b.vx = (gx - b.x) / t; b.vz = (sh.tz + 0.5 * GRAV * t * t) / t;
+  b.vy = dy * (1 - 0.65 * sh.spin) / t; sh.ay = 2 * (dy - b.vy * t) / (t * t);
+  AU.bounce(); G.parts.push(...burst(b.x, b.y, 0, '#ff8bd1', 9));
+}
 function save(g) {
   const b = G.ball, sh = b.shot; G.stats.saves[g.team]++; g.saves++;
   banner('GEHALTEN!', '#ffc83a', g.name, 1, true); AU.save(); AU.crowd(0.22, 0.4); G.shake = 0.15; G.slowT = 0.45; G.flash = 0.25;
@@ -1876,7 +1899,7 @@ function scoreGoal(team, gx) {
   if (G.shootout) { AU.net(); G.netKick[gx === 0 ? 0 : 1] = 1; G.ball.shot = null; G.ball.vx *= 0.2; return soResolve(true); }
   const b = G.ball, sc = b.last && b.last.team === team ? b.last : null, shot = b.shot;
   G.score[team]++; G.stats.goals[team]++; G.phase = 'goal'; G.phaseT = 0; G.lastScorer = sc; G.lastConcede = 1 - team;
-  G.replay = G.rec.slice(); G.rec = []; G.replayMeta = { scorer: sc, kempa: G.kempa && G.kempa.to === sc };
+  G.replay = G.rec.slice(); G.rec = []; G.replayMeta = { scorer: sc, kempa: G.kempa && G.kempa.to === sc, dreher: !!(shot && shot.spin) };
   b.shot = null; b.vx *= 0.25; b.vy *= 0.3; G.netKick[gx === 0 ? 0 : 1] = 1;
   const k = kit(team), wasPen = !!G.pen; G.pen = null;
   if (sc) sc.goals++;
@@ -1886,14 +1909,15 @@ function scoreGoal(team, gx) {
   if (sc && shot && shot.assist && shot.assist !== sc && shot.assist.team === team) shot.assist.as = (shot.assist.as || 0) + 1;
   const gkC = G.goalie[1 - team]; if (gkC) gkC.ga = (gkC.ga || 0) + 1;
   const kempaGoal = G.kempa && G.kempa.to === sc; G.kempa = null;
-  const title = !sc ? 'EIGENTOR' : kempaGoal ? 'KEMPA-TOR!' : wasPen ? 'VERWANDELT!' : 'TOR!';
+  const dreher = !!(sc && shot && shot.spin), title = !sc ? 'EIGENTOR' : kempaGoal ? 'KEMPA-TOR!' : wasPen ? 'VERWANDELT!' : dreher ? 'DREHER!' : 'TOR!';
   banner(title, k.c1, sc ? `#${sc.num} ${sc.name}` : TEAMS[G.tid[team]].n, 2.1, true);
   G.cut = sc ? { kind: 'goal', p: sc, t: 0, dur: 2.4, title, col: k.c1 } : null;
   ledFlash(`TOR  ${TEAMS[G.tid[team]].short.toUpperCase()}  ${G.score[0]}:${G.score[1]}`, k.c1 === '#f4f4f0' ? '#ffffff' : k.c1, 4);
   AU.net(); AU.horn(); buzz(60); AU.cheer(team === 0 ? 1 : 0.55); AU.jingle('goal'); AU.exc = 1; G.shake = 0.5; G.excite = 3.5; G.flash = 0.4; G.wave = G.score[team] % 5 === 0 ? 6 : G.wave;
   G.parts.push(...confetti(gx, [k.c1, k.c2, '#ffffff', '#ffc83a']));
   const s = `${G.score[0]}:${G.score[1]}`;
-  say(sc ? pick([`${sc.name} trifft zum ${s}!`, `Tor durch ${sc.name}! Es steht ${s}.`, `Eiskalt, ${sc.name}! ${s}.`, `Der sitzt! ${sc.name}, ${s}.`, `Unhaltbar! ${sc.name} zum ${s}.`]) : `Eigentor! ${s}.`);
+  if (dreher) say(pick([`Was für ein Dreher von ${sc.name}! ${s}.`, `${sc.name} dreht ihn rein, ${s}!`, `Der Ball dreht am Torwart vorbei! ${s}.`]));
+  else say(sc ? pick([`${sc.name} trifft zum ${s}!`, `Tor durch ${sc.name}! Es steht ${s}.`, `Eiskalt, ${sc.name}! ${s}.`, `Der sitzt! ${sc.name}, ${s}.`, `Unhaltbar! ${sc.name} zum ${s}.`]) : `Eigentor! ${s}.`);
   G.log.push({ team, name: sc ? sc.name : 'Eigentor', min: Math.floor(gameMinute()) });
   if (sc && !G.demo && AU.vol.speaker) { const line = team === 0 ? `Tor für ${TEAMS[G.tid[0]].short}! Torschütze mit der Nummer ${sc.num}: ${sc.name}! Es steht ${G.score[0]} zu ${G.score[1]}.` : `Tor für die Gäste. Nummer ${sc.num}, ${sc.name}. ${G.score[0]} zu ${G.score[1]}.`; setTimeout(() => AU.say(line), 900); }
 }
@@ -2309,6 +2333,7 @@ function hud() {
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
       text(usePad() ? 'B=HEBER' : TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
+      if (dreherSpot(c, gx)) text(usePad() ? 'A=DREHER' : TOUCHDEV ? 'PASS=DREHER' : 'S=DREHER', x, y - 92, '#ff8bd1', 8, 'center');   // nur wo er geht
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
@@ -2388,7 +2413,7 @@ function replayHud() {
   if (Math.floor(G.t * 2) % 2) rect(12, 8, 8, 8, '#e2372f');
   text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', hudR() - 12, 8, '#9b90ad', 8, 'right', null);
   text(`${usePad() ? 'A' : TOUCHDEV ? 'TIPPEN' : 'TASTE'} = WEITER`, W - 12, H - 16, '#9b90ad', 8, 'right', null);
-  const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
+  const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : m.dreher ? 'DREHER' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
   const yy = (G.t * 90) % H; rect(0, yy, W, 2, 'rgba(255,255,255,0.07)');
   for (let i = 0; i < 30; i++) rect(Math.random() * W, 24 + Math.random() * (H - 48), 1, 1, 'rgba(255,255,255,0.25)');
 }
@@ -2607,14 +2632,14 @@ const ACT = {
       <b>W / SHIFT</b><span>Sprinten (kostet Puste)</span>
       <b>S</b><span>Angriff: Pass in Laufrichtung (ohne Richtung zum besten freien Mitspieler) · Abwehr: Spieler wechseln. Erst zum ballnächsten, jedes weitere Drücken zum nächstnäheren. Ohne Wechseltaste steuerst du automatisch den ballnächsten Spieler</span>
       <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: wie S</span>
-      <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe) · Abwehr: Blocksprung</span>
+      <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt die Ecke (hoch/runter = Seite, Aufladen = Höhe). Auf dem Flügel beim Aufladen S = Dreher: Der Ball springt vor dem Torwart auf und dreht weg, am besten können das Dreher-Künstler · Abwehr: Blocksprung</span>
       <b>D</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
       <b>Q</b><span>Wechselmenü</span>
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
-      <b>GAMEPAD</b><span>A Pass · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler und Listen, Trikotfarbe: A, dann links/rechts</span>
-      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
+      <b>GAMEPAD</b><span>A Pass (beim Aufladen auf dem Flügel: Dreher) · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler und Listen, Trikotfarbe: A, dann links/rechts</span>
+      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht, dazu PASS = Dreher vom Flügel), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
   },

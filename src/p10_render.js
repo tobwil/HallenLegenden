@@ -134,6 +134,7 @@ function hud() {
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
       text(usePad() ? 'B=HEBER' : TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
+      if (dreherSpot(c, gx)) text(usePad() ? 'A=DREHER' : TOUCHDEV ? 'PASS=DREHER' : 'S=DREHER', x, y - 92, '#ff8bd1', 8, 'center');   // nur wo er geht
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
@@ -213,7 +214,7 @@ function replayHud() {
   if (Math.floor(G.t * 2) % 2) rect(12, 8, 8, 8, '#e2372f');
   text('WIEDERHOLUNG', 26, 8, '#f3ead6', 8, 'left', null); text('ZEITLUPE', hudR() - 12, 8, '#9b90ad', 8, 'right', null);
   text(`${usePad() ? 'A' : TOUCHDEV ? 'TIPPEN' : 'TASTE'} = WEITER`, W - 12, H - 16, '#9b90ad', 8, 'right', null);
-  const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
+  const m = G.replayMeta || {}; if (m.scorer) text(`${m.kempa ? 'KEMPA-TOR' : m.dreher ? 'DREHER' : 'TOR'}: #${m.scorer.num} ${m.scorer.name.toUpperCase()}`, 12, H - 16, '#ffc83a', 8, 'left', null);
   const yy = (G.t * 90) % H; rect(0, yy, W, 2, 'rgba(255,255,255,0.07)');
   for (let i = 0; i < 30; i++) rect(Math.random() * W, 24 + Math.random() * (H - 48), 1, 1, 'rgba(255,255,255,0.25)');
 }
