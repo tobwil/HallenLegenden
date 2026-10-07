@@ -2,6 +2,11 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.29: App Store und Copyright
+- **Startseite:** Die Plattform-Leiste zeigt BROWSER, APP STORE (Link zur kostenlosen App für iPhone und iPad) und KONSOLE COMING SOON. Der Schlusstext, der Abschnitt „Auf jedem Gerät“ und zwei FAQ-Antworten nennen die App mit Link. Auch die strukturierten Daten für Suchmaschinen nennen sie (Plattformen iOS und iPadOS, App-Store-Link). Klicks auf den App-Store-Link zählt Umami als `appstore-klick` mit Ort.
+- **Copyright:** © 2026 Tobias Wilhelm statt tobwil auf dem Titelbildschirm, im Footer der Startseite, in LICENSE und README. Der GitHub-Name tobwil bleibt in Links.
+- README (deutsch und englisch) nennt die App. Der Plattform-Test prüft die neue Copyright-Zeile.
+
 ## v8.28: Platzieren lohnt sich
 - **Behoben: Würfe ließen sich kaum platzieren.** Der Torwart kam aus der Mitte an beide Pfosten: Er lief mit 7,5 m/s in die Ecke, und seine Reichweite bei der Parade (rund 1,6 m) war größer als die halbe Torbreite (1,5 m). Auf Profi und Legende traf ein Wurf in die Ecke kaum öfter als einer auf den Torwart. Jetzt ist der Torwart beim Abwehren etwas langsamer (6 m/s), und seine Reichweite deckt nicht mehr beide Pfosten. Eine gut platzierte Ecke erreicht er sichtbar nicht mehr. Die volle Ecke ist dafür riskanter, sie geht öfter knapp daneben.
 - **Zielen mit Pfeilen und Stick:**

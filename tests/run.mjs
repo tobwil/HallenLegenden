@@ -48,7 +48,7 @@ test('Plattform-Schnittstelle: eigener Speicher, Ereignisse, BEENDEN und Copyrig
   // Browser ohne Hülle: kein BEENDEN, Standard-Zeile
   const web = await open(DESKTOP);
   const w = await web.page.evaluate(() => { const legal = menu.querySelectorAll('.legal')[1].innerText; ACT.main(); return { legal, quit: !!menu.querySelector('[data-act="exitGame"]'), name: PLATFORM.name }; });
-  ok(w.name === 'web' && !w.quit && w.legal.includes('tobwil'), 'Browser: ' + JSON.stringify(w)); ok(!web.errors.length, web.errors.join('; ')); await web.ctx.close();
+  ok(w.name === 'web' && !w.quit && w.legal.includes('© 2026 Tobias Wilhelm'), 'Browser: ' + JSON.stringify(w)); ok(!web.errors.length, web.errors.join('; ')); await web.ctx.close();
   // mit Hülle: Speicher in einer Map (vorbelegte Einstellungen), Ereignisse mitschreiben
   const ctx = await browser.newContext(DESKTOP);
   await ctx.addInitScript(() => {

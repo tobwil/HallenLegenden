@@ -41,7 +41,7 @@ Retro-Handball im Pixel-Look, inspiriert von *Legend Bowl*. Ein komplettes Brows
 
 **▶ Spielen: [hallenlegenden.de](https://hallenlegenden.de/)** · Wünsche und Ideen: [Wunsch-Formular](https://hallenlegenden.de/#wunsch)
 
-Läuft am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerung (Querformat empfohlen, das Spielfeld nutzt auch breite Handys bis an den Rand). Offline geht es auch: `game/index.html` herunterladen und im Browser öffnen.
+Läuft im Browser am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Touch-Steuerung (Querformat empfohlen, das Spielfeld nutzt auch breite Handys bis an den Rand). Für iPhone und iPad gibt es Hallen-Legenden auch kostenlos [im App Store](https://apps.apple.com/de/app/hallen-legenden/id6819399214). Offline geht es auch: `game/index.html` herunterladen und im Browser öffnen.
 
 > Inoffizielles Fan-Projekt. Vereins- und Spielernamen sind Fantasienamen. Es gibt keine Logos und keine Verbindung zu einer Liga oder einem Verein. Im Editor lassen sich alle Namen und Farben lokal im eigenen Browser ändern.
 
@@ -193,25 +193,25 @@ Die alte Adresse [tobwil.github.io/HallenLegenden](https://tobwil.github.io/Hall
 
 ### Entstehung
 
-Das Spiel hat **tobwil** im Dialog mit Claude (Anthropic) in Claude Code entwickelt: von einer ersten Version mit fiktiven Teams über die Pixel-Halle, die Ligen 2026/27 und den Manager-Modus bis zur Touch-Steuerung. Den Verlauf mit allen Wünschen, Entscheidungen und Tests beschreibt [docs/ENTWICKLUNG.md](docs/ENTWICKLUNG.md), die Versionen stehen in [CHANGELOG.md](CHANGELOG.md).
+Das Spiel hat **Tobias Wilhelm** ([tobwil](https://github.com/tobwil)) im Dialog mit Claude (Anthropic) in Claude Code entwickelt: von einer ersten Version mit fiktiven Teams über die Pixel-Halle, die Ligen 2026/27 und den Manager-Modus bis zur Touch-Steuerung. Den Verlauf mit allen Wünschen, Entscheidungen und Tests beschreibt [docs/ENTWICKLUNG.md](docs/ENTWICKLUNG.md), die Versionen stehen in [CHANGELOG.md](CHANGELOG.md).
 
 ### Lizenz, Name und Namensnennung
 
-Der Code steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE), © 2026 [tobwil](https://github.com/tobwil). Der Quellcode ist offen einsehbar, das Spiel ist aber nicht für kommerzielle Zwecke freigegeben.
+Der Code steht unter der [PolyForm Noncommercial License 1.0.0](LICENSE), © 2026 Tobias Wilhelm ([tobwil](https://github.com/tobwil)). Der Quellcode ist offen einsehbar, das Spiel ist aber nicht für kommerzielle Zwecke freigegeben.
 
-**Erlaubt** ist alles, was nicht kommerziell ist: das Spiel spielen, den Code lesen und daraus lernen, ihn verändern, eigene Versionen bauen und kostenlos weitergeben. Auch gemeinnützige Organisationen, Schulen, Vereine und Hochschulen dürfen es nutzen. **Bedingung:** Der Urheberhinweis „Copyright (c) 2026 tobwil“ und der Lizenztext (oder der Link darauf) müssen in allen Kopien und abgeleiteten Versionen erhalten bleiben.
+**Erlaubt** ist alles, was nicht kommerziell ist: das Spiel spielen, den Code lesen und daraus lernen, ihn verändern, eigene Versionen bauen und kostenlos weitergeben. Auch gemeinnützige Organisationen, Schulen, Vereine und Hochschulen dürfen es nutzen. **Bedingung:** Der Urheberhinweis „Copyright (c) 2026 Tobias Wilhelm“ und der Lizenztext (oder der Link darauf) müssen in allen Kopien und abgeleiteten Versionen erhalten bleiben.
 
-**Nicht erlaubt** ist jede kommerzielle Nutzung, zum Beispiel das Spiel oder eine darauf basierende Version zu verkaufen, in einem App-Store gegen Geld oder mit Werbung und In-App-Käufen anzubieten oder in ein kommerzielles Produkt einzubauen. Wer das vorhat, braucht eine eigene Lizenz von tobwil (Kontakt über das [Impressum](https://hallenlegenden.de/impressum.html)).
+**Nicht erlaubt** ist jede kommerzielle Nutzung, zum Beispiel das Spiel oder eine darauf basierende Version zu verkaufen, in einem App-Store gegen Geld oder mit Werbung und In-App-Käufen anzubieten oder in ein kommerzielles Produkt einzubauen. Wer das vorhat, braucht eine eigene Lizenz von Tobias Wilhelm (Kontakt über das [Impressum](https://hallenlegenden.de/impressum.html)).
 
 Versionen bis einschließlich v8.11 wurden unter der MIT-Lizenz veröffentlicht. Für Kopien dieser älteren Versionen gilt weiterhin die MIT-Lizenz, für alle späteren Versionen gilt die PolyForm Noncommercial License.
 
-**Name und Logo sind von der Lizenz ausgenommen.** Der Name „Hallen-Legenden“ und das Logo (der Schriftzug des Spiels) gehören nicht zum lizenzierten Code und bleiben tobwil vorbehalten. Das gilt auch für andere Schreibweisen und verwechselbare Abwandlungen, zum Beispiel „Hallenlegenden“, „Hallen Legenden“, „Legenden der Halle“, „Hall Legends“ oder „Hallen-Legenden 2“, und für die Domain hallenlegenden.de.
+**Name und Logo sind von der Lizenz ausgenommen.** Der Name „Hallen-Legenden“ und das Logo (der Schriftzug des Spiels) gehören nicht zum lizenzierten Code und bleiben Tobias Wilhelm vorbehalten. Das gilt auch für andere Schreibweisen und verwechselbare Abwandlungen, zum Beispiel „Hallenlegenden“, „Hallen Legenden“, „Legenden der Halle“, „Hall Legends“ oder „Hallen-Legenden 2“, und für die Domain hallenlegenden.de.
 
 Wer eine veränderte Version veröffentlicht (zum Beispiel als Website, App oder Download):
 - muss ihr einen anderen Namen geben, der sich klar von „Hallen-Legenden“ unterscheidet,
-- darf nicht den Eindruck erwecken, es handle sich um das offizielle Spiel oder um eine von tobwil unterstützte Version.
+- darf nicht den Eindruck erwecken, es handle sich um das offizielle Spiel oder um eine von Tobias Wilhelm unterstützte Version.
 
-Erlaubt und erwünscht ist ein Hinweis auf die Herkunft, etwa *„Basiert auf Hallen-Legenden von tobwil“* mit Link auf dieses Repository. Ein Fork hier auf GitHub, um Änderungen beizutragen oder auszuprobieren, darf den Namen des Repositorys behalten.
+Erlaubt und erwünscht ist ein Hinweis auf die Herkunft, etwa *„Basiert auf Hallen-Legenden von Tobias Wilhelm“* mit Link auf dieses Repository. Ein Fork hier auf GitHub, um Änderungen beizutragen oder auszuprobieren, darf den Namen des Repositorys behalten.
 
 ---
 
@@ -223,7 +223,7 @@ Retro handball in pixel style, inspired by *Legend Bowl*. A complete browser gam
 
 **▶ Play: [hallenlegenden.de](https://hallenlegenden.de/)** · Ideas and requests: [feature request form](https://hallenlegenden.de/#wunsch) (German)
 
-Runs on desktop with keyboard or gamepad and on phones with touch controls (landscape recommended; the pitch fills wide phone screens edge to edge). Works offline too: download `game/index.html` and open it in your browser.
+Runs in the browser on desktop with keyboard or gamepad and on phones with touch controls (landscape recommended; the pitch fills wide phone screens edge to edge). For iPhone and iPad, Hallen-Legenden is also free [on the App Store](https://apps.apple.com/de/app/hallen-legenden/id6819399214). Works offline too: download `game/index.html` and open it in your browser.
 
 The game itself is in **German** (menus, commentary, newspaper). The controls below are all you need to get started.
 
@@ -377,22 +377,22 @@ The old address [tobwil.github.io/HallenLegenden](https://tobwil.github.io/Halle
 
 ### Background
 
-**tobwil** developed the game in conversation with Claude (Anthropic) in Claude Code: from a first version with fictional teams, through the pixel arena, the 2026/27 leagues and the manager mode, to touch controls. The full history with all requests, decisions and tests is in [docs/ENTWICKLUNG.md](docs/ENTWICKLUNG.md), the versions are listed in [CHANGELOG.md](CHANGELOG.md).
+**Tobias Wilhelm** ([tobwil](https://github.com/tobwil)) developed the game in conversation with Claude (Anthropic) in Claude Code: from a first version with fictional teams, through the pixel arena, the 2026/27 leagues and the manager mode, to touch controls. The full history with all requests, decisions and tests is in [docs/ENTWICKLUNG.md](docs/ENTWICKLUNG.md), the versions are listed in [CHANGELOG.md](CHANGELOG.md).
 
 ### License, name and attribution
 
-The code is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE), © 2026 [tobwil](https://github.com/tobwil). The source code is openly available, but the game is not licensed for commercial use.
+The code is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE), © 2026 Tobias Wilhelm ([tobwil](https://github.com/tobwil)). The source code is openly available, but the game is not licensed for commercial use.
 
-**Allowed** is anything non-commercial: playing the game, reading and learning from the code, modifying it, building your own versions and sharing them free of charge. Charities, schools, clubs and universities may use it as well. **Condition:** the copyright notice "Copyright (c) 2026 tobwil" and the license text (or a link to it) must be kept in all copies and derived versions.
+**Allowed** is anything non-commercial: playing the game, reading and learning from the code, modifying it, building your own versions and sharing them free of charge. Charities, schools, clubs and universities may use it as well. **Condition:** the copyright notice "Copyright (c) 2026 Tobias Wilhelm" and the license text (or a link to it) must be kept in all copies and derived versions.
 
-**Not allowed** is any commercial use, for example selling the game or a version based on it, offering it in an app store for money or with ads and in-app purchases, or including it in a commercial product. If you plan to do that, you need a separate license from tobwil (contact via the [imprint](https://hallenlegenden.de/impressum.html)).
+**Not allowed** is any commercial use, for example selling the game or a version based on it, offering it in an app store for money or with ads and in-app purchases, or including it in a commercial product. If you plan to do that, you need a separate license from Tobias Wilhelm (contact via the [imprint](https://hallenlegenden.de/impressum.html)).
 
 Versions up to and including v8.11 were published under the MIT License. Copies of those earlier versions remain under the MIT License; all later versions are under the PolyForm Noncommercial License.
 
-**The name and logo are not covered by the license.** The name "Hallen-Legenden" and the logo (the game's wordmark) are not part of the licensed code and remain reserved to tobwil. This also applies to other spellings and confusingly similar variations, such as "Hallenlegenden", "Hallen Legenden", "Legenden der Halle", "Hall Legends" or "Hallen-Legenden 2", and to the domain hallenlegenden.de.
+**The name and logo are not covered by the license.** The name "Hallen-Legenden" and the logo (the game's wordmark) are not part of the licensed code and remain reserved to Tobias Wilhelm. This also applies to other spellings and confusingly similar variations, such as "Hallenlegenden", "Hallen Legenden", "Legenden der Halle", "Hall Legends" or "Hallen-Legenden 2", and to the domain hallenlegenden.de.
 
 If you publish a modified version (for example as a website, app or download), you:
 - must give it a different name that is clearly distinct from "Hallen-Legenden",
-- must not suggest that it is the official game or a version endorsed by tobwil.
+- must not suggest that it is the official game or a version endorsed by Tobias Wilhelm.
 
-A note on where it comes from is allowed and welcome, such as *"Based on Hallen-Legenden by tobwil"* with a link to this repository. A fork here on GitHub for contributing or trying out changes may keep the repository name.
+A note on where it comes from is allowed and welcome, such as *"Based on Hallen-Legenden by Tobias Wilhelm"* with a link to this repository. A fork here on GitHub for contributing or trying out changes may keep the repository name.

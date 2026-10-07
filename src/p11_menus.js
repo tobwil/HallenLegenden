@@ -114,7 +114,7 @@ const ACT = {
     showMenu(`<div class="title"><p class="logo">HALLEN-<br>LEGENDEN<span>HANDBALL 26/27</span></p>
       <button class="press" data-act="main" autofocus>DRÜCKE START</button>
       <p class="legal">Inoffizielles Fan-Spiel. Vereinsnamen nur zur Zuordnung, ohne Logos und ohne Verbindung zu Liga oder Vereinen.</p>
-      <p class="legal">${esc(PLATFORM.legal || '© 2026 tobwil · Quellcode offen, nicht kommerziell · github.com/tobwil/HallenLegenden')}</p></div>`, true);
+      <p class="legal">${esc(PLATFORM.legal || '© 2026 Tobias Wilhelm · Quellcode offen, nicht kommerziell · github.com/tobwil/HallenLegenden')}</p></div>`, true);
   },
   main() {
     SCREEN = 'main'; AU.startMusic();

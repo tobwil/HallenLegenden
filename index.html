@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Hallen-Legenden – Handball-Spiel &amp; Handball-Manager kostenlos im Browser</title>
 <meta name="description" content="Das Handball-Spiel für den Browser: 7 gegen 7 selbst spielen und als Handball-Manager den Verein führen, mit Pokal und Europapokal. Kostenlos, auch am Handy.">
-<meta name="author" content="tobwil">
+<meta name="author" content="Tobias Wilhelm">
 <meta name="robots" content="index,follow,max-image-preview:large,max-video-preview:-1">
 <meta name="theme-color" content="#07060b">
 <meta property="og:type" content="website">
@@ -107,6 +107,12 @@ html:not(.js) .hud{display:none}
 .cap .platforms li::before{content:"";position:static;flex-shrink:0;width:8px;height:8px;background:var(--green);box-shadow:1px 1px 0 #000}
 .cap .platforms li.soon{color:var(--dim);border-style:dashed}
 .cap .platforms li.soon::before{background:var(--gold)}
+.cap .platforms li.store{padding:0}
+.cap .platforms li.store a{display:flex;align-items:center;gap:8px;padding:7px 10px;color:inherit;text-decoration:none}
+.cap .platforms li.store a::before{content:"";flex-shrink:0;width:8px;height:8px;background:var(--green);box-shadow:1px 1px 0 #000}
+.cap .platforms li.store::before{display:none}
+.cap .platforms li.store:hover,.cap .platforms li.store:focus-within{border-color:var(--gold)}
+.cap .platforms li.store a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .cap .platforms li.soon b{font-weight:400;color:var(--gold)}
 .scroll-hint{font-family:var(--pix);font-size:10px;color:var(--dim);animation:blink 1.2s steps(2) infinite;margin:0}
 @keyframes blink{50%{opacity:.25}}
@@ -246,18 +252,18 @@ footer a:hover{color:var(--gold)}
       "alternateName": ["Hallenlegenden", "Hallen-Legenden Handball 26/27"],
       "description": "Kostenloses Handball-Spiel im Retro-Pixel-Look für den Browser: 7 gegen 7 mit echten Regeln selbst spielen und im Karriere-Modus als Handball-Manager den Verein führen, mit zwei Ligen, Pokal und Europapokal mit Final Four.",
       "url": "https://hallenlegenden.de/",
-      "sameAs": ["https://github.com/tobwil/HallenLegenden"],
+      "sameAs": ["https://github.com/tobwil/HallenLegenden", "https://apps.apple.com/de/app/hallen-legenden/id6819399214"],
       "image": ["https://hallenlegenden.de/docs/screenshots/gameplay.jpg", "https://hallenlegenden.de/docs/screenshots/final-four.jpg", "https://hallenlegenden.de/docs/screenshots/career-newspaper.jpg"],
       "screenshot": "https://hallenlegenden.de/docs/screenshots/gameplay.jpg",
       "genre": ["Sportspiel", "Handballspiel", "Sportmanager", "Retro"],
-      "gamePlatform": ["Webbrowser", "PC", "Smartphone"],
+      "gamePlatform": ["Webbrowser", "PC", "Smartphone", "iOS", "iPadOS"],
       "applicationCategory": "GameApplication",
-      "operatingSystem": "Windows, macOS, Linux, Android, iOS (im Browser)",
+      "operatingSystem": "Windows, macOS, Linux, Android (im Browser), iOS und iPadOS (App Store oder Browser)",
       "playMode": "SinglePlayer",
       "inLanguage": "de",
       "isAccessibleForFree": true,
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock", "url": "https://hallenlegenden.de/game/" },
-      "author": { "@type": "Person", "name": "tobwil", "url": "https://github.com/tobwil" },
+      "author": { "@type": "Person", "name": "Tobias Wilhelm", "url": "https://github.com/tobwil" },
       "license": "https://polyformproject.org/licenses/noncommercial/1.0.0",
       "trailer": {
         "@type": "VideoObject",
@@ -273,9 +279,9 @@ footer a:hover{color:var(--gold)}
       "@type": "FAQPage",
       "@id": "https://hallenlegenden.de/#faq",
       "mainEntity": [{"@type": "Question", "name": "Ist Hallen-Legenden kostenlos?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Das Handball-Spiel ist komplett kostenlos, ohne Werbung, ohne In-App-Käufe und ohne Anmeldung."}},
-        {"@type": "Question", "name": "Kann ich das Handball-Spiel am Handy spielen?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Hallen-Legenden läuft im Browser am Smartphone mit Touch-Steuerung: links ein Stick zum Laufen, rechts Knöpfe für Pass, Wurf und Finte. Am besten im Querformat."}},
+        {"@type": "Question", "name": "Kann ich das Handball-Spiel am Handy spielen?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Hallen-Legenden läuft im Browser am Smartphone mit Touch-Steuerung: links ein Stick zum Laufen, rechts Knöpfe für Pass, Wurf und Finte. Am besten im Querformat. Für iPhone und iPad gibt es Hallen-Legenden auch als kostenlose App im App Store."}},
         {"@type": "Question", "name": "Gibt es einen Handball-Manager-Modus?", "acceptedAnswer": {"@type": "Answer", "text": "Ja. Im Karriere-Modus führst du deinen Verein über viele Saisons: Aufstellung, Training, Transfermarkt, Gehälter, Zuschauer und Sponsoren. Der Vorstand gibt ein Saisonziel vor. Die Spiele spielst du selbst oder lässt sie simulieren."}},
-        {"@type": "Question", "name": "Muss ich etwas herunterladen oder installieren?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Das Spiel startet direkt im Browser, am Computer und am Handy. Dein Spielstand wird im Browser gespeichert."}},
+        {"@type": "Question", "name": "Muss ich etwas herunterladen oder installieren?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Das Spiel startet direkt im Browser, am Computer und am Handy. Dein Spielstand wird im Browser gespeichert. Wer lieber eine App möchte: Für iPhone und iPad gibt es Hallen-Legenden kostenlos im App Store."}},
         {"@type": "Question", "name": "Wie funktioniert die Steuerung?", "acceptedAnswer": {"@type": "Answer", "text": "Am Computer laufen die Spieler mit den Pfeiltasten, S passt, die Leertaste wirft, A spielt den Kempa-Trick, D täuscht an, W oder Shift sprintet. Ein Gamepad funktioniert auch."}},
         {"@type": "Question", "name": "Spielen echte Vereine mit?", "acceptedAnswer": {"@type": "Answer", "text": "Nein. Alle 52 Vereine und ihre Spieler haben Fantasienamen aus Stadt und Spitzname. Hallen-Legenden ist ein inoffizielles Fan-Projekt."}}]
     }
@@ -310,8 +316,8 @@ footer a:hover{color:var(--gold)}
           <a class="btn big" href="#wunsch" data-umami-event="wunsch-klick" data-umami-event-ort="start">FEATURE WÜNSCHEN</a>
         </div>
         <ul class="platforms" aria-label="Plattformen">
-          <li>COMPUTER</li>
-          <li>SMARTPHONE</li>
+          <li>BROWSER</li>
+          <li class="store"><a href="https://apps.apple.com/de/app/hallen-legenden/id6819399214" rel="noopener" title="Hallen-Legenden für iPhone und iPad im App Store" aria-label="App Store: Hallen-Legenden für iPhone und iPad" data-umami-event="appstore-klick" data-umami-event-ort="start">APP STORE</a></li>
           <li class="soon">KONSOLE <b>COMING SOON</b></li>
         </ul>
         <p class="scroll-hint" aria-hidden="true">SCROLLEN ↓ UND DIE LEGENDE LÄUFT LOS</p>
@@ -386,7 +392,7 @@ footer a:hover{color:var(--gold)}
       <article class="cap" data-scene="finale">
         <span class="num">07 / 07 · ANWURF</span>
         <h2>Deine Legende beginnt.</h2>
-        <p>Kostenlos im Browser am Computer (auch mit Gamepad) und am Smartphone. Konsole: coming soon.</p>
+        <p>Kostenlos im Browser am Computer (auch mit Gamepad) und am Smartphone, für iPhone und iPad auch als <a href="https://apps.apple.com/de/app/hallen-legenden/id6819399214" rel="noopener" data-umami-event="appstore-klick" data-umami-event-ort="finale">App im App Store</a>. Konsole: coming soon.</p>
         <div class="cta">
           <a class="btn main" href="game/" data-umami-event="spielen-klick" data-umami-event-ort="finale">▶ JETZT SPIELEN</a>
           <a class="btn" href="#wunsch" data-umami-event="wunsch-klick" data-umami-event-ort="finale">WAS FEHLT DIR?</a>
@@ -420,14 +426,14 @@ footer a:hover{color:var(--gold)}
       <li><h3>Selbst spielen</h3><p>7 gegen 7 mit echten Handball-Regeln: Zeitstrafen, passives Spiel, 7-Meter, Abwehr im 6:0, 5:1 oder 3:2:1. Jedes Spiel wie eine TV-Übertragung, mit Aufstellungen, Torschützen-Karte und Wiederholung.</p></li>
       <li><h3>Handball-Manager</h3><p>Kader, Training, Transfermarkt, Gehälter und Verträge. Zuschauer und Sponsoren bringen das Geld, der Vorstand will Erfolg ohne Schulden. Der Handball-Kurier berichtet nach jedem Spieltag.</p></li>
       <li><h3>Liga, Pokal, Europapokal</h3><p>36 Vereine in zwei Ligen mit Auf- und Abstieg, dazu 16 internationale Topklubs. Pokal mit 32 Teams und Europapokal mit Gruppenphase, beide mit Final Four in neutraler Halle.</p></li>
-      <li><h3>Auf jedem Gerät</h3><p>Am Computer mit Tastatur oder Gamepad, am Smartphone mit Touch. Ohne Download, ohne Anmeldung, ohne Werbung. Der Spielstand bleibt im Browser.</p></li>
+      <li><h3>Auf jedem Gerät</h3><p>Am Computer mit Tastatur oder Gamepad, am Smartphone mit Touch, auf iPhone und iPad auch als <a href="https://apps.apple.com/de/app/hallen-legenden/id6819399214" rel="noopener" data-umami-event="appstore-klick" data-umami-event-ort="features">App im App Store</a>. Im Browser ohne Download, ohne Anmeldung, ohne Werbung, der Spielstand bleibt dort gespeichert.</p></li>
     </ul>
     <div class="faq">
       <h2>Häufige Fragen</h2>
         <details open><summary>Ist Hallen-Legenden kostenlos?</summary><p>Ja. Das Handball-Spiel ist komplett kostenlos, ohne Werbung, ohne In-App-Käufe und ohne Anmeldung.</p></details>
-        <details><summary>Kann ich das Handball-Spiel am Handy spielen?</summary><p>Ja. Hallen-Legenden läuft im Browser am Smartphone mit Touch-Steuerung: links ein Stick zum Laufen, rechts Knöpfe für Pass, Wurf und Finte. Am besten im Querformat.</p></details>
+        <details><summary>Kann ich das Handball-Spiel am Handy spielen?</summary><p>Ja. Hallen-Legenden läuft im Browser am Smartphone mit Touch-Steuerung: links ein Stick zum Laufen, rechts Knöpfe für Pass, Wurf und Finte. Am besten im Querformat. Für iPhone und iPad gibt es Hallen-Legenden auch als kostenlose <a href="https://apps.apple.com/de/app/hallen-legenden/id6819399214" rel="noopener" data-umami-event="appstore-klick" data-umami-event-ort="faq">App im App Store</a>.</p></details>
         <details><summary>Gibt es einen Handball-Manager-Modus?</summary><p>Ja. Im Karriere-Modus führst du deinen Verein über viele Saisons: Aufstellung, Training, Transfermarkt, Gehälter, Zuschauer und Sponsoren. Der Vorstand gibt ein Saisonziel vor. Die Spiele spielst du selbst oder lässt sie simulieren.</p></details>
-        <details><summary>Muss ich etwas herunterladen oder installieren?</summary><p>Nein. Das Spiel startet direkt im Browser, am Computer und am Handy. Dein Spielstand wird im Browser gespeichert.</p></details>
+        <details><summary>Muss ich etwas herunterladen oder installieren?</summary><p>Nein. Das Spiel startet direkt im Browser, am Computer und am Handy. Dein Spielstand wird im Browser gespeichert. Wer lieber eine App möchte: Für iPhone und iPad gibt es Hallen-Legenden kostenlos im <a href="https://apps.apple.com/de/app/hallen-legenden/id6819399214" rel="noopener" data-umami-event="appstore-klick" data-umami-event-ort="faq">App Store</a>.</p></details>
         <details><summary>Wie funktioniert die Steuerung?</summary><p>Am Computer laufen die Spieler mit den Pfeiltasten, S passt, die Leertaste wirft, A spielt den Kempa-Trick, D täuscht an, W oder Shift sprintet. Ein Gamepad funktioniert auch.</p></details>
         <details><summary>Spielen echte Vereine mit?</summary><p>Nein. Alle 52 Vereine und ihre Spieler haben Fantasienamen aus Stadt und Spitzname. Hallen-Legenden ist ein inoffizielles Fan-Projekt.</p></details>
     </div>
@@ -498,7 +504,7 @@ footer a:hover{color:var(--gold)}
 <footer>
   <div class="foot-inner">
     <p>Inoffizielles Fan-Projekt. Vereins- und Spielernamen sind Fantasienamen, ohne Verbindung zu einer Liga oder einem Verein.</p>
-    <p>© 2026 tobwil · <a href="https://github.com/tobwil/HallenLegenden">Quellcode auf GitHub</a> · Lizenz: PolyForm Noncommercial · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+    <p>© 2026 Tobias Wilhelm · <a href="https://github.com/tobwil/HallenLegenden">Quellcode auf GitHub</a> · Lizenz: PolyForm Noncommercial · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
   </div>
 </footer>
 
