@@ -44,6 +44,15 @@ function kempa(p) {
   if (G.human === p.team) G.ctrl = q;
   AU.pass(); say(`${p.name} lupft in den Kreis... KEMPA?`, 2);
 }
+// Zielen des Spielers: hoch/runter wählt die Ecke, ab 30 % Auslenkung ganz (Handy-Stick; schräge Pfeiltasten kämen sonst nur auf 71 %).
+// Ohne hoch/runter ein Stück (30 %) Richtung der Ecke, die weiter vom Torwart weg ist: Wer nur aufs Tor zuläuft, wirft nicht genau auf
+// den Torwart, gezieltes Werfen in die Ecke bringt aber deutlich mehr
+function humanAim(p, y) {
+  if (Math.abs(y || 0) >= 0.3) return Math.sign(y);
+  if (Math.abs(y || 0) >= 0.1) return 0.3 * Math.sign(y);   // leicht gedrückt: ein Stück in diese Richtung, nie entgegen
+  const gk = G.goalie[1 - p.team], off = gk && !gk.out ? gk.y - 10 : 0;
+  return 0.3 * (Math.abs(off) > 0.15 ? -Math.sign(off) : p.y < 10 ? 1 : -1);
+}
 // Dreher vom Flügel: Der Ball fliegt erst auf den Torwart zu, springt kurz vor ihm auf und dreht dann zur Seite weg.
 // Nur aus spitzem Winkel, aber nicht aus der Ecke an der Torauslinie (da passt er nicht ins Tor). Dreher-Künstler treffen ihn sicherer
 const dreherSpot = (p, gx) => Math.abs(p.y - 10) > 5 && goalDist(p.x, p.y, gx) < 9.5 && Math.abs(p.x - gx) > 1.2;
@@ -57,7 +66,7 @@ function shoot(p, aimY, charge, lob = false, dreher = false) {
   }
   let ty, tz;
   if (aimY === null) {           // KI zielt in die freie Ecke
-    const far = gk.y > 10 ? rnd(9.0, 9.5) : rnd(10.5, 11.0);
+    const far = gk.y > 10 ? rnd(9.2, 9.7) : rnd(10.3, 10.8);
     ty = Math.random() < 0.8 ? far : rnd(9.3, 10.7);
     tz = Math.random() < 0.5 ? rnd(0.25, 0.7) : rnd(1.2, 1.65);
   } else { ty = 10 + clamp(aimY, -1, 1) * 1.25; tz = 0.25 + charge * 1.5; }

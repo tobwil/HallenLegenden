@@ -347,6 +347,45 @@ test('Dreher: nur vom Flügel (Wurf halten + Pass), springt vor dem Torwart auf 
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Zielen: Pfeile/Stick wählen die Ecke (schräg = ganz), ohne hoch/runter ein Stück weg vom Torwart, Zielkreuz = Wurf, Ecke schlägt Mitte', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 6060);
+  const r = await page.evaluate(STEP + `(() => {
+    hideMenu(); if (G) G.paused = true;
+    let sd = 6060; Math.random = () => (sd = (sd * 16807) % 2147483647) / 2147483647;   // Demo-Spiel verbraucht Zufall in Echtzeit: hier fest neu setzen
+    const setup = (dx, y) => {
+      if (G) G.paused = true; newMatch(0, 1, { human: 0, halfLen: 600, diff: 1 }); G.paused = true; G.introT = 99;
+      let n = 0; while (G.phase !== 'play' && n++ < 3000) __run(1);
+      const gx = goalX(0), s = sgn(0), p = G.players.find(q => q.team === 0 && q.role === 'RM');
+      for (const q of G.players) if (q !== p && q.role !== 'TW') place(q, 20, q.team ? 2 : 18);
+      p.att = 75; place(p, gx - s * dx, y); giveBall(p); G.ctrl = p; G.phase = 'play';
+      for (let i = 0; i < 40; i++) { p.x = gx - s * dx; p.y = y; __run(1); }
+      return p;
+    };
+    let got; const o = shoot; window.shoot = (pl, aim, ...a) => { got = aim; return o(pl, aim, ...a); };
+    // 1. echte Eingaben: Leertaste halten mit Pfeilen bzw. Touch-Stick, dann loslassen
+    const out = {};
+    for (const [key, keys, ty] of [['nur', ['ArrowRight'], 0], ['schraeg', ['ArrowRight', 'ArrowUp'], 0], ['touch04', [], -0.4], ['touch02', [], -0.2]]) {
+      const p = setup(9, 8); got = undefined;
+      for (const k of keys) KEY[k] = true; KEY.Space = true; KEYP.Space = true; TOUCH.y = ty; TOUCH.x = ty ? 0.9 : 0;
+      __run(15); const cross = humanAim(p, p.aim), gk = G.goalie[1].y;
+      KEY.Space = false; __run(1); for (const k of keys) KEY[k] = false; TOUCH.x = TOUCH.y = 0;
+      out[key] = { got, cross, away: gk > 10 ? -1 : 1 };
+    }
+    window.shoot = o;
+    // 2. Platzieren lohnt sich: volle Ecke gegen Mitte, je 150 Würfe aus Rückraum Mitte, Halbposition und 7 m
+    const rate = aim => { let g = 0; for (let i = 0; i < 150; i++) { const [dx, y] = [[9.5, 10], [9, 6.5], [7, 12]][i % 3], p = setup(dx, y); shoot(p, aim * (i % 2 ? 1 : -1), 0.75); let j = 0; while (G.phase === 'play' && G.ball.shot && j++ < 300) __run(1); if (G.phase === 'goal') g++; } return g / 150; };
+    out.mitte = rate(0); out.ecke = rate(1);
+    return out;
+  })()`);
+  ok(r.nur.got === 0.3 * r.nur.away && r.nur.cross === r.nur.got, `nur →: Wurf ${r.nur.got}, Zielkreuz ${r.nur.cross}, erwartet ${0.3 * r.nur.away} (weg vom Torwart)`);
+  ok(r.schraeg.got === -1 && r.schraeg.cross === -1, `→ + ↑: Wurf ${r.schraeg.got} statt ganz in die obere Ecke`);
+  ok(r.touch04.got === -1, `Touch-Stick 40 % hoch: Wurf ${r.touch04.got} statt ganz in die Ecke`);
+  ok(r.touch02.got === -0.3, `Touch-Stick 20 % hoch: Wurf ${r.touch02.got} statt ein Stück nach oben`);
+  console.log(`      Torquote Profi, aufgeladen: Mitte ${Math.round(r.mitte * 100)} %, Ecke ${Math.round(r.ecke * 100)} %`);
+  ok(r.ecke >= r.mitte + 0.1, 'die Ecke ist nicht klar besser als die Mitte');
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Eingabepuffer: Druck während des Passflugs wird beim Fangen ausgeführt, genau einmal', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 777);
   const r = await page.evaluate(STEP + `(() => {
@@ -397,6 +436,7 @@ test('Passquote: gehaltene Richtung und neue Richtung im Flug, Bälle fliegen ge
         if (mode === 'steer' && f === 8) { const d2 = dirs[(trials * 3 + 1) % 8]; arrows(d2[0], d2[1]); }
         __run(1);
         if (f === 0) { q = G.ball.passTo; if (!q) break; dir0 = Math.atan2(G.ball.vy, G.ball.vx); }
+        if (G.ball.x < 0.3 || G.ball.x > CW - 0.3) { q = null; break; }   // Pass an Pfosten oder Torlinie: Abprall ist Physik, zählt nicht
         if (q && G.phase === 'play' && G.ball.state === 'air' && G.ball.passTo === q && !G.ball.lob && Math.hypot(G.ball.vx, G.ball.vy) > 1) { let t = Math.abs(Math.atan2(G.ball.vy, G.ball.vx) - dir0); t = Math.min(t, 2 * Math.PI - t); maxTurn = Math.max(maxTurn, t); }
         const ow = G.ball.owner; if (ow && ow !== o) { out = ow === q; break; } if (G.phase !== 'play') { out = false; break; }
       }

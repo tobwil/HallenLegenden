@@ -95,7 +95,7 @@ Rechte Hand auf den Pfeiltasten zum Laufen, linke Hand auf WASD und Leertaste f�
 | W / Shift | Sprint | Sprint |
 | S | Pass (Richtung = Laufrichtung), beim Aufladen auf dem Flügel: Dreher | Spieler wechseln: erst zum ballnächsten, mehrmals drücken = der Nähe nach weiter |
 | A | Kempa-Trick (auch Shift + S) | wie S |
-| Leertaste | Wurf (antippen = schnell, halten = mehr Wucht, hoch/runter = Ecke) | Blocksprung |
+| Leertaste | Wurf (antippen = schnell, halten = mehr Wucht). Hoch/runter, auch schräg = ganz in diese Ecke, ohne hoch/runter ein Stück weg vom Torwart. Das Zielkreuz zeigt, wohin er geht | Blocksprung |
 | D | Finte, beim Aufladen: Heber | Ball herausspielen |
 | T | Team-Timeout (Deckung umstellen) | |
 | Q | Wechselmenü | |
@@ -112,7 +112,7 @@ In der Abwehr und bei freiem Ball steuerst du ohne Wechseltaste automatisch den 
 
 **Touch (Handy):**
 - Stick erscheint dort, wo der Daumen links aufsetzt. Voll ausgelenkt sprintet der Spieler
-- Antippen: Mitspieler = Pass zu ihm, Tor = Wurf in diese Ecke, in der Abwehr Spieler = zu ihm wechseln. Ein Tipp in den ersten beiden Spielen erklärt das
+- Antippen: Mitspieler = Pass zu ihm, Tor = Wurf genau in diese Ecke (auch während WURF gehalten wird, beim Aufladen erinnert ein Hinweis daran), in der Abwehr Spieler = zu ihm wechseln. Ein Tipp in den ersten beiden Spielen erklärt das
 - Knöpfe je nach Lage: PASS/WURF/FINTE oder WECHSEL/BLOCK/KLAU. Langer Druck auf PASS spielt Kempa. WURF halten und PASS tippen = Dreher (nur vom Flügel). Im Ruhezustand sind die Knöpfe durchscheinend, damit man das Feld darunter sieht; die Größe (klein, normal, groß) steht unter Optionen
 - Pause (II) oben rechts, Zurück-Leiste in allen Menüs
 
@@ -170,7 +170,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Si
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 48 Tests, etwa eine Minute
+npm test                             # alle 49 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 9 tiefe Tests, etwa drei Minuten (vor größeren Versionen)
@@ -279,7 +279,7 @@ Right hand on the arrow keys to move, left hand on WASD and Space for the action
 | W / Shift | Sprint | Sprint |
 | S | Pass (direction = movement direction), while charging on the wing: spin shot | Switch player: first to the one closest to the ball, press again = next closest |
 | A | Kempa trick (also Shift + S) | same as S |
-| Space | Shoot (tap = quick, hold = more power, up/down = corner) | Block jump |
+| Space | Shoot (tap = quick, hold = more power). Up/down, also diagonally = all the way into that corner, without up/down a little away from the keeper. The reticle shows where it goes | Block jump |
 | D | Feint, while charging: lob | Steal the ball |
 | T | Team timeout (change defence) | |
 | Q | Substitution menu | |
@@ -296,7 +296,7 @@ In defence and on loose balls you automatically control the player closest to th
 
 **Touch (phone):**
 - The stick appears wherever your left thumb touches down. Full deflection makes the player sprint
-- Tapping: a teammate = pass to him, the goal = shot into that corner, in defence a player = switch to him. A tip explains this in your first two matches
+- Tapping: a teammate = pass to him, the goal = shot exactly into that corner (also while holding WURF, a hint reminds you when charging), in defence a player = switch to him. A tip explains this in your first two matches
 - Buttons change with the situation: PASS/WURF/FINTE (pass/shoot/feint) or WECHSEL/BLOCK/KLAU (switch/block/steal). Long-press PASS for a Kempa. Hold WURF and tap PASS for a spin shot (wing only). At rest the buttons are see-through so the pitch stays visible; their size (small, normal, large) is in the options
 - Pause (II) top right, back bar in all menus
 
@@ -354,7 +354,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). They 
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 48 tests, about one minute
+npm test                             # all 49 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 9 deep tests, about three minutes (before bigger releases)

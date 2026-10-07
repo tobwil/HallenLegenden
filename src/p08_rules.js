@@ -32,7 +32,7 @@ function updateBall(dt) {
     const g = G.goalie[1 - b.shot.team];
     if (!g.out && (b.px - g.x) * (b.x - g.x) <= 0) {
       b.shot.gkDone = true;
-      const dy = Math.abs(b.y - g.y), reach = 0.55 + (g.save > 0 ? 0.85 : 0.2) + g.gk / 400 + (g.trait === 'Krake' ? 0.15 : 0);
+      const dy = Math.abs(b.y - g.y), reach = 0.55 + (g.save > 0 ? GK_REACH : 0.2) + g.gk / 400 + (g.trait === 'Krake' ? 0.15 : 0);
       if (dy < reach && b.z < 2.3 && !(b.shot.lob && b.z > 2.0)) {
         let pr = (1 - dy / reach * 0.7) * (0.4 + g.gk / 100 * 0.4) * clamp(1.25 - b.shot.speed / 40, 0.5, 1);
         if (dy < 0.35) pr += 0.15; if (g.trait === 'Reflexmonster') pr += 0.06;
@@ -229,7 +229,7 @@ function step(dt) {
       if (G.human === sh.team) {
         G.pen.aim = lerp(G.pen.aim, IN.y, Math.min(1, dt * 8));
         if (IN.b) { sh.charging = true; sh.charge = Math.min(1, sh.charge + dt / 0.8); }
-        if (IN.rb && sh.charging) { shoot(sh, G.pen.aim, sh.charge); G.phase = 'play'; }
+        if (IN.rb && sh.charging) { shoot(sh, humanAim(sh, G.pen.aim), sh.charge); G.phase = 'play'; }
       } else {
         if (G.human >= 0) { if (IN.y < -0.4) G.pen.gkGuess = -1; else if (IN.y > 0.4) G.pen.gkGuess = 1; }
         if ((G.pen.aiT -= dt) <= 0) { shoot(sh, pick([-1, 1, 0.5, -0.5, 0]), rnd(0.45, 0.95)); G.phase = 'play'; }

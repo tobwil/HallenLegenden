@@ -130,11 +130,12 @@ function hud() {
     if (c.charging) {
       rect(x - 16, y - 62, 32, 5, OUTLINE); rect(x - 15, y - 61, Math.round(30 * c.charge), 3, c.charge > 0.92 ? '#ff4f3a' : c.charge > 0.6 ? '#ffc83a' : '#9cff57');
       // Zielkreuz am Tor
-      const gx = goalX(c.team), ty = 10 + clamp(c.aim || 0, -1, 1) * 1.25, tz = 0.25 + c.charge * 1.5;
+      const gx = goalX(c.team), ty = 10 + humanAim(c, c.aim) * 1.25, tz = 0.25 + c.charge * 1.5;   // genau dorthin geht der Wurf
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
       text(usePad() ? 'B=HEBER' : TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
       if (dreherSpot(c, gx)) text(usePad() ? 'A=DREHER' : TOUCHDEV ? 'PASS=DREHER' : 'S=DREHER', x, y - 92, '#ff8bd1', 8, 'center');   // nur wo er geht
+      else if (TOUCHDEV && !usePad()) text('TOR ANTIPPEN = ECKE', x, y - 92, '#ffc83a', 8, 'center');   // genauer als der Stick
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
@@ -148,7 +149,7 @@ function hud() {
   if (G.phase === 'penalty' && G.pen) {
     const sh = G.pen.shooter, gx = goalX(sh.team);
     if (G.human === sh.team) {
-      const ty = 10 + G.pen.aim * 1.25, tz = 0.25 + sh.charge * 1.5, rx = sx(gx, ty), ry = sy(ty, tz);
+      const ty = 10 + humanAim(sh, G.pen.aim) * 1.25, tz = 0.25 + sh.charge * 1.5, rx = sx(gx, ty), ry = sy(ty, tz);
       rect(rx - 6, ry, 4, 1, '#ffc83a'); rect(rx + 3, ry, 4, 1, '#ffc83a'); rect(rx, ry - 6, 1, 4, '#ffc83a'); rect(rx, ry + 3, 1, 4, '#ffc83a');
       banner7('ZIELEN: HOCH/RUNTER · K HALTEN & LOSLASSEN');
     } else if (G.human >= 0) {
