@@ -1094,7 +1094,7 @@ test('Erfolge: Titel, Rekorde und Ehrenhalle aus echten Spielen, Saisonbilanz un
     const mode = await shareCard('season'); const img = new Image(); img.src = SHARE.url; await img.decode();
     const preview = !!menu.querySelector('img.sharecard') && !!menu.querySelector('a[download]');
     ACT.cShareBack(); const backToSummary = !!CAREER.summary && menu.innerText.includes('ABSCHLUSS');
-    ACT.cNext(); ACT.cTab('trophy'); const view = { shelf: menu.querySelectorAll('.tshelf.won').length, rows: menu.querySelectorAll('.stt td.lbl').length, hall: menu.querySelectorAll('table.cards tbody tr').length };
+    ACT.cNext(); ACT.cTab('trophy'); const view = { shelf: menu.querySelectorAll('.tshelves:not(.ms) .tshelf.won').length, rows: menu.querySelectorAll('.stt:not(.aw) td.lbl').length, hall: menu.querySelectorAll('table.cards tbody tr').length };
     const m2 = await shareCard('career');
     return { recOk, exact, games: log.length, recKeys: Object.keys(R).sort().join(','), streak: R.streak && R.streak.v, played: T.sp, titlesOk, titles: s.titles, hallApps, mode, size: [img.width, img.height], preview, backToSummary, view, m2, text: SHARE.text };
   });
@@ -1102,6 +1102,72 @@ test('Erfolge: Titel, Rekorde und Ehrenhalle aus echten Spielen, Saisonbilanz un
   ok(r.recOk && r.games > r.played, 'Rekorde passen nicht zu den Ergebnissen: ' + JSON.stringify(r.exact)); ok(r.titlesOk, 'Titel: ' + JSON.stringify(r.titles)); ok(r.hallApps >= r.played * 7, 'Ehrenhalle zählt zu wenig Einsätze: ' + r.hallApps);
   ok(r.mode === 'preview' && r.size[0] === 1080 && r.size[1] === 1350 && r.preview, 'Teilen-Karte: ' + JSON.stringify(r)); ok(r.backToSummary, 'Zurück führt nicht zum Saisonabschluss');
   ok(r.view.shelf === r.titles.length && r.view.rows === 8 && r.view.hall > 0, 'Tab ERFOLGE: ' + JSON.stringify(r.view)); ok(r.text.includes('hallenlegenden.de'), 'Teilen-Text ohne Link');
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Erfolge: Spieler, Torwart und Talent der Saison, Spieler des Spiels in der Zeitung, 18 Meilensteine mit Nachtrag und Plattform-Ereignis', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 4711);
+  const r = await page.evaluate(STEP + `(() => {
+    hideMenu(); if (G) G.paused = true; G = null;
+    let sd = 4711; Math.random = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+    const ev = []; PLATFORM.event = (n, d) => ev.push([n, d]);
+    careerCreate(TEAMS.find(t => t.k === 'KIE').id, 1, 1, 1, true, 1);
+    let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 200) ACT.cSim();
+    const S = CAREER.season, ids = new Set(Object.keys(S.table).map(Number));
+    // Kandidaten vor dem Abschluss merken: Saisonstatistik und Alter (danach altern die Spieler)
+    const pre = {}; for (const id of ids) for (const p of CAREER.squads[id]) pre[p.pid] = { tid: id, age: p.age, sp: statOf(p).sp, role: p.role };
+    const newsPm = CAREER.news.some(n => /Spieltag:.*Spieler des Spiels: /.test(typeof n === 'string' ? n : n.t || ''));
+    ACT.cEnd();
+    const a = CAREER.summary.awards, need = S.fixtures.length * 0.4;
+    const okW = (w, tw, maxAge) => !!w && ids.has(w.tid) && pre[w.pid] && pre[w.pid].tid === w.tid && pre[w.pid].sp >= need && (pre[w.pid].role === 'TW') === tw && (!maxAge || pre[w.pid].age <= maxAge) && w.own === (w.tid === CAREER.team);
+    const res = { awards: !!a && CAREER.awards.length === 1 && CAREER.awards[0] === a, mvp: okW(a.mvp, false), tw: okW(a.tw, true), tal: okW(a.tal, false, 21) && a.tal.pid !== a.mvp.pid,
+      newsAw: CAREER.news.some(n => /^Auszeichnungen 2026\\/27: Spieler der Saison/.test(typeof n === 'string' ? n : n.t || '')), newsPm,
+      bilanz: (() => { seasonSummary(); return ['Spieler der Saison', 'Torwart der Saison', 'Talent der Saison'].every(t => menu.textContent.includes(t)); })() };
+    ACT.cNext();
+    // Meilensteine: ERSTER SIEG mit Saison, nur einmal, Zeitung und Plattform-Ereignis
+    res.sieg1 = CAREER.ms.sieg1 && CAREER.ms.sieg1.y === 2026;
+    res.einmal = msUnlock('sieg1') === false;
+    res.event = ev.some(([n, d]) => n === 'meilenstein' && d.id === 'sieg1' && !d.nachtrag);
+    // Dreher-Tor selbst im Karriere-Spiel: Meilenstein beim Tor
+    ACT.cPlay(); ACT.pmGo(); G.introT = 99; G.phase = 'play';
+    const me = G.players.find(p => p.team === G.human && p.role === 'LA');
+    G.ball.last = me; G.ball.shot = { by: me, team: me.team, spin: 1, speed: 15 }; scoreGoal(me.team, goalX(me.team));
+    res.dreher = !!(CAREER.ms.dreher && CAREER.ms.dreher.y === CAREER.year);
+    res.newsMs = /^Meilenstein: DREHER-TOR!/.test(CAREER.news[0]);   // Zeitung hält nur die letzten 14 Meldungen: direkt danach prüfen
+    G = null;
+    // Nachtrag für ältere Karrieren: aus Titeln und Rekorden, ohne Zeitung, Ereignis als Nachtrag
+    delete CAREER.ms; const n0 = CAREER.news.length;
+    CAREER.titles.push({ type: 'meister', year: 2026, team: CAREER.team }, { type: 'pokal', year: 2026, team: CAREER.team });
+    CAREER.rec.streak = { v: 10, year: 2026, team: CAREER.team };
+    erfolgeInit();
+    res.nachtrag = ['meister', 'pokal', 'double', 'final4', 'serie5', 'serie10', 'sieg1'].every(k => CAREER.ms[k]) && !CAREER.ms.dreher;
+    res.nachtragStill = CAREER.news.length === n0 && ev.some(([n, d]) => n === 'meilenstein' && d.id === 'double' && d.nachtrag);
+    // Anzeige: 18 Meilensteine, Auszeichnungen
+    careerHub('trophy');
+    res.tiles = menu.querySelectorAll('.tshelves.ms .tshelf').length; res.won = menu.querySelectorAll('.tshelves.ms .tshelf.won').length;
+    res.tab = /MEILENSTEINE · \\d+ VON 18/.test(menu.textContent) && /AUSZEICHNUNGEN/.test(menu.textContent) && menu.textContent.includes(a.mvp.name);
+    return res;
+  })()`);
+  for (const [k, m] of Object.entries({ awards: 'Auszeichnungen nicht gespeichert', mvp: 'Spieler der Saison falsch (Liga, Einsätze, Feldspieler)', tw: 'Torwart der Saison falsch', tal: 'Talent der Saison falsch (bis 21, nicht der Spieler der Saison)',
+    newsAw: 'keine Zeitungsmeldung zu den Auszeichnungen', newsPm: 'Spieltagsmeldung ohne Spieler des Spiels', bilanz: 'Saisonbilanz ohne Auszeichnungen', sieg1: 'ERSTER SIEG nicht freigeschaltet', einmal: 'Meilenstein doppelt',
+    event: 'kein Plattform-Ereignis meilenstein', newsMs: 'keine Zeitungsmeldung zum Meilenstein', dreher: 'Dreher-Tor im Karriere-Spiel ohne Meilenstein', nachtrag: 'Nachtrag aus Titeln und Rekorden fehlt', nachtragStill: 'Nachtrag nicht still oder ohne Ereignis', tab: 'Tab ERFOLGE ohne Meilensteine/Auszeichnungen' }))
+    ok(r[k], m + ' ' + JSON.stringify(r));
+  ok(r.tiles === 18 && r.won >= 8, `Meilenstein-Kacheln: ${r.tiles}, freigeschaltet ${r.won}`);
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Zeitung: Schlagzeile passt zur Tordifferenz (6 Tore Vorsprung ist kein Arbeitssieg) und wechselt über die Spieltage', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 31);
+  const r = await page.evaluate(() => {
+    careerCreate(TEAMS.find(t => t.k === 'KIE').id, 1, 1, 1, true, 1);
+    const lines = d => Array.from({ length: 17 }, (_, i) => { CAREER.lastMatch = { round: i + 1, home: i % 2 === 0, opp: (i * 5 + 1) % 18, my: 25 + Math.max(d, 0), their: 25 - Math.min(d, 0) }; return headline().h; });
+    const tpl = l => new Set(l.map(h => h.replace(/[A-ZÄÖÜ][A-ZÄÖÜ-]+ ?/g, w => /^(ARBEITSSIEG|ZITTERSIEG|KNAPP|ABER|VERDIENT|KLARER|SIEG|SOUVERÄN|LÄSST|KEINE|CHANCE|GEGEN|ZWEI|PUNKTE|FÜR|BEZWINGT|PLEITE|VERLIERT|KLARE|NIEDERLAGE|ZU|STARK|CHANCENLOS|BITTER|DANEBEN|IN|DEBAKEL|GEHT|UNTER|ZERLEGT|GALA|PUNKTETEILUNG|MIT|REMIS-KRIMI) ?$/.test(w) ? w : 'X ')));
+    return { six: lines(6), one: lines(1), minus5: lines(-5), minus1: lines(-1), var1: tpl(lines(1)).size, var2: tpl(lines(2)).size, varM2: tpl(lines(-2)).size };
+  });
+  ok(!r.six.some(h => /ARBEITSSIEG|ZITTERSIEG|KNAPP/.test(h)), '6 Tore Vorsprung als knapper Sieg: ' + r.six.join(' | '));
+  ok(r.one.every(h => /ARBEITSSIEG|ZITTERSIEG|KNAPP/.test(h)), '1 Tor Vorsprung nicht als knapper Sieg: ' + r.one.join(' | '));
+  ok(!r.minus5.some(h => /KNAPP|BITTER/.test(h)), '5 Tore Rückstand als knapp: ' + r.minus5.join(' | '));
+  ok(r.var1 >= 2 && r.var2 >= 2 && r.varM2 >= 2, `Schlagzeile wechselt nicht (${r.var1}/${r.var2}/${r.varM2} Varianten über 17 Spieltage)`);
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
@@ -1114,7 +1180,7 @@ test('Erfolge: ältere Karriere bekommt Titel aus der Historie nachgetragen', as
     delete CAREER.titles; delete CAREER.rec; delete CAREER.hall; saveCareer();
   });
   await page.reload(); await page.waitForTimeout(600);
-  const r = await page.evaluate(() => { ACT.career && 0; careerHub('trophy'); return { titles: CAREER.titles.map(t => t.type + t.year).join(','), shelf: menu.querySelectorAll('.tshelf.won').length, hall: Object.keys(CAREER.hall).length }; });
+  const r = await page.evaluate(() => { ACT.career && 0; careerHub('trophy'); return { titles: CAREER.titles.map(t => t.type + t.year).join(','), shelf: menu.querySelectorAll('.tshelves:not(.ms) .tshelf.won').length, hall: Object.keys(CAREER.hall).length }; });
   ok(r.titles === 'meister2026,pokal2026,euro2027' && r.shelf === 3 && r.hall > 0, JSON.stringify(r));
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });

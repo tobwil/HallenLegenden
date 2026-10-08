@@ -23,7 +23,7 @@ Actual browser gameplay and menus. Click any image to view it at full size.
 | **Final Four** | **Europapokal · European cup** |
 | [![Final Four in der lila Event-Halle: Kiel holt den Europapokal, Konfetti in den Vereinsfarben](docs/screenshots/final-four.jpg)](docs/screenshots/final-four.jpg) | [![Europapokal im Karriere-Modus: Gruppentabellen, Ergebnisse und Turnierbaum bis zum Sieger](docs/screenshots/career-euro.jpg)](docs/screenshots/career-euro.jpg) |
 | **Vor dem Spiel · Pre-match comparison** | **Erfolge · Achievements** |
-| [![Vor dem Spiel: Kiel gegen Berlin mit Tabellenplatz, Form der letzten fünf Spiele, Sternen für Angriff, Abwehr und Tor, Topwerfer und Hinspiel](docs/screenshots/prematch.jpg)](docs/screenshots/prematch.jpg) | [![Tab Erfolge: Trophäenschrank mit Meisterschaft, Pokal und Europapokal, darunter die Rekorde der Karriere](docs/screenshots/career-trophies.jpg)](docs/screenshots/career-trophies.jpg) |
+| [![Vor dem Spiel: Kiel gegen Berlin mit Tabellenplatz, Form der letzten fünf Spiele, Sternen für Angriff, Abwehr und Tor, Topwerfer und Hinspiel](docs/screenshots/prematch.jpg)](docs/screenshots/prematch.jpg) | [![Tab Erfolge: Trophäenschrank mit Meisterschaft und Pokal, darunter die Meilensteine der Karriere mit Saison](docs/screenshots/career-trophies.jpg)](docs/screenshots/career-trophies.jpg) |
 | **Kader mit Potenzial · Squad with potential** | **Karriere als Bild teilen · Share your career** |
 | [![Kader mit Gesamtwert, Potenzial und Trend, Einzelwerten, Form, Fitness, Toren, Vertrag und Marktwert](docs/screenshots/career-squad.jpg)](docs/screenshots/career-squad.jpg) | [![Teilen-Bild der Karriere: drei Titel in fünf Saisons, beste Saison, höchster Sieg, Torjäger und Vereinslegende](docs/screenshots/share-card.jpg)](docs/screenshots/share-card.jpg) |
 | **Spielerkarte · Player card** | **Scouting-Karte · Scouting card** |
@@ -80,7 +80,7 @@ Läuft im Browser am Desktop mit Tastatur oder Gamepad und auf dem Handy mit Tou
   - Europapokal: Platz 1 und 2 der 1. Liga und der Pokalsieger treffen auf 13 internationale Vereine. Gruppenphase (4 × 4, Hin- und Rückspiel), Viertelfinale, Final Four am Saisonende. Bei 6 Spieltagen kompakt mit 8 Vereinen. Prämien und Zuschauereinnahmen, eigener Tab mit Gruppen und Turnierbaum
   - Jede Partie selbst spielen oder simulieren
   - Zeitung „Handball-Kurier“ mit Schlagzeilen, Tabelle, Torjägern und Meldungen
-  - Erfolge: Trophäenschrank mit allen Titeln, Rekorde (höchster Sieg, längste Siegesserie, meiste Tore in einem Spiel, beste Saison, Zuschauerrekord und mehr) und eine Ehrenhalle mit den Vereinslegenden
+  - Erfolge: Trophäenschrank mit allen Titeln, Rekorde (höchster Sieg, längste Siegesserie, meiste Tore in einem Spiel, beste Saison, Zuschauerrekord und mehr) und eine Ehrenhalle mit den Vereinslegenden. Dazu 18 Meilensteine (vom ersten Sieg über das Dreher-Tor bis zum Double) und zum Saisonende die Auszeichnungen Spieler, Torwart und Talent der Saison in deiner Liga. Der Spieler des Spiels steht auch in der Spieltagsmeldung der Zeitung
   - Saisonbilanz und Karriere als Pixel-Bild teilen (am Handy direkt per WhatsApp und Co., sonst als Bild speichern)
 - **Editor** für Vereinsnamen, Kürzel, Trikotfarben, Spielernamen und Nummern
 - **Speichern:** laufende Spiele automatisch und per „Speichern & Beenden“, Karriere dauerhaft im Browser (`localStorage`)
@@ -157,7 +157,7 @@ Im Browser speichert das Spiel in `localStorage`. Eine Hülle wie eine Desktop-V
 |---|---|
 | `name` | Name der Plattform, im Browser `'web'`. Außerhalb des Browsers sagen Optionen und Editor „Gerät“ statt „Browser“, der Teilen-Text lässt „im Browser“ weg |
 | `storage` | Speicher mit `getItem`, `setItem`, `removeItem`, synchron wie `localStorage` |
-| `event(name, data)` | bekommt dieselben Ereignisse wie die Statistik, zum Beispiel `spiel-ende` mit `{ ergebnis }` und `titel` mit `{ art }` (`meister`, `pokal`, `euro`, `meister2`, `aufstieg`) |
+| `event(name, data)` | bekommt dieselben Ereignisse wie die Statistik, zum Beispiel `spiel-ende` mit `{ ergebnis }` und `titel` mit `{ art }` (`meister`, `pokal`, `euro`, `meister2`, `aufstieg`). `meilenstein` mit `{ id }` (zum Beispiel für Game Center), nachgetragene Meilensteine älterer Karrieren mit `{ id, nachtrag: true }`. Die IDs stehen in `MILESTONES` (`src/p18_erfolge.js`) |
 | `quit()` | zeigt BEENDEN im Hauptmenü |
 | `legal` | ersetzt die Copyright-Zeile auf dem Titelbildschirm |
 | `shareUrl` | Adresse im Teilen-Text, Standard `https://hallenlegenden.de` |
@@ -170,7 +170,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Si
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 49 Tests, etwa eine Minute
+npm test                             # alle 51 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 9 tiefe Tests, etwa drei Minuten (vor größeren Versionen)
@@ -264,7 +264,7 @@ The game itself is in **German** (menus, commentary, newspaper). The controls be
   - European cup: 1st and 2nd of the 1st league plus the cup winner meet 13 international clubs. Group stage (4 × 4, home and away), quarter-finals, Final Four at the end of the season. Compact with 8 clubs for 6-matchday seasons. Prize money and gate receipts, own tab with groups and bracket
   - Play every match yourself or simulate it
   - "Handball-Kurier" newspaper with headlines, table, top scorers and news
-  - Achievements: trophy cabinet with every title, records (biggest win, longest winning streak, most goals in a match, best season, attendance record and more) and a hall of fame for your club legends
+  - Achievements: trophy cabinet with every title, records (biggest win, longest winning streak, most goals in a match, best season, attendance record and more) and a hall of fame for your club legends. Plus 18 milestones (from the first win and a spin-shot goal to the double) and, at the end of each season, the awards for player, goalkeeper and young player of the season in your league. The player of the match also appears in the newspaper's matchday report
   - Share your season summary or whole career as a pixel image (straight to WhatsApp and co. on phones, or save it)
 - **Editor** for club names, abbreviations, kit colours, player names and numbers
 - **Saving:** ongoing matches automatically and via "Save & Quit", careers persist in the browser (`localStorage`)
@@ -341,7 +341,7 @@ In the browser the game saves to `localStorage`. A wrapper such as a desktop ver
 |---|---|
 | `name` | platform name, `'web'` in the browser. Outside the browser, options and editor say “device” instead of “browser” and the share text drops “in the browser” |
 | `storage` | storage with `getItem`, `setItem`, `removeItem`, synchronous like `localStorage` |
-| `event(name, data)` | receives the same events as the analytics, for example `spiel-ende` with `{ ergebnis }` and `titel` with `{ art }` (`meister`, `pokal`, `euro`, `meister2`, `aufstieg`) |
+| `event(name, data)` | receives the same events as the analytics, for example `spiel-ende` with `{ ergebnis }` and `titel` with `{ art }` (`meister`, `pokal`, `euro`, `meister2`, `aufstieg`). `meilenstein` with `{ id }` (for example for Game Center), milestones backfilled from older careers with `{ id, nachtrag: true }`. The IDs are listed in `MILESTONES` (`src/p18_erfolge.js`) |
 | `quit()` | shows QUIT (BEENDEN) in the main menu |
 | `legal` | replaces the copyright line on the title screen |
 | `shareUrl` | address in the share text, default `https://hallenlegenden.de` |
@@ -354,7 +354,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). They 
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 49 tests, about one minute
+npm test                             # all 51 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 9 deep tests, about three minutes (before bigger releases)

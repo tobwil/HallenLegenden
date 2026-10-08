@@ -256,6 +256,7 @@ function playRound(own) {
   S.posHist = (S.posHist || []).concat(standingsOf(S.table).findIndex(r => r.i === CAREER.team) + 1);   // Tabellenplatz nach jedem Spieltag (Statistik)
   const me = CAREER.team, mine = own.a === me ? [own.ga, own.gb] : [own.gb, own.ga], opp = own.a === me ? own.b : own.a;
   const res = mine[0] > mine[1] ? 'S' : mine[0] === mine[1] ? 'U' : 'N';
+  const pm = own.La.concat(own.Lb).find(p => (own.stats[p.pid] || {}).potm), pmTxt = pm ? ` Spieler des Spiels: ${pm.name}${own.La.includes(pm) === (own.a === me) ? '' : ` (${TEAMS[opp].short})`}.` : '';
   const myL = own.a === me ? own.La : own.Lb, top = myL.filter(p => p.role !== 'TW').map(p => [p, (own.stats[p.pid] || {}).g || 0]).sort((x, y) => y[1] - x[1])[0];
   const gk = myL.find(p => p.role === 'TW');
   CAREER.lastMatch = { round: S.round + 1, home: own.a === me, opp, my: mine[0], their: mine[1], res, top: top ? { name: top[0].name, g: top[1] } : null, gk: gk ? { name: gk.name, sv: (own.stats[gk.pid] || {}).sv || 0 } : null };
@@ -264,7 +265,7 @@ function playRound(own) {
   const fin = roundFinances(fx, own.a === me, opp), g = fin.gate;
   if (g) CAREER.lastMatch.fans = g.n;
   noteOwnMatch(mine[0], mine[1], opp, 'Liga', own.stats, myL, g ? g.n : 0);   // Rekorde, Ehrenhalle
-  news(`${S.round + 1}. Spieltag: ${res === 'S' ? 'Sieg' : res === 'U' ? 'Remis' : 'Niederlage'} gegen ${TEAMS[opp].n} (${mine[0]}:${mine[1]}). ${g ? `${g.n.toLocaleString('de-DE')} Zuschauer${g.full ? ' (ausverkauft)' : ''}: ${euro(g.money)}, ` : 'Auswärtsspiel, '}Sponsor ${euro(fin.sponsor)}, Gehälter ${euro(fin.wages)}.`);
+  news(`${S.round + 1}. Spieltag: ${res === 'S' ? 'Sieg' : res === 'U' ? 'Remis' : 'Niederlage'} gegen ${TEAMS[opp].n} (${mine[0]}:${mine[1]}).${pmTxt} ${g ? `${g.n.toLocaleString('de-DE')} Zuschauer${g.full ? ' (ausverkauft)' : ''}: ${euro(g.money)}, ` : 'Auswärtsspiel, '}Sponsor ${euro(fin.sponsor)}, Gehälter ${euro(fin.wages)}.`);
   const gains = weeklyTraining(); if (gains.length) news(`Training: ${gains.slice(0, 3).join(', ')}${gains.length > 3 ? ' …' : ''}`);
   S.round++;
   for (const t of TEAMS) for (const p of CAREER.squads[t.id]) if (p.inj) { p.inj--; if (!p.inj && t.id === me) news(`${p.name} ist wieder fit.`); }
@@ -284,6 +285,7 @@ const wageBill = () => Math.round(CAREER.squads[CAREER.team].reduce((s, p) => s 
 function ownFixture() { const S = CAREER.season; return S.done ? null : S.fixtures[S.round].find(f => f.includes(CAREER.team)); }
 function careerSimOwn() { if (ownCupTie()) return cupSimOwn(); if (ownEuroTie()) return euroSimOwn(); const fx = ownFixture(); if (!fx) return; coachPrep(); playRound(simMatch(fx[0], fx[1])); }
 function careerAfterPlayed(g) {
+  if (g.soWinner !== undefined && g.soWinner === g.human) msUnlock('krimi');   // 7-Meter-Werfen selbst gewonnen
   const stats = {}, all = allMatchPlayers(), played = [[], []];
   const best = potm(all);
   all.forEach(p => { if (!p.pid) return;
@@ -378,6 +380,7 @@ function careerEndSeason() {
   euroQualify(l1);
   const pos = st.findIndex(x => x.i === me) + 1;
   const close = seasonClose(lg, pos, S.table[me], up.includes(me), !!CAREER.cup && CAREER.cup.winner === me, euroW === me);   // Titel, Rekorde, Ehrenhalle (vor Alterung und Wechseln)
+  const awards = awardSeason(lg, S.table);   // Spieler, Torwart und Talent der Saison (braucht die Saisonstatistik)
   const prize = leaguePrize(pos, lg);
   CAREER.money += prize; finOf().prize += prize;
   const verdict = boardVerdict(pos, CAREER.goal, lg), finSeason = { ...finOf() };
@@ -425,7 +428,7 @@ function careerEndSeason() {
   const goalMet = pos <= CAREER.goal.pos;
   sum.goal = CAREER.goal.txt; sum.goalMet = goalMet; sum.board = verdict; sum.fin = finSeason; sum.money = CAREER.money;
   CAREER.history.push({ year: CAREER.year, team: me, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null, euro: euroW, euroMy });
-  sum.euroWinner = euroW; sum.euroMy = euroMy; sum.titles = close.titles; sum.own = close.own;
+  sum.euroWinner = euroW; sum.euroMy = euroMy; sum.titles = close.titles; sum.own = close.own; sum.awards = awards;
   for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += leaguePrize(k + 1, l); });
   leagueIds(3).forEach(id => { CAREER.aiMoney[id] += INTL_HOME_PRIZE; });   // internationale Vereine: Prämien aus ihrer Heimatliga
   if (CAREER.aiTransfers) aiTransferRound(4);
@@ -497,13 +500,19 @@ function headline() {
   const m = CAREER.lastMatch, me = TEAMS[CAREER.team];
   if (!m) return { h: `${me.short.toUpperCase()} STARTET IN DIE SAISON`, s: `Der Vorstand gibt das Ziel aus: ${CAREER.goal.txt}. Die Konkurrenz sieht ${me.short} auf Rang ${CAREER.goal.rank} der Kräfteverhältnisse.` };
   const o = TEAMS[m.opp], diff = m.my - m.their, sc = `${m.my}:${m.their}`;
-  const r = seeded(CAREER.year * 97 + m.round), pk = a => a[(r() * a.length) | 0];
+  // Auswahl gestreut über Saison, Spieltag und Gegner (der einfache Zufall gab für benachbarte Spieltage immer dieselbe Zeile)
+  const r = seeded(hashStr(`${CAREER.year}|${m.round}|${m.opp}|${sc}`)), pk = a => a[(r() * a.length) | 0];
+  const ME = me.short.toUpperCase(), O = o.short.toUpperCase();
   let h;
-  if (diff >= 8) h = pk([`${me.short.toUpperCase()} ZERLEGT ${o.short.toUpperCase()}!`, `GALA! ${sc} GEGEN ${o.short.toUpperCase()}`, `${o.short.toUpperCase()} CHANCENLOS`]);
-  else if (diff > 0) h = pk([`${me.short.toUpperCase()} BEZWINGT ${o.short.toUpperCase()}`, `ARBEITSSIEG GEGEN ${o.short.toUpperCase()}`, `ZWEI PUNKTE FÜR ${me.short.toUpperCase()}`]);
-  else if (diff === 0) h = pk([`PUNKTETEILUNG MIT ${o.short.toUpperCase()}`, `REMIS-KRIMI: ${sc}`]);
-  else if (diff > -8) h = pk([`PLEITE GEGEN ${o.short.toUpperCase()}`, `${me.short.toUpperCase()} VERLIERT ${sc}`, `KNAPP DANEBEN IN ${m.home ? me.short.toUpperCase() : o.short.toUpperCase()}`]);
-  else h = pk([`DEBAKEL! ${sc} GEGEN ${o.short.toUpperCase()}`, `${me.short.toUpperCase()} GEHT UNTER`]);
+  if (diff >= 8) h = pk([`${ME} ZERLEGT ${O}!`, `GALA! ${sc} GEGEN ${O}`, `${O} CHANCENLOS`]);
+  else if (diff >= 4) h = pk([`KLARER SIEG GEGEN ${O}`, `${ME} SOUVERÄN: ${sc}`, `${ME} LÄSST ${O} KEINE CHANCE`]);
+  else if (diff >= 2) h = pk([`${ME} BEZWINGT ${O}`, `ZWEI PUNKTE FÜR ${ME}`, `SIEG GEGEN ${O}`]);
+  else if (diff === 1) h = pk([`ARBEITSSIEG GEGEN ${O}`, `ZITTERSIEG: ${sc}`, `KNAPP, ABER VERDIENT: ${sc}`]);
+  else if (diff === 0) h = pk([`PUNKTETEILUNG MIT ${O}`, `REMIS-KRIMI: ${sc}`]);
+  else if (diff === -1) h = pk([`KNAPP DANEBEN IN ${m.home ? ME : O}`, `${ME} VERLIERT ${sc}`, `BITTER: ${sc} GEGEN ${O}`]);
+  else if (diff >= -3) h = pk([`PLEITE GEGEN ${O}`, `${ME} VERLIERT ${sc}`, `KEINE PUNKTE GEGEN ${O}`]);
+  else if (diff >= -7) h = pk([`KLARE NIEDERLAGE GEGEN ${O}`, `${O} ZU STARK FÜR ${ME}`, `${ME} CHANCENLOS: ${sc}`]);
+  else h = pk([`DEBAKEL! ${sc} GEGEN ${O}`, `${ME} GEHT UNTER`]);
   const s = [`${m.round}. Spieltag, ${m.home ? (m.fans ? `vor ${m.fans.toLocaleString('de-DE')} Zuschauern` : 'vor heimischem Publikum') : 'auswärts'}: ${me.short} ${m.my > m.their ? 'gewinnt' : m.my === m.their ? 'spielt' : 'verliert'} ${sc} gegen ${o.n}.`];
   if (m.top && m.top.g) s.push(`Bester Werfer war ${m.top.name} mit ${m.top.g} Toren.`);
   if (m.gk) s.push(`${m.gk.name} kam auf ${m.gk.sv} Paraden.`);

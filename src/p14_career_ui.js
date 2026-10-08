@@ -357,6 +357,7 @@ function seasonSummary() {
       <tr><td>Pokalsieger</td><td>${s.cupWinner !== null && s.cupWinner !== undefined ? esc(TEAMS[s.cupWinner].n) : '–'}${s.cupWinner === CAREER.team ? ' (DEIN VEREIN!)' : ''}</td></tr>
       <tr><td>Europapokalsieger</td><td>${s.euroWinner !== null && s.euroWinner !== undefined ? esc(TEAMS[s.euroWinner].n) : '–'}${s.euroWinner === CAREER.team ? ' (DEIN VEREIN!)' : s.euroMy ? ` · dein Verein: ${esc(s.euroMy)}` : ''}</td></tr>
       <tr><td>Torschützenkönig</td><td>${s.top ? `${esc(s.top.name)} (${TEAMS[s.top.tid].k}), ${s.top.n} Tore` : '–'}</td></tr>
+      ${s.awards ? AWARDS.map(([k, n]) => `<tr><td>${n}</td><td>${awardTxt(s.awards[k])}</td></tr>`).join('') : ''}
     </tbody></table>
     <h3>ENTWICKLUNG IM KADER</h3><p class="muted" style="font-size:18px">${s.dev.slice(0, 8).map(d => `${esc(d.name)} <b style="color:${d.d > 0 ? 'var(--green)' : 'var(--hot)'}">${d.d > 0 ? '+' : ''}${d.d}</b> (${d.o})`).join(' · ') || 'Kaum Veränderungen.'}</p>
     ${s.gone && s.gone.length ? `<p class="muted">Vertrag ausgelaufen, ablösefrei weg: ${s.gone.map(esc).join(', ')}.</p>` : ''}
