@@ -3383,13 +3383,19 @@ function headline() {
   const m = CAREER.lastMatch, me = TEAMS[CAREER.team];
   if (!m) return { h: `${me.short.toUpperCase()} STARTET IN DIE SAISON`, s: `Der Vorstand gibt das Ziel aus: ${CAREER.goal.txt}. Die Konkurrenz sieht ${me.short} auf Rang ${CAREER.goal.rank} der Kräfteverhältnisse.` };
   const o = TEAMS[m.opp], diff = m.my - m.their, sc = `${m.my}:${m.their}`;
-  const r = seeded(CAREER.year * 97 + m.round), pk = a => a[(r() * a.length) | 0];
+  // Auswahl gestreut über Saison, Spieltag und Gegner (der einfache Zufall gab für benachbarte Spieltage immer dieselbe Zeile)
+  const r = seeded(hashStr(`${CAREER.year}|${m.round}|${m.opp}|${sc}`)), pk = a => a[(r() * a.length) | 0];
+  const ME = me.short.toUpperCase(), O = o.short.toUpperCase();
   let h;
-  if (diff >= 8) h = pk([`${me.short.toUpperCase()} ZERLEGT ${o.short.toUpperCase()}!`, `GALA! ${sc} GEGEN ${o.short.toUpperCase()}`, `${o.short.toUpperCase()} CHANCENLOS`]);
-  else if (diff > 0) h = pk([`${me.short.toUpperCase()} BEZWINGT ${o.short.toUpperCase()}`, `ARBEITSSIEG GEGEN ${o.short.toUpperCase()}`, `ZWEI PUNKTE FÜR ${me.short.toUpperCase()}`]);
-  else if (diff === 0) h = pk([`PUNKTETEILUNG MIT ${o.short.toUpperCase()}`, `REMIS-KRIMI: ${sc}`]);
-  else if (diff > -8) h = pk([`PLEITE GEGEN ${o.short.toUpperCase()}`, `${me.short.toUpperCase()} VERLIERT ${sc}`, `KNAPP DANEBEN IN ${m.home ? me.short.toUpperCase() : o.short.toUpperCase()}`]);
-  else h = pk([`DEBAKEL! ${sc} GEGEN ${o.short.toUpperCase()}`, `${me.short.toUpperCase()} GEHT UNTER`]);
+  if (diff >= 8) h = pk([`${ME} ZERLEGT ${O}!`, `GALA! ${sc} GEGEN ${O}`, `${O} CHANCENLOS`]);
+  else if (diff >= 4) h = pk([`KLARER SIEG GEGEN ${O}`, `${ME} SOUVERÄN: ${sc}`, `${ME} LÄSST ${O} KEINE CHANCE`]);
+  else if (diff >= 2) h = pk([`${ME} BEZWINGT ${O}`, `ZWEI PUNKTE FÜR ${ME}`, `SIEG GEGEN ${O}`]);
+  else if (diff === 1) h = pk([`ARBEITSSIEG GEGEN ${O}`, `ZITTERSIEG: ${sc}`, `KNAPP, ABER VERDIENT: ${sc}`]);
+  else if (diff === 0) h = pk([`PUNKTETEILUNG MIT ${O}`, `REMIS-KRIMI: ${sc}`]);
+  else if (diff === -1) h = pk([`KNAPP DANEBEN IN ${m.home ? ME : O}`, `${ME} VERLIERT ${sc}`, `BITTER: ${sc} GEGEN ${O}`]);
+  else if (diff >= -3) h = pk([`PLEITE GEGEN ${O}`, `${ME} VERLIERT ${sc}`, `KEINE PUNKTE GEGEN ${O}`]);
+  else if (diff >= -7) h = pk([`KLARE NIEDERLAGE GEGEN ${O}`, `${O} ZU STARK FÜR ${ME}`, `${ME} CHANCENLOS: ${sc}`]);
+  else h = pk([`DEBAKEL! ${sc} GEGEN ${O}`, `${ME} GEHT UNTER`]);
   const s = [`${m.round}. Spieltag, ${m.home ? (m.fans ? `vor ${m.fans.toLocaleString('de-DE')} Zuschauern` : 'vor heimischem Publikum') : 'auswärts'}: ${me.short} ${m.my > m.their ? 'gewinnt' : m.my === m.their ? 'spielt' : 'verliert'} ${sc} gegen ${o.n}.`];
   if (m.top && m.top.g) s.push(`Bester Werfer war ${m.top.name} mit ${m.top.g} Toren.`);
   if (m.gk) s.push(`${m.gk.name} kam auf ${m.gk.sv} Paraden.`);

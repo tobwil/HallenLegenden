@@ -1156,6 +1156,21 @@ test('Erfolge: Spieler, Torwart und Talent der Saison, Spieler des Spiels in der
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Zeitung: Schlagzeile passt zur Tordifferenz (6 Tore Vorsprung ist kein Arbeitssieg) und wechselt über die Spieltage', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 31);
+  const r = await page.evaluate(() => {
+    careerCreate(TEAMS.find(t => t.k === 'KIE').id, 1, 1, 1, true, 1);
+    const lines = d => Array.from({ length: 17 }, (_, i) => { CAREER.lastMatch = { round: i + 1, home: i % 2 === 0, opp: (i * 5 + 1) % 18, my: 25 + Math.max(d, 0), their: 25 - Math.min(d, 0) }; return headline().h; });
+    const tpl = l => new Set(l.map(h => h.replace(/[A-ZÄÖÜ][A-ZÄÖÜ-]+ ?/g, w => /^(ARBEITSSIEG|ZITTERSIEG|KNAPP|ABER|VERDIENT|KLARER|SIEG|SOUVERÄN|LÄSST|KEINE|CHANCE|GEGEN|ZWEI|PUNKTE|FÜR|BEZWINGT|PLEITE|VERLIERT|KLARE|NIEDERLAGE|ZU|STARK|CHANCENLOS|BITTER|DANEBEN|IN|DEBAKEL|GEHT|UNTER|ZERLEGT|GALA|PUNKTETEILUNG|MIT|REMIS-KRIMI) ?$/.test(w) ? w : 'X ')));
+    return { six: lines(6), one: lines(1), minus5: lines(-5), minus1: lines(-1), var1: tpl(lines(1)).size, var2: tpl(lines(2)).size, varM2: tpl(lines(-2)).size };
+  });
+  ok(!r.six.some(h => /ARBEITSSIEG|ZITTERSIEG|KNAPP/.test(h)), '6 Tore Vorsprung als knapper Sieg: ' + r.six.join(' | '));
+  ok(r.one.every(h => /ARBEITSSIEG|ZITTERSIEG|KNAPP/.test(h)), '1 Tor Vorsprung nicht als knapper Sieg: ' + r.one.join(' | '));
+  ok(!r.minus5.some(h => /KNAPP|BITTER/.test(h)), '5 Tore Rückstand als knapp: ' + r.minus5.join(' | '));
+  ok(r.var1 >= 2 && r.var2 >= 2 && r.varM2 >= 2, `Schlagzeile wechselt nicht (${r.var1}/${r.var2}/${r.varM2} Varianten über 17 Spieltage)`);
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 test('Erfolge: ältere Karriere bekommt Titel aus der Historie nachgetragen', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 8);
   await page.evaluate(() => {
