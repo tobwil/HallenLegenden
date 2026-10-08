@@ -4,7 +4,7 @@
 #   sh promo.sh film     Story-Film und Anzug-Clip von der Landingpage
 #   sh promo.sh spiel    Clips aus dem Spiel (Final Four, Aufstellungen, Spielszene, Kempa, Europapokal) und daraus der Teaser
 #   sh promo.sh profil   Profilbild und Banner für Social Media (X, Bluesky …) nach docs/presse/
-#   sh promo.sh bilder   Standbilder der Menüs für README und Landingpage nach docs/screenshots/ (Vor dem Spiel, Erfolge, Kader, Teilen, Handy)
+#   sh promo.sh bilder   Standbilder für README und Landingpage nach docs/screenshots/ (Titel, Spielszene, Vor dem Spiel, Erfolge, Kader, Teilen, Handy)
 # Braucht: node mit playwright (npm i playwright im Ordner tools/promo), ffmpeg, python3.
 # Optional: CHROMIUM=/pfad/zu/chromium, falls Playwright seinen Browser nicht findet.
 set -e

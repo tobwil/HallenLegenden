@@ -8,6 +8,7 @@ Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Ent
 - **Ältere Karrieren** bekommen Meilensteine beim ersten Laden aus Titeln, Rekorden, Historie und Ehrenhalle nachgetragen, ohne Zeitungsmeldung.
 - **Plattform:** Jeder Meilenstein geht als Ereignis `meilenstein` mit `{ id }` an die Plattform-Schnittstelle (und an Umami), nachgetragene mit `{ id, nachtrag: true }`. So kann die iOS-App sie zum Beispiel als Game-Center-Erfolge melden.
 - **Spieler des Spiels** steht jetzt auch in der Spieltagsmeldung der Zeitung. Gezählt wurde er schon vorher, auf der Spielerkarte.
+- **README-Screenshots aktualisiert:** Titelbildschirm (zeigte noch „© 2026 tobwil · Open Source (MIT)“), Spielszene (aktuelle Namen) und Tab ERFOLGE mit Meilensteinen. `tools/promo/bilder.js` nimmt jetzt auch Titelbildschirm und Spielszene auf und wiederholt das Handy-Bild, falls gerade ein Pfiff läuft. Die übrigen Bilder sind inhaltlich aktuell.
 - Spielablauf, Balance und Simulation bleiben unverändert. 1 neuer Regressionstest (Auszeichnungen gegen Liga, Einsätze und Alter geprüft, Zeitung, Saisonbilanz, Meilenstein mit Saison und genau einmal, Plattform-Ereignis, Dreher-Tor im Karriere-Spiel, stiller Nachtrag, Anzeige), insgesamt 50. Zwei Erfolge-Tests zählen nur noch Trophäenschrank und Rekorde.
 
 ## v8.29: App Store und Copyright

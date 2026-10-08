@@ -1,4 +1,4 @@
-/* Nimmt Standbilder für README und Landingpage auf (PNG, 1280 × 720, Handy 1278 × 590): Teamauswahl, Karriere
+/* Nimmt Standbilder für README und Landingpage auf (PNG, 1280 × 720, Handy 1278 × 590): Titelbildschirm, Spielszene, Teamauswahl, Karriere
    (Zeitung, Statistik, Pokal, Europapokal, Kader, Spielerkarte, Scouting-Karte, Erfolge), Vor dem Spiel, Teilen-Bild und Handy im Querformat.
    Aufruf: node bilder.js <Ausgabeordner> [Basis-URL]
    Fester Zufall: die Menübilder sind bei jedem Aufruf gleich (das Handybild läuft in Echtzeit und kann leicht abweichen). promo.sh wandelt sie in JPG für docs/screenshots/ um.
@@ -19,6 +19,16 @@ const SEED = s => { window.__seed = s => { let x = s; Math.random = () => (x = (
     await p.goto(BASE + '/game/index.html'); await p.waitForTimeout(700); return { p, ctx };
   };
   const shot = (p, name) => p.screenshot({ path: path.join(OUT, name + '.png') });
+
+  // Titelbildschirm (Demo-Spiel im Hintergrund, Copyright-Zeile)
+  { const { p, ctx } = await open(2026);
+    await p.waitForTimeout(1500); await shot(p, 'title-screen'); await ctx.close(); }
+
+  // Spielszene: Kiel gegen Flensburg kurz nach dem Anpfiff, Name über dem eigenen Spieler
+  { const { p, ctx } = await open(2026);
+    await p.evaluate(() => { __seed(2026); startMatch(TEAMS.find(t => t.k === 'KIE').id, TEAMS.find(t => t.k === 'FLE').id, { human: 0, halfLen: 180 }); G.introT = 99; });
+    await p.waitForFunction(() => G && G.phase === 'play', null, { timeout: 20000 }); await p.waitForTimeout(1200);
+    await shot(p, 'gameplay'); await ctx.close(); }
 
   // Schnelles Spiel: Kiel gegen Flensburg
   { const { p, ctx } = await open(2026);
@@ -57,11 +67,15 @@ const SEED = s => { window.__seed = s => { let x = s; Math.random = () => (x = (
     await p.evaluate(() => { __seed(21); return shareCard('career'); }); await p.waitForSelector('#menu img.sharecard'); await p.waitForTimeout(300);
     await shot(p, 'share-card'); await ctx.close(); }
 
-  // Handy quer: Spielfeld über die volle Breite, durchscheinende Touch-Knöpfe
-  { const { p, ctx } = await open(4242, { viewport: { width: 852, height: 393 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1.5 });
+  // Handy quer: Spielfeld über die volle Breite, durchscheinende Touch-Knöpfe. Läuft in Echtzeit: Liegt gerade ein Pfiff an (Foul, Freiwurf), neu aufnehmen
+  for (let k = 0; k < 4; k++) {
+    const { p, ctx } = await open(4242, { viewport: { width: 852, height: 393 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1.5 });
     await p.evaluate(() => { localStorage.setItem('hl4_touchtip', '9'); document.body.classList.add('touch'); startMatch(TEAMS.find(t => t.k === 'KIE').id, TEAMS.find(t => t.k === 'FLE').id, { human: 0, halfLen: 180 }); G.introT = 99; });
     await p.waitForFunction(() => G && G.phase === 'play', null, { timeout: 20000 }); await p.waitForTimeout(2500);
-    await shot(p, 'mobile'); await ctx.close(); }
+    const clean = await p.evaluate(() => G.phase === 'play');
+    if (clean || k === 3) await shot(p, 'mobile');
+    await ctx.close(); if (clean) break;
+  }
 
   await b.close();
 })();
