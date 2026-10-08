@@ -12,6 +12,7 @@ function erfolgeInit() {
   if (!CAREER) return;
   CAREER.rec ??= {};
   CAREER.hall ??= {};
+  CAREER.awards ??= [];
   if (!CAREER.titles) {   // ältere Karrieren: Titel aus der Historie nachtragen
     CAREER.titles = [];
     for (const h of CAREER.history || []) {
@@ -20,7 +21,71 @@ function erfolgeInit() {
     }
     for (const p of CAREER.squads[CAREER.team]) hallEntry(p).g = Math.max(hallEntry(p).g, p.tg || 0);   // Ehrenhalle: Tore bisher
   }
+  if (!CAREER.ms) msInit();
 }
+const isLegend = e => e.s >= 5 || e.g >= 150 || e.t >= 3;   // Ehrenhalle: 5 Saisons, 150 Tore oder 3 Titel für deine Vereine
+// ---------- Meilensteine: einmal pro Karriere, mit Saison. Melden sich in der Zeitung und als Ereignis an die Plattform (z. B. Game Center) ----------
+const MILESTONES = [
+  { k: 'sieg1', n: 'ERSTER SIEG', d: 'Gewinne ein Pflichtspiel.' },
+  { k: 'kantersieg', n: 'KANTERSIEG', d: 'Gewinne mit 10 Toren Unterschied.' },
+  { k: 'serie5', n: 'LAUF', d: '5 Ligasiege in Folge.' },
+  { k: 'serie10', n: 'UNAUFHALTSAM', d: '10 Ligasiege in Folge.' },
+  { k: 'voll', n: 'AUSVERKAUFT', d: 'Volle Halle bei einem Heimspiel.' },
+  { k: 'dreher', n: 'DREHER-TOR', d: 'Triff selbst mit einem Dreher.' },
+  { k: 'kempa', n: 'KEMPA-TOR', d: 'Triff selbst mit dem Kempa-Trick.' },
+  { k: 'krimi', n: 'NERVENSTARK', d: 'Gewinne selbst ein 7-Meter-Werfen.' },
+  { k: 'aufstieg', n: 'AUFSTIEG', d: 'Steige in die 1. Liga auf.' },
+  { k: 'final4', n: 'FINAL FOUR', d: 'Erreiche ein Final Four im Pokal oder Europapokal.' },
+  { k: 'pokal', n: 'POKALSIEGER', d: 'Gewinne den Pokal.' },
+  { k: 'meister', n: 'DEUTSCHER MEISTER', d: 'Werde Meister der 1. Liga.' },
+  { k: 'euro', n: 'EUROPAS BESTE', d: 'Gewinne den Europapokal.' },
+  { k: 'double', n: 'DOUBLE', d: 'Meister und Pokalsieger in derselben Saison.' },
+  { k: 'mvp', n: 'SPIELER DER SAISON', d: 'Ein Spieler deines Vereins wird Spieler der Saison.' },
+  { k: 'legende', n: 'HALLEN-LEGENDE', d: 'Ein Spieler deiner Vereine wird Legende der Ehrenhalle.' },
+  { k: 'treue', n: 'URGESTEIN', d: '10 Saisons als Trainer.' },
+  { k: 'million', n: 'MILLIONÄR', d: '1 Million Euro auf dem Konto.' },
+];
+function msUnlock(k, year = CAREER.year, quiet = false) {
+  if (!CAREER.ms) erfolgeInit();   // alte Karriere: erst nachtragen, dann neu freischalten
+  const M = CAREER.ms;
+  if (M[k]) return false;
+  M[k] = { y: year ?? null };
+  const m = MILESTONES.find(x => x.k === k);
+  if (!quiet) news(`Meilenstein: ${m.n}! ${m.d}`);
+  track('meilenstein', quiet ? { id: k, nachtrag: true } : { id: k });
+  return true;
+}
+// ältere Karrieren: aus Titeln, Rekorden, Historie und Ehrenhalle nachtragen (ohne Zeitungsmeldung)
+function msInit() {
+  CAREER.ms = {};
+  const R = CAREER.rec || {}, T = CAREER.titles || [], H = CAREER.history || [], q = (k, y) => msUnlock(k, y, true);
+  if (R.win) q('sieg1', R.win.year);
+  if (R.win && R.win.v >= 10) q('kantersieg', R.win.year);
+  if (R.streak && R.streak.v >= 5) q('serie5', R.streak.year);
+  if (R.streak && R.streak.v >= 10) q('serie10', R.streak.year);
+  for (const t of T) {
+    if (['aufstieg', 'pokal', 'meister', 'euro'].includes(t.type)) q(t.type, t.year);
+    if (t.type === 'pokal' || t.type === 'euro') q('final4', t.year);
+    if (t.type === 'meister' && T.some(u => u.type === 'pokal' && u.year === t.year)) q('double', t.year);
+  }
+  for (const h of H) if (h.euroMy && /Halbfinale|Finale|Sieger/.test(h.euroMy)) q('final4', h.year);
+  if (H.length >= 10) q('treue', H[9].year);
+  for (const a of CAREER.awards || []) if (a.mvp && a.mvp.own) q('mvp', a.year);
+  if (Object.values(CAREER.hall || {}).some(isLegend)) q('legende');
+  if (CAREER.money >= 1e6) q('million');
+}
+// nach jedem eigenen Spiel (gespielt oder simuliert)
+function msAfterMatch(my, their, fans) {
+  if (my > their) msUnlock('sieg1');
+  if (my - their >= 10) msUnlock('kantersieg');
+  if (CAREER.streak >= 5) msUnlock('serie5');
+  if (CAREER.streak >= 10) msUnlock('serie10');
+  if (fans && fans >= hallCap(CAREER.team)) msUnlock('voll');
+  if (CAREER.money >= 1e6) msUnlock('million');
+  if (Object.values(CAREER.hall).some(isLegend)) msUnlock('legende');
+}
+// Tore, die du selbst im Karriere-Spiel erzielst: Dreher und Kempa
+function msGoal(kind) { if (G && G.career && CAREER && !G.demo) msUnlock(kind); }
 function seasonTitles(lg, pos, cup, euro, up) {
   const t = [];
   if (lg === 1 && pos === 1) t.push('meister');
@@ -37,7 +102,7 @@ function hallEntry(p) {
 const better = (cur, v) => !cur || v > cur.v;
 // nach jedem eigenen Spiel (Liga, Pokal, Europapokal)
 function noteOwnMatch(my, their, opp, comp, stats, L, fans) {
-  if (!CAREER.rec) erfolgeInit();
+  erfolgeInit();
   const R = CAREER.rec, base = { opp, sc: `${my}:${their}`, year: CAREER.year, comp, team: CAREER.team };
   if (my > their && better(R.win, my - their)) R.win = { v: my - their, ...base };
   if (my < their && better(R.loss, their - my)) R.loss = { v: their - my, ...base };
@@ -49,10 +114,11 @@ function noteOwnMatch(my, their, opp, comp, stats, L, fans) {
     if (p.role !== 'TW' && g && better(R.pgoals, g)) R.pgoals = { v: g, name: p.name, ...base };
   }
   if (comp === 'Liga' && CAREER.streak > 0 && better(R.streak, CAREER.streak)) R.streak = { v: CAREER.streak, year: CAREER.year, team: CAREER.team };
+  msAfterMatch(my, their, fans);
 }
 // Saisonabschluss (vor Alterung und Kaderwechseln): Titel, Saisonrekorde, Ehrenhalle
 function seasonClose(lg, pos, row, up, cupWon, euroWon) {
-  if (!CAREER.rec) erfolgeInit();
+  erfolgeInit();
   const me = CAREER.team, R = CAREER.rec, sq = CAREER.squads[me];
   const titles = seasonTitles(lg, pos, cupWon, euroWon, up);
   titles.forEach(type => { CAREER.titles.push({ type, year: CAREER.year, team: me }); track('titel', { art: type }); });
@@ -60,14 +126,53 @@ function seasonClose(lg, pos, row, up, cupWon, euroWon) {
   if (better(R.season, pts * 10 + (lg === 1 ? 5 : 0))) R.season = { v: pts * 10 + (lg === 1 ? 5 : 0), pts, neg: row.n * 2 + row.u, pos, lg, year: CAREER.year, team: me };
   if (best && best.sg && better(R.scorer, best.sg)) R.scorer = { v: best.sg, name: best.name, year: CAREER.year, team: me };
   for (const p of sq) { const e = hallEntry(p); e.s++; e.t += titles.length; e.team = me; }
+  for (const k of ['aufstieg', 'pokal', 'meister', 'euro']) if (titles.includes(k)) msUnlock(k);
+  if (titles.includes('meister') && titles.includes('pokal')) msUnlock('double');
+  if ((CAREER.cup && CAREER.cup.myBest >= 3) || /Halbfinale|Finale|Sieger/.test(euroMyBest())) msUnlock('final4');   // Halbfinale erreicht
+  if ((CAREER.history || []).length + 1 >= 10) msUnlock('treue');
+  if (Object.values(CAREER.hall).some(isLegend)) msUnlock('legende');
   const fans = finOf().fans, avg = fans.length ? Math.round(fans.reduce((a, b) => a + b, 0) / fans.length / 10) * 10 : 0;
   return { titles, own: { s: row.s, u: row.u, n: row.n, tp: row.tp, tm: row.tm, pts, neg: row.n * 2 + row.u, scorer: best && best.sg ? { name: best.name, n: best.sg } : null, fans: avg } };
+}
+// ---------- Auszeichnungen der Saison in deiner Liga (vor Alterung und Statistik-Reset): Spieler, Torwart, Talent ----------
+// Mindestens 40 % der Spieltage gespielt. Feldspieler: Tore, Vorlagen, Ballgewinne, Spieler des Spiels, dazu ein Bonus nach Tabellenplatz.
+// Torwart: Fangquote, Spieler des Spiels, kleiner Tabellenbonus. Talent: bester Feldspieler bis 21 Jahre (nicht der Spieler der Saison)
+function seasonAwards(lg, table) {
+  const st = standingsOf(table), n = st.length, need = CAREER.season.fixtures.length * 0.4, me = CAREER.team;
+  const bonus = tid => { const k = st.findIndex(x => x.i === tid); return k < 0 ? 0 : 10 * (1 - k / Math.max(1, n - 1)); };
+  const pool = st.flatMap(({ i }) => CAREER.squads[i].map(p => ({ p, tid: i, x: statOf(p) }))).filter(o => o.x.sp >= need);
+  const quote = x => x.sv / Math.max(1, x.sv + x.ga);
+  const field = o => o.x.g + o.x.as * 0.8 + o.x.bg * 0.6 + o.x.potm * 2.5 + bonus(o.tid), keeper = o => quote(o.x) * 100 + o.x.potm * 1.5 + bonus(o.tid) * 0.3;
+  const top = (list, f) => list.slice().sort((a, b) => f(b) - f(a))[0];
+  const F = pool.filter(o => o.p.role !== 'TW'), mvp = top(F, field), tw = top(pool.filter(o => o.p.role === 'TW'), keeper), tal = top(F.filter(o => o.p.age <= 21 && o !== mvp), field);
+  const ent = (o, line) => o ? { name: o.p.name, pid: o.p.pid, tid: o.tid, role: o.p.role, own: o.tid === me, line } : null;
+  return { year: CAREER.year, lg,
+    mvp: ent(mvp, mvp && `${mvp.x.g} Tore, ${mvp.x.as} Vorlagen, ${mvp.x.potm}× Spieler des Spiels`),
+    tw: ent(tw, tw && `${Math.round(quote(tw.x) * 100)} % gehalten, ${tw.x.sv} Paraden`),
+    tal: ent(tal, tal && `${tal.p.age} Jahre, ${tal.x.g} Tore, ${tal.x.as} Vorlagen`) };
+}
+const AWARDS = [['mvp', 'Spieler der Saison'], ['tw', 'Torwart der Saison'], ['tal', 'Talent der Saison']];
+const awardTxt = w => w ? `${w.own ? '<b style="color:var(--gold)">' : ''}${esc(w.name)}${w.own ? '</b>' : ''} (${TEAMS[w.tid].k}), ${esc(w.line)}${w.own ? ' · DEIN VEREIN!' : ''}` : '–';
+function awardSeason(lg, table) {
+  erfolgeInit();
+  const a = seasonAwards(lg, table); CAREER.awards.push(a);
+  const txt = AWARDS.filter(([k]) => a[k]).map(([k, n]) => `${n} ${a[k].name} (${TEAMS[a[k].tid].short})`).join(', ');
+  if (txt) news(`Auszeichnungen ${seasonName(a.year)}: ${txt}.`);
+  for (const [k] of AWARDS) if (a[k] && a[k].own) { const p = findCareerPlayer(CAREER.team, a[k].pid); if (p) hallEntry(p).aw = (hallEntry(p).aw || 0) + 1; }
+  if (a.mvp && a.mvp.own) msUnlock('mvp');
+  return a;
 }
 // ---------- Anzeige: Tab ERFOLGE ----------
 function trophySvg(col, on) {
   const c = on ? col : '#3a2f4d', d = on ? shade(col, 0.6) : '#2a2438';
   const px = [[3, 1, 8, 1, d], [2, 2, 10, 5, c], [0, 2, 2, 3, c], [12, 2, 2, 3, c], [1, 4, 1, 2, c], [12, 4, 1, 2, c], [3, 7, 8, 1, c], [5, 8, 4, 2, c], [6, 10, 2, 2, d], [4, 12, 6, 1, c], [3, 13, 8, 2, d], [4, 3, 2, 3, on ? '#ffffff' : '#4a3d62']];
   return `<svg class="tro" viewBox="0 0 14 16" width="42" height="48" aria-hidden="true">${px.map(([x, y, w, h, f]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"/>`).join('')}</svg>`;
+}
+// Medaille für Meilensteine (Pixel, wie die Pokale)
+function medalSvg(on) {
+  const c = on ? '#ffc83a' : '#3a2f4d', d = on ? '#b07a12' : '#2a2438', r = on ? '#ff4f3a' : '#2a2438';
+  const px = [[3, 0, 2, 4, r], [7, 0, 2, 4, r], [4, 3, 4, 1, r], [3, 4, 6, 1, d], [2, 5, 8, 5, c], [3, 10, 6, 1, d], [3, 5, 6, 1, on ? '#fff3c4' : '#4a3d62'], [5, 6, 2, 3, d]];
+  return `<svg class="tro" viewBox="0 0 12 12" width="30" height="30" aria-hidden="true">${px.map(([x, y, w, h, f]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${f}"/>`).join('')}</svg>`;
 }
 const teamTag = id => id !== undefined && id !== CAREER.team ? ` · ${esc(TEAMS[id].short)}` : '';
 function trophyView() {
@@ -85,13 +190,18 @@ function trophyView() {
     ['Beste Saison', R.season && `${R.season.pts}:${R.season.neg} Punkte, Platz ${R.season.pos} in der ${R.season.lg}. Liga (${seasonName(R.season.year)}${teamTag(R.season.team)})`],
     ['Zuschauerrekord', R.fans && `${R.fans.v.toLocaleString('de-DE')} gegen ${esc(TEAMS[R.fans.opp].n)} (${seasonName(R.fans.year)})`],
   ];
-  const score = e => e.g + e.apps * 0.5 + e.t * 25 + e.s * 10, legend = e => e.s >= 5 || e.g >= 150 || e.t >= 3;
+  const score = e => e.g + e.apps * 0.5 + e.t * 25 + e.s * 10, legend = isLegend;
   const hall = H.sort((a, b) => score(b[1]) - score(a[1])).slice(0, 10);
   return `<p class="muted">Alle Titel, Rekorde und die besten Spieler deiner Karriere. Rekorde zählen ab dieser Version, Titel auch rückwirkend aus der Historie.</p>
     <h3>TROPHÄENSCHRANK · ${T.length} ${T.length === 1 ? 'TITEL' : 'TITEL'}</h3><div class="tshelves">${shelf}</div>
+    <h3>MEILENSTEINE · ${Object.keys(CAREER.ms).length} VON ${MILESTONES.length}</h3><div class="tshelves ms">${MILESTONES.map(m => { const got = CAREER.ms[m.k];
+      return `<div class="tshelf ${got ? 'won' : ''}">${medalSvg(got)}<span>${m.n}</span><i>${esc(m.d)}</i>${got ? `<b style="font-size:10px">${got.y ? seasonName(got.y) : '✓'}</b>` : ''}</div>`; }).join('')}</div>
+    <h3>AUSZEICHNUNGEN</h3>${CAREER.awards.length ? `<table class="sqt stt aw"><tbody>${CAREER.awards.slice().reverse().map(a =>
+      `<tr><td class="lbl">${seasonName(a.year)} · ${a.lg}. Liga</td><td>${AWARDS.filter(([k]) => a[k]).map(([k, n]) => `${n.replace(' der Saison', '')}: ${a[k].own ? '<b style="color:var(--gold)">' : ''}${esc(a[k].name)}${a[k].own ? '</b>' : ''} (${TEAMS[a[k].tid].k})`).join(' · ')}</td></tr>`).join('')}</tbody></table>
+      <p class="muted" style="font-size:17px">Spieler, Torwart und Talent der Saison, vergeben am Saisonende in deiner Liga. Gold: Spieler deines Vereins.</p>` : '<p class="muted">Am Ende deiner ersten Saison werden Spieler, Torwart und Talent der Saison gewählt.</p>'}
     <h3>REKORDE</h3><table class="sqt stt"><tbody>${rec.map(([l, v]) => `<tr><td class="lbl">${l}</td><td>${v || '<span class="muted">noch kein Eintrag</span>'}</td></tr>`).join('')}</tbody></table>
     <h3>EHRENHALLE</h3>${hall.length ? `<table class="sqt cards"><thead><tr><th>NAME</th><th>POS</th><th>SAISONS</th><th>SPIELE</th><th>TORE</th><th>TITEL</th></tr></thead><tbody>${hall.map(([k, e]) =>
-      `<tr><td class="c-name">${esc(e.name)}${legend(e) ? ' <span class="tal" style="color:var(--gold)">LEGENDE</span>' : ''}${inSquad.has(k) ? '' : ' <span class="age">ehemalig</span>'}</td><td data-l="POS">${e.role}</td><td data-l="SAISONS">${e.s}</td><td data-l="SPIELE">${e.apps}</td><td data-l="TORE">${e.g}</td><td data-l="TITEL">${e.t}</td></tr>`).join('')}</tbody></table>
+      `<tr><td class="c-name">${esc(e.name)}${legend(e) ? ' <span class="tal" style="color:var(--gold)">LEGENDE</span>' : ''}${e.aw ? ` <span class="tal">${e.aw}× AUSGEZEICHNET</span>` : ''}${inSquad.has(k) ? '' : ' <span class="age">ehemalig</span>'}</td><td data-l="POS">${e.role}</td><td data-l="SAISONS">${e.s}</td><td data-l="SPIELE">${e.apps}</td><td data-l="TORE">${e.g}</td><td data-l="TITEL">${e.t}</td></tr>`).join('')}</tbody></table>
       <p class="muted" style="font-size:17px">LEGENDE: 5 Saisons, 150 Tore oder 3 Titel für deine Vereine.</p>` : '<p class="muted">Noch keine Einträge. Nach dem ersten Spiel geht es los.</p>'}
     <div class="row"><button class="main" data-act="cShare" data-v="career">KARRIERE ALS BILD TEILEN</button></div>`;
 }

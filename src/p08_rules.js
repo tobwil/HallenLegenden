@@ -135,7 +135,9 @@ function scoreGoal(team, gx) {
   if (sc && shot && shot.assist && shot.assist !== sc && shot.assist.team === team) shot.assist.as = (shot.assist.as || 0) + 1;
   const gkC = G.goalie[1 - team]; if (gkC) gkC.ga = (gkC.ga || 0) + 1;
   const kempaGoal = G.kempa && G.kempa.to === sc; G.kempa = null;
-  const dreher = !!(sc && shot && shot.spin), title = !sc ? 'EIGENTOR' : kempaGoal ? 'KEMPA-TOR!' : wasPen ? 'VERWANDELT!' : dreher ? 'DREHER!' : 'TOR!';
+  const dreher = !!(sc && shot && shot.spin);
+  if (sc && sc.team === G.human) { if (dreher) msGoal('dreher'); if (kempaGoal) msGoal('kempa'); }   // Meilensteine (nur Karriere)
+  const title = !sc ? 'EIGENTOR' : kempaGoal ? 'KEMPA-TOR!' : wasPen ? 'VERWANDELT!' : dreher ? 'DREHER!' : 'TOR!';
   banner(title, k.c1, sc ? `#${sc.num} ${sc.name}` : TEAMS[G.tid[team]].n, 2.1, true);
   G.cut = sc ? { kind: 'goal', p: sc, t: 0, dur: 2.4, title, col: k.c1 } : null;
   ledFlash(`TOR  ${TEAMS[G.tid[team]].short.toUpperCase()}  ${G.score[0]}:${G.score[1]}`, k.c1 === '#f4f4f0' ? '#ffffff' : k.c1, 4);

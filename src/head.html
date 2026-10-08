@@ -174,6 +174,10 @@ button.link:hover,button.link:focus-visible{background:none;color:var(--gold)}
 .tshelf b{font-family:var(--pix);font-weight:normal;font-size:14px;color:var(--gold)}
 .tshelf span{font-family:var(--pix);font-size:8px;color:var(--ink);line-height:1.4}
 .tshelf i{font-style:normal;font-size:16px;color:var(--mute)}
+.tshelves.ms{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.tshelves.ms .tshelf{padding:8px 6px}
+.tshelves.ms .tshelf:not(.won){opacity:.75}
+.tshelves.ms .tshelf i{font-size:15px;line-height:1.15}
 .jobs{border:3px solid var(--hot);background:rgba(255,79,58,.08);padding:10px 12px;display:grid;gap:8px}
 .jobs h3{color:var(--hot);margin:0}
 .sharecard{display:block;width:min(100%,360px);height:auto;margin:0 auto;image-rendering:pixelated;border:3px solid var(--ink);box-shadow:5px 5px 0 #000}

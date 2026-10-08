@@ -256,6 +256,7 @@ function playRound(own) {
   S.posHist = (S.posHist || []).concat(standingsOf(S.table).findIndex(r => r.i === CAREER.team) + 1);   // Tabellenplatz nach jedem Spieltag (Statistik)
   const me = CAREER.team, mine = own.a === me ? [own.ga, own.gb] : [own.gb, own.ga], opp = own.a === me ? own.b : own.a;
   const res = mine[0] > mine[1] ? 'S' : mine[0] === mine[1] ? 'U' : 'N';
+  const pm = own.La.concat(own.Lb).find(p => (own.stats[p.pid] || {}).potm), pmTxt = pm ? ` Spieler des Spiels: ${pm.name}${own.La.includes(pm) === (own.a === me) ? '' : ` (${TEAMS[opp].short})`}.` : '';
   const myL = own.a === me ? own.La : own.Lb, top = myL.filter(p => p.role !== 'TW').map(p => [p, (own.stats[p.pid] || {}).g || 0]).sort((x, y) => y[1] - x[1])[0];
   const gk = myL.find(p => p.role === 'TW');
   CAREER.lastMatch = { round: S.round + 1, home: own.a === me, opp, my: mine[0], their: mine[1], res, top: top ? { name: top[0].name, g: top[1] } : null, gk: gk ? { name: gk.name, sv: (own.stats[gk.pid] || {}).sv || 0 } : null };
@@ -264,7 +265,7 @@ function playRound(own) {
   const fin = roundFinances(fx, own.a === me, opp), g = fin.gate;
   if (g) CAREER.lastMatch.fans = g.n;
   noteOwnMatch(mine[0], mine[1], opp, 'Liga', own.stats, myL, g ? g.n : 0);   // Rekorde, Ehrenhalle
-  news(`${S.round + 1}. Spieltag: ${res === 'S' ? 'Sieg' : res === 'U' ? 'Remis' : 'Niederlage'} gegen ${TEAMS[opp].n} (${mine[0]}:${mine[1]}). ${g ? `${g.n.toLocaleString('de-DE')} Zuschauer${g.full ? ' (ausverkauft)' : ''}: ${euro(g.money)}, ` : 'Auswärtsspiel, '}Sponsor ${euro(fin.sponsor)}, Gehälter ${euro(fin.wages)}.`);
+  news(`${S.round + 1}. Spieltag: ${res === 'S' ? 'Sieg' : res === 'U' ? 'Remis' : 'Niederlage'} gegen ${TEAMS[opp].n} (${mine[0]}:${mine[1]}).${pmTxt} ${g ? `${g.n.toLocaleString('de-DE')} Zuschauer${g.full ? ' (ausverkauft)' : ''}: ${euro(g.money)}, ` : 'Auswärtsspiel, '}Sponsor ${euro(fin.sponsor)}, Gehälter ${euro(fin.wages)}.`);
   const gains = weeklyTraining(); if (gains.length) news(`Training: ${gains.slice(0, 3).join(', ')}${gains.length > 3 ? ' …' : ''}`);
   S.round++;
   for (const t of TEAMS) for (const p of CAREER.squads[t.id]) if (p.inj) { p.inj--; if (!p.inj && t.id === me) news(`${p.name} ist wieder fit.`); }
@@ -284,6 +285,7 @@ const wageBill = () => Math.round(CAREER.squads[CAREER.team].reduce((s, p) => s 
 function ownFixture() { const S = CAREER.season; return S.done ? null : S.fixtures[S.round].find(f => f.includes(CAREER.team)); }
 function careerSimOwn() { if (ownCupTie()) return cupSimOwn(); if (ownEuroTie()) return euroSimOwn(); const fx = ownFixture(); if (!fx) return; coachPrep(); playRound(simMatch(fx[0], fx[1])); }
 function careerAfterPlayed(g) {
+  if (g.soWinner !== undefined && g.soWinner === g.human) msUnlock('krimi');   // 7-Meter-Werfen selbst gewonnen
   const stats = {}, all = allMatchPlayers(), played = [[], []];
   const best = potm(all);
   all.forEach(p => { if (!p.pid) return;
@@ -378,6 +380,7 @@ function careerEndSeason() {
   euroQualify(l1);
   const pos = st.findIndex(x => x.i === me) + 1;
   const close = seasonClose(lg, pos, S.table[me], up.includes(me), !!CAREER.cup && CAREER.cup.winner === me, euroW === me);   // Titel, Rekorde, Ehrenhalle (vor Alterung und Wechseln)
+  const awards = awardSeason(lg, S.table);   // Spieler, Torwart und Talent der Saison (braucht die Saisonstatistik)
   const prize = leaguePrize(pos, lg);
   CAREER.money += prize; finOf().prize += prize;
   const verdict = boardVerdict(pos, CAREER.goal, lg), finSeason = { ...finOf() };
@@ -425,7 +428,7 @@ function careerEndSeason() {
   const goalMet = pos <= CAREER.goal.pos;
   sum.goal = CAREER.goal.txt; sum.goalMet = goalMet; sum.board = verdict; sum.fin = finSeason; sum.money = CAREER.money;
   CAREER.history.push({ year: CAREER.year, team: me, lg, pos, champ: st[0].i, top, goal: CAREER.goal.txt, met: goalMet, cup: CAREER.cup ? CAREER.cup.winner : null, euro: euroW, euroMy });
-  sum.euroWinner = euroW; sum.euroMy = euroMy; sum.titles = close.titles; sum.own = close.own;
+  sum.euroWinner = euroW; sum.euroMy = euroMy; sum.titles = close.titles; sum.own = close.own; sum.awards = awards;
   for (const [list, l] of [[st, lg], [other, lg === 1 ? 2 : 1]]) list.forEach((x, k) => { if (x.i !== me) CAREER.aiMoney[x.i] += leaguePrize(k + 1, l); });
   leagueIds(3).forEach(id => { CAREER.aiMoney[id] += INTL_HOME_PRIZE; });   // internationale Vereine: Prämien aus ihrer Heimatliga
   if (CAREER.aiTransfers) aiTransferRound(4);

@@ -2,6 +2,14 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.30: Auszeichnungen und Meilensteine
+- **Neu: Auszeichnungen der Saison.** Am Saisonende werden in deiner Liga der **Spieler der Saison**, der **Torwart der Saison** und das **Talent der Saison** (bis 21 Jahre) gewählt. Wer mindestens 40 % der Spieltage gespielt hat, kommt in Frage. Feldspieler zählen mit Toren, Vorlagen, Ballgewinnen und „Spieler des Spiels“, Torhüter mit der Fangquote, dazu jeweils ein kleiner Bonus nach Tabellenplatz. Die Gewinner stehen in der Saisonbilanz, in der Zeitung und im Tab ERFOLGE. Eigene Spieler sind dort golden markiert und bekommen in der Ehrenhalle den Vermerk „AUSGEZEICHNET“.
+- **Neu: 18 Meilensteine** im Tab ERFOLGE, jeweils mit Saison: erster Sieg, Kantersieg, 5 und 10 Ligasiege in Folge, ausverkaufte Halle, selbst erzielte Dreher- und Kempa-Tore, gewonnenes 7-Meter-Werfen, Aufstieg, Final Four, Pokal, Meisterschaft, Europapokal, Double, Spieler der Saison, Hallen-Legende, 10 Saisons als Trainer und 1 Million Euro auf dem Konto. Ein neuer Meilenstein meldet sich in der Zeitung.
+- **Ältere Karrieren** bekommen Meilensteine beim ersten Laden aus Titeln, Rekorden, Historie und Ehrenhalle nachgetragen, ohne Zeitungsmeldung.
+- **Plattform:** Jeder Meilenstein geht als Ereignis `meilenstein` mit `{ id }` an die Plattform-Schnittstelle (und an Umami), nachgetragene mit `{ id, nachtrag: true }`. So kann die iOS-App sie zum Beispiel als Game-Center-Erfolge melden.
+- **Spieler des Spiels** steht jetzt auch in der Spieltagsmeldung der Zeitung. Gezählt wurde er schon vorher, auf der Spielerkarte.
+- Spielablauf, Balance und Simulation bleiben unverändert. 1 neuer Regressionstest (Auszeichnungen gegen Liga, Einsätze und Alter geprüft, Zeitung, Saisonbilanz, Meilenstein mit Saison und genau einmal, Plattform-Ereignis, Dreher-Tor im Karriere-Spiel, stiller Nachtrag, Anzeige), insgesamt 50. Zwei Erfolge-Tests zählen nur noch Trophäenschrank und Rekorde.
+
 ## v8.29: App Store und Copyright
 - **Startseite:** Die Plattform-Leiste zeigt BROWSER, APP STORE (Link zur kostenlosen App für iPhone und iPad) und KONSOLE COMING SOON. Der Schlusstext, der Abschnitt „Auf jedem Gerät“ und zwei FAQ-Antworten nennen die App mit Link. Auch die strukturierten Daten für Suchmaschinen nennen sie (Plattformen iOS und iPadOS, App-Store-Link). Klicks auf den App-Store-Link zählt Umami als `appstore-klick` mit Ort.
 - **Copyright:** © 2026 Tobias Wilhelm statt tobwil auf dem Titelbildschirm, im Footer der Startseite, in LICENSE und README. Der GitHub-Name tobwil bleibt in Links.
