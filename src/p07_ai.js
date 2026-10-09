@@ -64,7 +64,7 @@ function aiTarget(p, dt) {
     if (presser === p && !ctrlNear && (td < 12.5 || bd < 3)) {
       const cy = clamp(threat.y, GY1, GY2), dd = Math.max(0.1, dist(threat.x, threat.y, gx, cy));
       const tx = threat.x + (gx - threat.x) / dd * 0.85, ty = threat.y + (cy - threat.y) / dd * 0.85;
-      if (own && own === threat && dist(p.x, p.y, own.x, own.y) < 1.15 && p.cd <= 0 && Math.random() < dt * 0.45 * p.df / 80) steal(p, own);
+      if (own && own === threat && dist(p.x, p.y, own.x, own.y) < 1.15 && p.cd <= 0 && Math.random() < dt * 0.45 * p.df / 80 * (G.human === own.team ? DIFF[G.diff].press : 1)) steal(p, own);
       if (own && own.charging && dist(p.x, p.y, own.x, own.y) < 2.2 && p.z <= 0 && Math.random() < dt * 3) { p.vz = 3.8; p.block = 0.6; }
       return [tx, ty, true];
     }

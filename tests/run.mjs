@@ -844,8 +844,8 @@ test('Spielerkarte: Handball-Statistik aus Simulation und Spiel stimmig, 7-Meter
     ACT.afterMatch();
     return { shooter, seven: CAREER.seven, my, th, g: sum('g'), sh: sum('sh'), ga: sum('ga', o => o.role === 'TW'), s7: sum('s7'), min: sum('min') };
   });
-  // Saisonwechsel: Saisonzahlen leer, Karriere bleibt
-  const nx = await page.evaluate(() => { const q = CAREER.squads[CAREER.team].find(x => statOf(x, 'k').sp > 0), k0 = statOf(q, 'k').sp; let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 60) ACT.cSim(); const k1 = statOf(q, 'k').sp; ACT.cEnd(); ACT.cNext(); return { s: statOf(q).sp, k: statOf(q, 'k').sp, k1, k0 }; });
+  // Saisonwechsel: Saisonzahlen leer, Karriere bleibt (gesunder Stammspieler, der sicher noch einmal spielt)
+  const nx = await page.evaluate(() => { const q = CAREER.squads[CAREER.team].find(x => statOf(x, 'k').sp > 0 && x.start && !x.inj), k0 = statOf(q, 'k').sp; let g = 0; while ((!CAREER.season.done || cupDue() || euroDue()) && g++ < 60) ACT.cSim(); const k1 = statOf(q, 'k').sp; ACT.cEnd(); ACT.cNext(); return { s: statOf(q).sp, k: statOf(q, 'k').sp, k1, k0 }; });
   // Pad und Tastatur: der Fokus bleibt auf dem gedrückten Kartenknopf. Verkauf macht Kapitänsamt und 7-Meter frei
   await page.evaluate(() => { ACT.cTab('squad'); const sq = CAREER.squads[CAREER.team], q = sq.filter(x => x.start && x.role !== 'TW' && !isLocked(x) && x.pid !== CAREER.capt && x.pid !== CAREER.seven && sq.filter(y => y.role === x.role).length > 1).sort((a, b) => pValue(a) - pValue(b))[0]; window.__q = q.pid; ACT.cPick(q.pid); });
   const foc = [];
@@ -1153,6 +1153,74 @@ test('Erfolge: Spieler, Torwart und Talent der Saison, Spieler des Spiels in der
     event: 'kein Plattform-Ereignis meilenstein', newsMs: 'keine Zeitungsmeldung zum Meilenstein', dreher: 'Dreher-Tor im Karriere-Spiel ohne Meilenstein', nachtrag: 'Nachtrag aus Titeln und Rekorden fehlt', nachtragStill: 'Nachtrag nicht still oder ohne Ereignis', tab: 'Tab ERFOLGE ohne Meilensteine/Auszeichnungen' }))
     ok(r[k], m + ' ' + JSON.stringify(r));
   ok(r.tiles === 18 && r.won >= 8, `Meilenstein-Kacheln: ${r.tiles}, freigeschaltet ${r.won}`);
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
+test('Schwierigkeit: Abfangen und Klauen gegen die CPU je Stufe schwerer, CPU stört den Ballführer, Pass am engen Gegenspieler vorbei; CPU gegen CPU unabhängig von den Stufen-Werten; nach klarem Sieg die nächste, nach klarer Niederlage die vorige Stufe anbieten', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 41);
+  const r = await page.evaluate(() => {
+    hideMenu();
+    // Einfacher Spieler-Bot: zum Tor, bei 9 m aufladen und in die freie Ecke werfen; in der Abwehr vor den Ballführer stellen und klauen
+    const st = { prev: {}, chT: 0, aimY: 0, pen: false };
+    const bot = dt => {
+      const me = G.ctrl, b = G.ball, gx = goalX(0), s = gx > 20 ? 1 : -1; let x = 0, y = 0, a = false, bb = false, c = false;
+      if (G.phase === 'penalty' && b.owner && b.owner.team === 0) { if (!st.pen) { st.pen = true; st.chT = 0; } if (G.phaseT <= 0) { st.chT += dt; bb = st.chT < 0.6; y = 1; } }
+      else if (me && G.phase !== 'intro') {
+        st.pen = false;
+        if (b.owner === me && me.role !== 'TW') {
+          const tx = gx - s * 8.3, ty = 10, dx = tx - me.x, dy = ty - me.y, m = Math.hypot(dx, dy) || 1, gk = G.goalie[1];
+          if (G.phase !== 'play') a = me.hold > 0.6;
+          else if (me.charging) { st.chT += dt; y = st.aimY; bb = st.chT < 0.55; }
+          else if (goalDist(me.x, me.y, gx) < 9.6) { bb = true; st.chT = 0; st.aimY = gk.y > 10 ? -1 : 1; }
+          else if (me.hold > 4) a = true; else { x = dx / m; y = dy / m; }
+        } else if (b.owner && b.owner.team === 1) {
+          const o = b.owner, so = goalX(1) > 20 ? 1 : -1, dx = o.x + so * 0.7 - me.x, dy = o.y - me.y, m = Math.hypot(dx, dy);
+          if (m > 0.3) { x = dx / m; y = dy / m; } c = m < 1.4 && Math.random() < 0.05;
+        } else if (!b.owner) { const dx = b.x - me.x, dy = b.y - me.y, m = Math.hypot(dx, dy); if (m > 0.3) { x = dx / m; y = dy / m; } }
+      }
+      const P = st.prev; Object.assign(IN, { x, y, s: false, a, b: bb, c, k: false, pa: a && !P.a, pb: bb && !P.b, pc: c && !P.c, ra: !a && P.a, rb: !bb && P.b, rc: !c && P.c }); IN.aHeld = 0; st.prev = { a, b: bb, c };
+    };
+    const play = (diff, human, n) => {
+      let gd = 0, icpt = 0, sc = [];
+      const bn = banner; banner = function (t, ...x) { if (G.ball.owner && (t === 'ABGEFANGEN!' || t === 'BALLGEWINN')) { if (G.ball.owner.team === 0) icpt++; } return bn(t, ...x); };
+      for (let i = 0; i < n; i++) {
+        newMatch(2, 1, { human, halfLen: 120, diff }); G.paused = true; G.introT = 99; let k = 0;
+        while (G.phase !== 'fulltime' && k++ < 60000) { if (!menu.hidden) hideMenu(); if (human === 0) bot(1 / 60); step(1 / 60); }
+        gd += G.score[0] - G.score[1]; sc.push(G.score.join(':'));
+      }
+      banner = bn; return { gd, icpt, sc: sc.join(' ') };
+    };
+    const seed = v => { let x = v; Math.random = () => (x = (x * 16807) % 2147483647) / 2147483647; };
+    seed(5); const am = play(0, 0, 4); seed(5); const le = play(2, 0, 4);
+    seed(9); const c0 = play(1, -1, 2).sc; const keep = { ...DIFF[1] }; Object.assign(DIFF[1], { steal: 0.5, icpt: 0.9, press: 9, foul: 0 }); seed(9); const c2 = play(1, -1, 2).sc; Object.assign(DIFF[1], keep);
+    // Pass am Gegenspieler vorbei: steht der Verteidiger direkt am Werfer, fängt er selten ab, 3 m weiter im Passweg öfter
+    const lane = gap => { let n = 0; for (let i = 0; i < 300; i++) {
+      newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.phase = 'play'; G.paused = true; G.introT = 99;
+      const pa = G.players.find(p => p.team === 1 && p.role === 'RM'), rc = G.players.find(p => p.team === 1 && p.role === 'RL'), d = G.players.find(p => p.team === 0 && p.role === 'KM');
+      for (const p of G.players) if (p !== pa && p !== rc && p !== d && p.role !== 'TW') { p.x = 20; p.y = 19.5; }
+      Object.assign(pa, { x: 20, y: 10, vx: 0, vy: 0 }); Object.assign(rc, { x: 20, y: 3, vx: 0, vy: 0 }); Object.assign(d, { x: 20, y: 10 - gap, vx: 0, vy: 0 }); G.ctrl = null;
+      giveBall(pa); G.ctrl = null; pass(pa, rc); for (let k = 0; k < 60 && G.ball.owner !== rc && G.ball.owner !== d; k++) updateBall(1 / 60);
+      if (G.ball.owner === d) n++; } return n; };
+    const nearI = lane(0.8), farI = lane(3);
+    // Abpfiff-Hinweis: klarer Sieg im schnellen Spiel auf Profi, nicht bei knappem Sieg, nicht auf Legende, nicht in der Karriere
+    const end = (diff, s, career) => { newMatch(2, 1, { human: 0, halfLen: 120, diff, career }); G.score = s; G.phase = 'fulltime'; if (career) G.career = false; endMatch(); return menu.querySelector('.diffhint')?.textContent || ''; };
+    const hint = end(1, [20, 13]), narrow = end(1, [18, 14]), leg = end(2, [22, 10]), down = end(1, [12, 19]), downL = end(2, [10, 17]), amL = end(0, [10, 17]), narrowL = end(1, [14, 18]);
+    newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.score = [20, 13]; G.phase = 'fulltime'; G.career = true; endMatch(); const career = menu.querySelector('.diffhint')?.textContent || '';
+    G.career = true; G.score = [10, 17]; endMatch(); const careerL = menu.querySelector('.diffhint')?.textContent || '';
+    const ev = []; PLATFORM.event = (n, d) => { if (n.startsWith('stufe')) ev.push(n + ':' + d.stufe); };
+    G.career = false; end(1, [20, 13]); menu.querySelector('[data-act="rematchDiff"]').click(); const up = [G.diff, SEL.diff, G.label];
+    end(1, [12, 19]); menu.querySelector('[data-act="rematchDiff"]').click(); const dn = [G.diff, SEL.diff, G.label]; PLATFORM.event = null;
+    return { nearI, farI, am, le, c0, c2, hint, narrow, leg, career, up, down, downL, am0: amL, narrowL, careerL, dn, ev, mono: [0, 1].every(i => DIFF[i].icpt > DIFF[i + 1].icpt && DIFF[i].steal > DIFF[i + 1].steal && DIFF[i].press < DIFF[i + 1].press && DIFF[i].foul > DIFF[i + 1].foul) };
+  });
+  ok(r.mono, 'Stufen nicht durchgehend schwerer (Abfangen, Klauen, Stören, Fouls)');
+  ok(r.am.gd - r.le.gd >= 12, `Legende kaum schwerer als Amateur: Tordifferenz ${r.am.gd} gegen ${r.le.gd} (${r.am.sc} | ${r.le.sc})`);
+  ok(r.am.icpt > r.le.icpt * 1.15, `Ballgewinne des Menschen auf Amateur ${r.am.icpt}, auf Legende ${r.le.icpt}`);
+  ok(r.nearI < r.farI * 0.6 && r.farI > 20, `Abfangen direkt am Werfer ${r.nearI}, 3 m weiter ${r.farI} von 300 Pässen`);
+  ok(r.c0 === r.c2, `CPU gegen CPU hängt an den Werten gegen den Menschen: ${r.c0} | ${r.c2}`);
+  ok(r.hint.includes('Zu leicht?') && r.hint.includes('LEGENDE') && !r.narrow && !r.leg && !r.career, `Hinweis zu leicht: ${JSON.stringify([r.hint, r.narrow, r.leg, r.career])}`);
+  ok(r.down.includes('Zu schwer?') && r.down.includes('AMATEUR') && r.downL.includes('PROFI') && !r.am0 && !r.narrowL && !r.careerL, `Hinweis zu schwer: ${JSON.stringify([r.down, r.downL, r.am0, r.narrowL, r.careerL])}`);
+  ok(r.up[0] === 2 && r.up[1] === 2 && r.up[2] === 'REVANCHE' && r.dn[0] === 0 && r.dn[1] === 0, `Revanche auf Legende ${r.up}, auf Amateur ${r.dn}`);
+  ok(r.ev.join() === 'stufe-hoch:legende,stufe-runter:amateur', 'Statistik-Ereignisse: ' + r.ev);
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 

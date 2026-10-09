@@ -110,13 +110,13 @@ function feint(p, dx, dy) {
 function steal(d, c) {
   if (d.cd > 0 || !c) return; d.cd = 0.75; d.throwT = 0.25; d.stealT = 0.3;
   if (dist(d.x, d.y, c.x, c.y) > 1.35) { d.cd = 0.35; return; }   // ins Leere: kein Strafstillstand
-  const pr = 0.16 + (d.df - c.att) / 220 + (c.charging ? 0.15 : 0) + (G.human === d.team ? 0.05 + DIFF[G.diff].steal : 0);
+  const pr = 0.16 + (d.df - c.att) / 220 + (c.charging ? 0.15 : 0) + (G.human === d.team ? DIFF[G.diff].steal : 0);
   if (Math.random() < pr) {
     G.stats.steals[d.team]++; d.stealsN++;
     if (Math.random() < 0.55) { giveBall(d); banner('BALLGEWINN', '#9cff57', d.name, 1); say(pick([`${d.name} spitzelt den Ball weg!`, `Starke Abwehr von ${d.name}!`, `Ballverlust! ${d.name} ist dazwischen.`])); }
     else { const b = G.ball; b.owner = null; b.state = 'air'; b.x = c.x; b.y = c.y; b.z = 0.8; b.vx = (d.x - c.x) * 2 + rnd(-2, 2); b.vy = (d.y - c.y) * 2 + rnd(-2, 2); b.vz = 2; b.passTo = null; b.shot = null; b.last = d; b.nc = c; b.ncT = 0.3; b.tried = new Set(); }
     c.stun = 0.4;
-  } else if (Math.random() < 0.42) foul(d, c);
+  } else if (Math.random() < (G.human === c.team ? DIFF[G.diff].foul : 0.42)) foul(d, c);
   else d.stun = 0.35;
 }
 function foul(d, c) {
