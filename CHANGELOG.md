@@ -2,6 +2,11 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.33: Tests automatisch in GitHub
+- **Neu: GitHub Actions** (`.github/workflows/tests.yml`). Bei jedem Pull Request und jedem Push auf `main` wird das Spiel gebaut, dann laufen die Regressionstests (`npm test`) und die tiefen Tests (`npm run tief`) mit Chromium. Das Ergebnis steht als Prüfung „Tests“ im Pull Request.
+- **Build-Prüfung:** Passen `game/index.html` oder `hallen-legenden.html` nicht zu `src/`, schlägt die Prüfung mit einem Hinweis fehl. Dann wurde `sh src/build.sh` vergessen.
+- Läuft ein neuer Push auf denselben Branch, bricht der vorherige Lauf ab. Der Workflow hat nur Leserechte.
+
 ## v8.32: Die Legenden-Familie
 - **Startseite: neuer Abschnitt „Noch mehr Legenden“** über dem Fuß, wie auf korblegenden.de. Zwei Karten empfehlen die Geschwister **Padel-Legenden** (padellegenden.de) und **Korb-Legenden** (korblegenden.de). Jede Karte ist als Ganzes ein Link, mit Emoji statt Bild, damit keine fremden Server dazukommen. Auf dem Handy stehen die Karten untereinander. In der Kopfleiste gibt es den Eintrag „Mehr Legenden“, im Fuß „Auch von mir: Padel-Legenden und Korb-Legenden“.
 - **Suchmaschinen:** Die strukturierten Daten nennen beide Spiele als `isRelatedTo`.

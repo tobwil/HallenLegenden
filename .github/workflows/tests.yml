@@ -1,0 +1,50 @@
+# Tests bei jedem Pull Request und jedem Push auf main: Spiel bauen, prüfen, dass die gebauten Dateien zum Quellcode passen,
+# dann die Regressionstests (npm test) und die tiefen Tests (npm run tief) mit Chromium.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # der Update-Test in tief.mjs braucht origin/main als Vorversion
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+
+      - name: Spiel bauen und mit dem Quellcode vergleichen
+        run: |
+          sh src/build.sh
+          git diff --exit-code -- game/index.html hallen-legenden.html || { echo "::error::game/index.html oder hallen-legenden.html passen nicht zu src/. Bitte sh src/build.sh ausführen und die Dateien mit committen."; exit 1; }
+
+      - name: Abhängigkeiten und Chromium
+        working-directory: tests
+        run: |
+          npm ci
+          npx playwright-core install --with-deps chromium
+
+      - name: Regressionstests (npm test)
+        working-directory: tests
+        run: npm test
+
+      - name: Tiefe Tests (npm run tief)
+        working-directory: tests
+        run: npm run tief
