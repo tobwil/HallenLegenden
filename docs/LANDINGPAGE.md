@@ -84,6 +84,8 @@ Landingpage und Spiel (`game/index.html`, eingefügt von `src/build.sh`) laden d
 |---|---|---|
 | `spielen-klick` | Knöpfe „Spielen“ / „Jetzt spielen“ | `ort`: kopf, start, finale |
 | `wunsch-klick` | Knöpfe „Feature wünschen“ / „Was fehlt dir?“ | `ort` |
+| `appstore-klick` | Links zur App im App Store | `ort`: start, features, faq, finale |
+| `legenden-klick` | Karten im Abschnitt „Noch mehr Legenden“ und Links im Fuß | `ziel`: padellegenden, korblegenden; `ort`: familie, fuss |
 | `story-szene` | jede Szene im Story-Film, einmal pro Besuch | `szene`, `nr` (1–7) |
 | `wunsch-gesendet` | Formular erfolgreich abgeschickt | `kategorie` |
 | `spiel-start` | Partie beginnt | `modus`: schnelles-spiel, karriere |
