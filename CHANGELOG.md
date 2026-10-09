@@ -2,6 +2,17 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.32: Die Legenden-Familie
+- **Startseite: neuer Abschnitt „Noch mehr Legenden“** über dem Fuß, wie auf korblegenden.de. Zwei Karten empfehlen die Geschwister **Padel-Legenden** (padellegenden.de) und **Korb-Legenden** (korblegenden.de). Jede Karte ist als Ganzes ein Link, mit Emoji statt Bild, damit keine fremden Server dazukommen. Auf dem Handy stehen die Karten untereinander. In der Kopfleiste gibt es den Eintrag „Mehr Legenden“, im Fuß „Auch von mir: Padel-Legenden und Korb-Legenden“.
+- **Suchmaschinen:** Die strukturierten Daten nennen beide Spiele als `isRelatedTo`.
+- **Umami:** Klicks auf Karten und Fuß-Links zählen als `legenden-klick` mit `ziel` (padellegenden, korblegenden) und `ort` (familie, fuss). Die Datenschutzerklärung nennt die Klicks auf die Geschwister-Links und den App-Store-Link. `docs/LANDINGPAGE.md` führt `legenden-klick` und `appstore-klick` in der Ereignis-Tabelle.
+- **Behoben: STATISTIK ABSCHALTEN deckte den Kontakt auf.** Auf der Datenschutz-Seite hängte `assets/kontakt.js` das Aufdecken an alle Knöpfe mit der Klasse `.reveal`, also auch an den Statistik-Knopf. Ein Klick darauf zeigte die Kontaktdaten und entfernte den Knopf, sodass sich die Statistik nicht wieder einschalten ließ. Jetzt reagiert nur der Knopf in der Kontaktkarte.
+- 1 neuer Test, insgesamt 53. Er prüft:
+  - Karten, Fuß-Links, Kopfleiste, `isRelatedTo` und die Lage über dem Fuß
+  - keine Anfragen an neue fremde Server
+  - kein seitliches Scrollen bei 1440, 390 und 320 px, Karten auf dem Handy untereinander
+  - den Statistik-Knopf: ab- und wieder einschalten, Kontakt bleibt verdeckt
+
 ## v8.31: Schwierigkeit mit Biss
 - **Behoben: Gegen die CPU war es zu leicht.** Ein einfacher Spieler-Bot (geradeaus zum Tor, aus 8,5 m in die freie Ecke, in der Abwehr vor den Ballführer stellen) gewann bei gleich starken Vereinen auf Profi 12 von 12 Spielen mit rund 19:8, auf Legende 11 von 12. Die CPU verlor dabei fast jeden zweiten Angriff durch einen abgefangenen Pass oder Ballverlust. Dich störte sie kaum, und misslungene Klau-Versuche der CPU endeten oft im Foul, mit 5 bis 7 Siebenmetern pro Spiel für dich.
 - **Pass am engen Gegenspieler vorbei:** Stand ein Verteidiger direkt am Werfer (unter 1,3 m), lag er dicht an jedem Passweg und durfte schon beim Abwurf abfangen. Jeder vierte Pass unter Druck ging so verloren, und eine freie Alternative gab es praktisch nie. Jetzt fängt er dort nur noch mit gut einem Drittel der Chance ab. Pässe weiter im Passweg bleiben abfangbar. Das gilt für alle, auch für deine Pässe. Die CPU verliert gegen dich etwa 6 bis 8 statt 10 bis 13 Bälle durch Abfangen und kommt auf 25 bis 27 statt 18 bis 22 Würfe pro Spiel.

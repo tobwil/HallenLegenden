@@ -202,6 +202,19 @@ input::placeholder,textarea::placeholder{color:#5f5772}
 .btn[disabled]{opacity:.6;cursor:wait}
 
 /* ---------- Fuß ---------- */
+.family{padding:clamp(56px,8vw,110px) 16px;border-top:2px solid var(--line);background:radial-gradient(ellipse at 50% 0%,#24183a 0%,var(--bg) 70%)}
+.family-inner{max-width:1120px;margin:0 auto}
+.family h2{font-size:clamp(18px,2.6vw,30px);color:var(--gold);text-shadow:0 3px 0 #7a2c0c,0 5px 0 #000;margin:10px 0 14px}
+.family .lead{color:var(--dim);font-size:clamp(20px,2vw,24px);max-width:60ch;margin-bottom:26px}
+.sibs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.sib{display:flex;flex-direction:column;gap:12px;background:var(--panel);border:3px solid var(--ink);box-shadow:8px 8px 0 #000,inset 0 0 0 3px var(--panel2);padding:20px 22px;text-decoration:none;color:var(--ink)}
+.sib:focus-visible{outline:3px solid var(--cyan)}
+@media (hover:hover){.sib:hover{border-color:var(--gold)}.sib:hover .go{background:var(--gold);color:var(--bg)}}
+.sib .tag{font-family:var(--pix);font-size:10px;letter-spacing:.15em;color:var(--hot)}
+.sib h3{font-size:clamp(15px,1.8vw,20px);color:var(--gold);text-shadow:0 3px 0 #000}
+.sib p{color:var(--dim);font-size:20px}
+.sib .go{align-self:flex-start;font-family:var(--pix);font-size:10px;padding:9px 12px;border:2px solid var(--ink);background:var(--panel2);box-shadow:3px 3px 0 #000;margin-top:auto}
+.sib .icon{font-size:34px;line-height:1}
 footer{border-top:2px solid var(--line);padding:32px 16px 40px;color:var(--mute);font-size:19px}
 .foot-inner{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
 footer a{color:var(--dim)}
@@ -230,7 +243,7 @@ footer a:hover{color:var(--gold)}
 }
 @media (max-height:1000px) and (min-width:821px){ .scroll-hint{display:none} }
 @media (max-width:420px){ .cap .platforms li{font-size:8px;padding:6px 7px;gap:6px} }
-@media (max-width:560px){ .features{grid-template-columns:1fr} }
+@media (max-width:560px){ .features,.sibs{grid-template-columns:1fr} }
 @media (prefers-reduced-motion:reduce){ .logo,.scroll-hint{animation:none} }
 </style>
 <script type="application/ld+json">
@@ -265,6 +278,7 @@ footer a:hover{color:var(--gold)}
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock", "url": "https://hallenlegenden.de/game/" },
       "author": { "@type": "Person", "name": "Tobias Wilhelm", "url": "https://github.com/tobwil" },
       "license": "https://polyformproject.org/licenses/noncommercial/1.0.0",
+      "isRelatedTo": [{ "@type": "VideoGame", "name": "Padel-Legenden", "url": "https://padellegenden.de/" }, { "@type": "VideoGame", "name": "Korb-Legenden", "url": "https://korblegenden.de/" }],
       "trailer": {
         "@type": "VideoObject",
         "name": "Hallen-Legenden Trailer",
@@ -299,6 +313,7 @@ footer a:hover{color:var(--gold)}
     <a href="#film">Die Story</a>
     <a href="#handball-spiel">Das Spiel</a>
     <a href="#wunsch">Feature-Wünsche</a>
+    <a href="#legenden">Mehr Legenden</a>
     <a class="btn main" href="game/" data-umami-event="spielen-klick" data-umami-event-ort="kopf">▶ Spielen</a>
   </nav>
 </header>
@@ -499,12 +514,36 @@ footer a:hover{color:var(--gold)}
     </form>
   </div>
 </section>
+
+<section class="family" id="legenden" aria-labelledby="family-title">
+  <div class="family-inner">
+    <span class="num">DIE LEGENDEN-FAMILIE</span>
+    <h2 id="family-title">Noch mehr Legenden</h2>
+    <p class="lead">Hallen-Legenden hat zwei Geschwister mit derselben Technik: Pixel-Look, volle Hallen, Karriere und Zeitung. Auch kostenlos im Browser.</p>
+    <div class="sibs">
+      <a class="sib" href="https://padellegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="padellegenden" data-umami-event-ort="familie">
+        <span class="icon" aria-hidden="true">🎾</span>
+        <span class="tag">PADEL · 2 GEGEN 2</span>
+        <h3>Padel-Legenden</h3>
+        <p>Der Trendsport: Glas und Gitter, Bandeja, Víbora und der Smash „por tres“, dazu Bundesliga und Welttour mit Flügen auf der Weltkarte.</p>
+        <span class="go">PADELLEGENDEN.DE →</span>
+      </a>
+      <a class="sib" href="https://korblegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="korblegenden" data-umami-event-ort="familie">
+        <span class="icon" aria-hidden="true">🏀</span>
+        <span class="tag">BASKETBALL · 5 GEGEN 5</span>
+        <h3>Korb-Legenden</h3>
+        <p>Dunks, Crossover und Dreier mit Timing, zu zweit an einem Gerät, dazu eine Karriere mit zwei Ligen, Pokal und Europapokal.</p>
+        <span class="go">KORBLEGENDEN.DE →</span>
+      </a>
+    </div>
+  </div>
+</section>
 </main>
 
 <footer>
   <div class="foot-inner">
     <p>Inoffizielles Fan-Projekt. Vereins- und Spielernamen sind Fantasienamen, ohne Verbindung zu einer Liga oder einem Verein.</p>
-    <p>© 2026 Tobias Wilhelm · <a href="https://github.com/tobwil/HallenLegenden">Quellcode auf GitHub</a> · Lizenz: PolyForm Noncommercial · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+    <p>© 2026 Tobias Wilhelm · <a href="https://github.com/tobwil/HallenLegenden">Quellcode auf GitHub</a> · Lizenz: PolyForm Noncommercial · Auch von mir: <a href="https://padellegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="padellegenden" data-umami-event-ort="fuss">Padel-Legenden</a> und <a href="https://korblegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="korblegenden" data-umami-event-ort="fuss">Korb-Legenden</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
   </div>
 </footer>
 

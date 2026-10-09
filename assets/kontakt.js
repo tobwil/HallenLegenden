@@ -12,7 +12,7 @@
       } else el.textContent = v;
       el.classList.add('shown');
     });
-    document.querySelectorAll('.reveal').forEach(b => b.remove());
+    document.querySelectorAll('.card .reveal').forEach(b => b.remove());
   }
-  document.querySelectorAll('.reveal').forEach(b => b.addEventListener('click', reveal));
+  document.querySelectorAll('.card .reveal').forEach(b => b.addEventListener('click', reveal));   // nur in der Kontaktkarte, nicht der Statistik-Knopf
 })();

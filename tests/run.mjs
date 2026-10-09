@@ -1302,6 +1302,43 @@ test('TV-Intro mit Aufstellungen läuft vor dem Anwurf', async () => {
 });
 
 // ---------------------------------------------------------------- Handy-Zoom
+// Startseite und Rechtstexte liegen neben game/: bei GAME=https://…/game/ auf demselben Server, sonst im Repository
+const SITE = p => /^https?:\/\//.test(GAME) ? new URL('../' + p, GAME).href : pathToFileURL(path.join(root, p)).href;
+test('Startseite: Abschnitt „Noch mehr Legenden“ mit Padel- und Korb-Legenden, im Fuß verlinkt, keine neuen fremden Server, Handy ohne seitliches Scrollen; Statistik-Knopf im Datenschutz deckt den Kontakt nicht auf (#61)', async () => {
+  const bad = [];
+  for (const [w, h] of [[1440, 900], [390, 844], [320, 640]]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: w < 500, isMobile: w < 500 }), page = await ctx.newPage(), errors = [], hosts = new Set();
+    page.on('pageerror', e => errors.push(e.message)); page.on('request', r => { const u = new URL(r.url()); if (/^https?:$/.test(u.protocol) && !['localhost', '127.0.0.1'].includes(u.hostname)) hosts.add(u.hostname); });
+    await page.goto(SITE('index.html')); await page.waitForTimeout(400);
+    const r = await page.evaluate(() => {
+      const sec = document.getElementById('legenden'), cards = [...sec.querySelectorAll('a.sib')], foot = [...document.querySelectorAll('footer a[data-umami-event="legenden-klick"]')];
+      const ld = JSON.parse([...document.querySelectorAll('script[type="application/ld+json"]')].map(x => x.textContent).find(t => t.includes('VideoGame')));
+      const game = (ld['@graph'] || [ld]).find(x => x['@type'] === 'VideoGame');
+      sec.scrollIntoView(); const sr = sec.getBoundingClientRect(), cr = cards.map(c => c.getBoundingClientRect());
+      return { cards: cards.map(c => [c.href, c.dataset.umamiEvent, c.dataset.umamiEventZiel, c.dataset.umamiEventOrt, c.querySelector('h3').textContent].join('|')),
+        foot: foot.map(a => [a.href, a.dataset.umamiEventZiel, a.dataset.umamiEventOrt].join('|')), nav: !!document.querySelector('header nav a[href="#legenden"]'),
+        related: (game.isRelatedTo || []).map(x => x.url).join(), after: !!document.querySelector('#wunsch ~ #legenden'),
+        quer: document.documentElement.scrollWidth > innerWidth + 1 || sec.scrollWidth > sec.clientWidth + 1, stacked: cr.length === 2 && cr[1].top >= cr[0].bottom, side: cr.length === 2 && Math.abs(cr[1].top - cr[0].top) < 2, inside: cr.every(q => q.left >= sr.left - 1 && q.right <= sr.right + 1) };
+    });
+    const want = ['https://padellegenden.de/|legenden-klick|padellegenden|familie|Padel-Legenden', 'https://korblegenden.de/|legenden-klick|korblegenden|familie|Korb-Legenden'];
+    if (r.cards.join() !== want.join()) bad.push(`${w}px Karten: ${r.cards.join(' ; ')}`);
+    if (r.foot.join() !== 'https://padellegenden.de/|padellegenden|fuss,https://korblegenden.de/|korblegenden|fuss') bad.push(`${w}px Fuß: ${r.foot.join(' ; ')}`);
+    if (!r.nav || r.related !== 'https://padellegenden.de/,https://korblegenden.de/' || !r.after) bad.push(`${w}px Navigation/JSON-LD/Lage: ${JSON.stringify([r.nav, r.related, r.after])}`);
+    if (r.quer || !r.inside || (w <= 560 ? !r.stacked : !r.side)) bad.push(`${w}px Layout: ${JSON.stringify(r)}`);
+    const foreign = [...hosts].filter(x => x !== 'cloud.umami.is'); if (foreign.length) bad.push(`${w}px fremde Server: ${foreign}`);
+    if (errors.length) bad.push(`${w}px Fehler: ${errors.join('; ')}`);
+    await ctx.close();
+  }
+  // Datenschutz: STATISTIK ABSCHALTEN schaltet nur die Statistik, der Knopf bleibt und schaltet wieder ein; der Kontakt bleibt verdeckt, bis man ihn anzeigen lässt
+  const ctx = await browser.newContext(), page = await ctx.newPage(); await page.goto(SITE('datenschutz.html')); await page.waitForTimeout(200);
+  await page.click('#optout'); const d1 = await page.evaluate(() => ({ btn: document.getElementById('optout')?.textContent, off: localStorage.getItem('umami.disabled'), shown: document.querySelectorAll('[data-k].shown').length }));
+  await page.click('#optout'); const d2 = await page.evaluate(() => ({ btn: document.getElementById('optout')?.textContent, off: localStorage.getItem('umami.disabled') }));
+  await page.click('.card .reveal'); const d3 = await page.evaluate(() => ({ shown: document.querySelectorAll('[data-k].shown').length, optout: !!document.getElementById('optout'), cardBtn: !!document.querySelector('.card .reveal') }));
+  await ctx.close();
+  ok(d1.btn === 'STATISTIK WIEDER EINSCHALTEN' && d1.off === '1' && d1.shown === 0 && d2.btn === 'STATISTIK ABSCHALTEN' && d2.off === null && d3.shown === 4 && d3.optout && !d3.cardBtn, 'Datenschutz-Knöpfe: ' + JSON.stringify([d1, d2, d3]));
+  ok(!bad.length, bad.join(' | '));
+});
+
 test('Handy: kein Zoom mit zwei Daumen, Menü scrollt mit einem Finger', async () => {
   const { page, ctx, errors } = await open(MOBILE);
   const ev = await page.evaluate(() => {
