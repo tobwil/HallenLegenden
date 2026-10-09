@@ -1156,7 +1156,7 @@ test('Erfolge: Spieler, Torwart und Talent der Saison, Spieler des Spiels in der
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
-test('Schwierigkeit: Abfangen und Klauen gegen die CPU je Stufe schwerer, CPU stört den Ballführer; CPU gegen CPU unverändert; nach klarem Sieg die nächste Stufe anbieten', async () => {
+test('Schwierigkeit: Abfangen und Klauen gegen die CPU je Stufe schwerer, CPU stört den Ballführer, Pass am engen Gegenspieler vorbei; CPU gegen CPU unabhängig von den Stufen-Werten; nach klarem Sieg die nächste, nach klarer Niederlage die vorige Stufe anbieten', async () => {
   const { page, ctx, errors } = await open(DESKTOP, 41);
   const r = await page.evaluate(() => {
     hideMenu();
@@ -1193,19 +1193,34 @@ test('Schwierigkeit: Abfangen und Klauen gegen die CPU je Stufe schwerer, CPU st
     const seed = v => { let x = v; Math.random = () => (x = (x * 16807) % 2147483647) / 2147483647; };
     seed(5); const am = play(0, 0, 4); seed(5); const le = play(2, 0, 4);
     seed(9); const c0 = play(1, -1, 2).sc; const keep = { ...DIFF[1] }; Object.assign(DIFF[1], { steal: 0.5, icpt: 0.9, press: 9, foul: 0 }); seed(9); const c2 = play(1, -1, 2).sc; Object.assign(DIFF[1], keep);
+    // Pass am Gegenspieler vorbei: steht der Verteidiger direkt am Werfer, fängt er selten ab, 3 m weiter im Passweg öfter
+    const lane = gap => { let n = 0; for (let i = 0; i < 300; i++) {
+      newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.phase = 'play'; G.paused = true; G.introT = 99;
+      const pa = G.players.find(p => p.team === 1 && p.role === 'RM'), rc = G.players.find(p => p.team === 1 && p.role === 'RL'), d = G.players.find(p => p.team === 0 && p.role === 'KM');
+      for (const p of G.players) if (p !== pa && p !== rc && p !== d && p.role !== 'TW') { p.x = 20; p.y = 19.5; }
+      Object.assign(pa, { x: 20, y: 10, vx: 0, vy: 0 }); Object.assign(rc, { x: 20, y: 3, vx: 0, vy: 0 }); Object.assign(d, { x: 20, y: 10 - gap, vx: 0, vy: 0 }); G.ctrl = null;
+      giveBall(pa); G.ctrl = null; pass(pa, rc); for (let k = 0; k < 60 && G.ball.owner !== rc && G.ball.owner !== d; k++) updateBall(1 / 60);
+      if (G.ball.owner === d) n++; } return n; };
+    const nearI = lane(0.8), farI = lane(3);
     // Abpfiff-Hinweis: klarer Sieg im schnellen Spiel auf Profi, nicht bei knappem Sieg, nicht auf Legende, nicht in der Karriere
-    const end = (diff, s, career) => { newMatch(2, 1, { human: 0, halfLen: 120, diff, career }); G.score = s; G.phase = 'fulltime'; if (career) G.career = false; endMatch(); return menu.querySelector('.uphint')?.textContent || ''; };
-    const hint = end(1, [20, 13]), narrow = end(1, [18, 14]), leg = end(2, [22, 10]);
-    newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.score = [20, 13]; G.phase = 'fulltime'; G.career = true; endMatch(); const career = menu.querySelector('.uphint')?.textContent || '';
-    G.career = false; end(1, [20, 13]); menu.querySelector('[data-act="rematchUp"]').click(); const up = [G.diff, SEL.diff, G.label];
-    return { am, le, c0, c2, hint, narrow, leg, career, up, mono: [0, 1].every(i => DIFF[i].icpt > DIFF[i + 1].icpt && DIFF[i].steal > DIFF[i + 1].steal && DIFF[i].press < DIFF[i + 1].press && DIFF[i].foul > DIFF[i + 1].foul) };
+    const end = (diff, s, career) => { newMatch(2, 1, { human: 0, halfLen: 120, diff, career }); G.score = s; G.phase = 'fulltime'; if (career) G.career = false; endMatch(); return menu.querySelector('.diffhint')?.textContent || ''; };
+    const hint = end(1, [20, 13]), narrow = end(1, [18, 14]), leg = end(2, [22, 10]), down = end(1, [12, 19]), downL = end(2, [10, 17]), amL = end(0, [10, 17]), narrowL = end(1, [14, 18]);
+    newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.score = [20, 13]; G.phase = 'fulltime'; G.career = true; endMatch(); const career = menu.querySelector('.diffhint')?.textContent || '';
+    G.career = true; G.score = [10, 17]; endMatch(); const careerL = menu.querySelector('.diffhint')?.textContent || '';
+    const ev = []; PLATFORM.event = (n, d) => { if (n.startsWith('stufe')) ev.push(n + ':' + d.stufe); };
+    G.career = false; end(1, [20, 13]); menu.querySelector('[data-act="rematchDiff"]').click(); const up = [G.diff, SEL.diff, G.label];
+    end(1, [12, 19]); menu.querySelector('[data-act="rematchDiff"]').click(); const dn = [G.diff, SEL.diff, G.label]; PLATFORM.event = null;
+    return { nearI, farI, am, le, c0, c2, hint, narrow, leg, career, up, down, downL, am0: amL, narrowL, careerL, dn, ev, mono: [0, 1].every(i => DIFF[i].icpt > DIFF[i + 1].icpt && DIFF[i].steal > DIFF[i + 1].steal && DIFF[i].press < DIFF[i + 1].press && DIFF[i].foul > DIFF[i + 1].foul) };
   });
   ok(r.mono, 'Stufen nicht durchgehend schwerer (Abfangen, Klauen, Stören, Fouls)');
   ok(r.am.gd - r.le.gd >= 12, `Legende kaum schwerer als Amateur: Tordifferenz ${r.am.gd} gegen ${r.le.gd} (${r.am.sc} | ${r.le.sc})`);
   ok(r.am.icpt > r.le.icpt * 1.15, `Ballgewinne des Menschen auf Amateur ${r.am.icpt}, auf Legende ${r.le.icpt}`);
+  ok(r.nearI < r.farI * 0.6 && r.farI > 20, `Abfangen direkt am Werfer ${r.nearI}, 3 m weiter ${r.farI} von 300 Pässen`);
   ok(r.c0 === r.c2, `CPU gegen CPU hängt an den Werten gegen den Menschen: ${r.c0} | ${r.c2}`);
-  ok(r.hint.includes('LEGENDE') && !r.narrow && !r.leg && !r.career, `Hinweis: ${JSON.stringify([r.hint, r.narrow, r.leg, r.career])}`);
-  ok(r.up[0] === 2 && r.up[1] === 2 && r.up[2] === 'REVANCHE', 'Revanche auf Legende: ' + r.up);
+  ok(r.hint.includes('Zu leicht?') && r.hint.includes('LEGENDE') && !r.narrow && !r.leg && !r.career, `Hinweis zu leicht: ${JSON.stringify([r.hint, r.narrow, r.leg, r.career])}`);
+  ok(r.down.includes('Zu schwer?') && r.down.includes('AMATEUR') && r.downL.includes('PROFI') && !r.am0 && !r.narrowL && !r.careerL, `Hinweis zu schwer: ${JSON.stringify([r.down, r.downL, r.am0, r.narrowL, r.careerL])}`);
+  ok(r.up[0] === 2 && r.up[1] === 2 && r.up[2] === 'REVANCHE' && r.dn[0] === 0 && r.dn[1] === 0, `Revanche auf Legende ${r.up}, auf Amateur ${r.dn}`);
+  ok(r.ev.join() === 'stufe-hoch:legende,stufe-runter:amateur', 'Statistik-Ereignisse: ' + r.ev);
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 

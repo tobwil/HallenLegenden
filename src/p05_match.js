@@ -2,7 +2,7 @@
 let G = null;
 // Nur gegen den Menschen: cpu Stärkebonus der CPU, react Reaktionszeit der CPU, steal Klau-Bonus des Menschen, icpt Abfang-Bonus des gesteuerten Spielers,
 // press wie oft die CPU dem menschlichen Ballführer den Ball wegspitzeln will, foul Foulquote der CPU beim misslungenen Klau gegen den Menschen
-const DIFF = [{ n: 'Amateur', cpu: -9, react: 1.45, steal: 0.13, icpt: 0.25, press: 1, foul: 0.42 }, { n: 'Profi', cpu: 0, react: 1, steal: 0.08, icpt: 0.15, press: 1.6, foul: 0.3 }, { n: 'Legende', cpu: 9, react: 0.72, steal: 0.02, icpt: 0.03, press: 3, foul: 0.2 }];
+const DIFF = [{ n: 'Amateur', cpu: -9, react: 1.45, steal: 0.13, icpt: 0.25, press: 1, foul: 0.42 }, { n: 'Profi', cpu: 0, react: 1, steal: 0.08, icpt: 0.2, press: 1.3, foul: 0.35 }, { n: 'Legende', cpu: 6, react: 0.72, steal: 0.03, icpt: 0.05, press: 2.2, foul: 0.22 }];
 const goalX = t => ((t === 0) !== G.swap) ? CW : 0;
 const ownX = t => goalX(t) === CW ? 0 : CW;
 const sgn = t => goalX(t) === CW ? 1 : -1;

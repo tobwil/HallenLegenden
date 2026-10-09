@@ -3,16 +3,27 @@
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
 ## v8.31: Schwierigkeit mit Biss
-- **Behoben: Gegen die CPU war es zu leicht.** Ein einfacher Spieler-Bot (geradeaus zum Tor, aus 8,5 m in die freie Ecke, in der Abwehr vor den Ballführer stellen) gewann bei gleich starken Vereinen auf Profi 12 von 12 Spielen mit rund 19:8, auf Legende 11 von 12. Die Ursache: Wer selbst gesteuert wird, fing Pässe mit +25 % ab, rund 14 Ballgewinne pro Spiel. Den eigenen Ballführer störte die CPU dagegen kaum, und misslungene Klau-Versuche der CPU endeten oft im Foul, mit 5 bis 7 Siebenmetern pro Spiel für dich.
-- **Neu je Stufe:** Abfang-Bonus des gesteuerten Spielers, Klau-Chance, wie oft die CPU deinem Ballführer den Ball wegspitzeln will und wie oft sie dabei foult. Amateur bleibt wie bisher. Profi: Abfangen +15 % statt +25 %, die CPU stört deinen Ballführer 1,6-mal so oft und foult dabei seltener. Legende: Abfangen +3 %, Klauen schwerer, die CPU stört dreimal so oft, dazu Stärkebonus +9 statt +6.
+- **Behoben: Gegen die CPU war es zu leicht.** Ein einfacher Spieler-Bot (geradeaus zum Tor, aus 8,5 m in die freie Ecke, in der Abwehr vor den Ballführer stellen) gewann bei gleich starken Vereinen auf Profi 12 von 12 Spielen mit rund 19:8, auf Legende 11 von 12. Die CPU verlor dabei fast jeden zweiten Angriff durch einen abgefangenen Pass oder Ballverlust. Dich störte sie kaum, und misslungene Klau-Versuche der CPU endeten oft im Foul, mit 5 bis 7 Siebenmetern pro Spiel für dich.
+- **Pass am engen Gegenspieler vorbei:** Stand ein Verteidiger direkt am Werfer (unter 1,3 m), lag er dicht an jedem Passweg und durfte schon beim Abwurf abfangen. Jeder vierte Pass unter Druck ging so verloren, und eine freie Alternative gab es praktisch nie. Jetzt fängt er dort nur noch mit gut einem Drittel der Chance ab. Pässe weiter im Passweg bleiben abfangbar. Das gilt für alle, auch für deine Pässe. Die CPU verliert gegen dich etwa 6 bis 8 statt 10 bis 13 Bälle durch Abfangen und kommt auf 25 bis 27 statt 18 bis 22 Würfe pro Spiel.
+- **Neu je Stufe** (wirkt nur gegen dich): Abfang-Bonus des gesteuerten Spielers, Klau-Chance, wie oft die CPU deinem Ballführer den Ball wegspitzeln will und wie oft sie dabei foult.
+  - **Amateur:** bleibt wie bisher.
+  - **Profi:** Abfangen +20 % statt +25 %, die CPU stört deinen Ballführer 1,3-mal so oft und foult dabei seltener.
+  - **Legende:** Abfangen +5 %, Klauen schwerer, die CPU stört 2,2-mal so oft. Der Stärkebonus bleibt +6.
 - **Wirkung bei gleich starken Vereinen (Bot, Siege):**
-  - **Profi:** guter Spieler etwa 80–90 % (vorher 100 %), mittlerer etwa 70 % (vorher 90 %), Anfänger etwa ein Drittel.
-  - **Legende:** guter Spieler etwa die Hälfte.
-  - **Amateur:** unverändert, alle gewinnen.
+  - **Profi:** guter Spieler etwa 90 % (vorher 100 %, aber knapper), mittlerer etwa 70 % (vorher 90 %), Anfänger etwa ein Drittel.
+  - **Legende:** guter Spieler etwa die Hälfte, mittlerer etwa ein Viertel.
+  - **Amateur:** alle gewinnen weiter fast immer.
 - **Ungleiche Vereine:** Als Zweitligist gegen Magdeburg gewinnt ein guter Spieler weiter etwa die Hälfte, als Favorit gewinnt man weiter fast immer.
-- **CPU gegen CPU und simulierte Karriere-Spiele** bleiben unverändert. Mit Zufallseingaben fallen etwa gleich viele Tore (25,8 statt 28,0 pro Spiel).
-- **Neu: „Zu leicht?“** Nach einem Sieg mit mindestens 6 Toren im schnellen Spiel schlägt der Abpfiff die nächste Stufe vor, mit Knopf REVANCHE AUF PROFI bzw. AUF LEGENDE. Umami zählt das als `stufe-hoch`.
-- 1 neuer Regressionstest (Stufen durchgehend schwerer, Bot auf Amateur und Legende, CPU gegen CPU unabhängig von den neuen Werten, Hinweis und Revanche), insgesamt 52. Der Spielerkarten-Test prüft den Saisonwechsel jetzt an einem gesunden Stammspieler statt am ersten Spieler mit Einsätzen, der zufällig verletzt sein konnte.
+- **Tore:** CPU gegen CPU rund 1 bis 1,5 Tore mehr pro Spiel (16,1 statt 14,6 bzw. 16,9 statt 15,7), weil weniger Pässe verloren gehen. Der Favorit gewinnt gleich oft (66 % gegen 64 %). Mit Zufallseingaben gegen die CPU 27,4 statt 28,0 Tore. Simulierte Karriere-Spiele bleiben unverändert.
+- **Neu: „Zu leicht?“ und „Zu schwer?“** Nach einem Sieg mit mindestens 6 Toren im schnellen Spiel schlägt der Abpfiff die nächste Stufe vor, nach einer Niederlage mit mindestens 6 Toren die vorige. Dazu gibt es jeweils einen Knopf REVANCHE AUF …: gleiche Vereine, nur die Stufe ändert sich, die normale REVANCHE bleibt daneben. In der Karriere erscheint der Hinweis nicht, dort ist die Stufe beim Anlegen fest gewählt. Umami zählt die Wahl als `stufe-hoch` bzw. `stufe-runter`.
+- **Tests:** 1 neuer Regressionstest, insgesamt 52. Er prüft:
+  - Stufen durchgehend schwerer
+  - Bot auf Amateur und Legende
+  - Abfangen am Werfer gegen 3 m weiter im Passweg
+  - CPU gegen CPU unabhängig von den Stufen-Werten
+  - beide Hinweise, Revanche und Statistik-Ereignis
+
+  Der Spielerkarten-Test prüft den Saisonwechsel jetzt an einem gesunden Stammspieler statt am ersten Spieler mit Einsätzen, der zufällig verletzt sein konnte.
 
 ## v8.30: Auszeichnungen und Meilensteine
 - **Neu: Auszeichnungen der Saison.** Am Saisonende werden in deiner Liga der **Spieler der Saison**, der **Torwart der Saison** und das **Talent der Saison** (bis 21 Jahre) gewählt. Wer mindestens 40 % der Spieltage gespielt hat, kommt in Frage. Feldspieler zählen mit Toren, Vorlagen, Ballgewinnen und „Spieler des Spiels“, Torhüter mit der Fangquote, dazu jeweils ein kleiner Bonus nach Tabellenplatz. Die Gewinner stehen in der Saisonbilanz, in der Zeitung und im Tab ERFOLGE. Eigene Spieler sind dort golden markiert und bekommen in der Ehrenhalle den Vermerk „AUSGEZEICHNET“.

@@ -103,7 +103,7 @@ tr.zone-d td:first-child{box-shadow:inset 3px 0 0 var(--hot)}
 .muted{color:var(--dim);margin:0}
 .potm{display:flex;gap:12px;align-items:center;border:2px solid var(--gold);padding:8px;background:#1a1405}
 .potm canvas{width:80px;height:80px;image-rendering:pixelated;border:2px solid #000}
-.uphint{text-align:center;color:var(--gold);font-family:var(--pix);font-size:clamp(9px,1.4vw,12px);margin:8px 0 0}
+.diffhint{text-align:center;color:var(--gold);font-family:var(--pix);font-size:clamp(9px,1.4vw,12px);margin:8px 0 0}
 .ed{display:grid;grid-template-columns:auto 1fr 70px;gap:6px 8px;align-items:center}
 input,select{font-family:var(--term);font-size:20px;background:#0d0b14;color:var(--ink);border:2px solid var(--line);padding:4px 6px;min-width:0}
 input:focus,select:focus{outline:2px solid var(--gold);border-color:var(--gold)}
@@ -1132,7 +1132,7 @@ function drawFront() {
 let G = null;
 // Nur gegen den Menschen: cpu Stärkebonus der CPU, react Reaktionszeit der CPU, steal Klau-Bonus des Menschen, icpt Abfang-Bonus des gesteuerten Spielers,
 // press wie oft die CPU dem menschlichen Ballführer den Ball wegspitzeln will, foul Foulquote der CPU beim misslungenen Klau gegen den Menschen
-const DIFF = [{ n: 'Amateur', cpu: -9, react: 1.45, steal: 0.13, icpt: 0.25, press: 1, foul: 0.42 }, { n: 'Profi', cpu: 0, react: 1, steal: 0.08, icpt: 0.15, press: 1.6, foul: 0.3 }, { n: 'Legende', cpu: 9, react: 0.72, steal: 0.02, icpt: 0.03, press: 3, foul: 0.2 }];
+const DIFF = [{ n: 'Amateur', cpu: -9, react: 1.45, steal: 0.13, icpt: 0.25, press: 1, foul: 0.42 }, { n: 'Profi', cpu: 0, react: 1, steal: 0.08, icpt: 0.2, press: 1.3, foul: 0.35 }, { n: 'Legende', cpu: 6, react: 0.72, steal: 0.03, icpt: 0.05, press: 2.2, foul: 0.22 }];
 const goalX = t => ((t === 0) !== G.swap) ? CW : 0;
 const ownX = t => goalX(t) === CW ? 0 : CW;
 const sgn = t => goalX(t) === CW ? 1 : -1;
@@ -1847,7 +1847,8 @@ function updateBall(dt) {
     if (p.role !== 'TW' && inArea(b.x, b.y) && p.z < 0.3) continue;
     if (b.passTo && p.team !== b.passTo.team) {
       if (b.tried.has(p)) continue; b.tried.add(p);
-      if (Math.random() < 0.1 + p.df / 900 + (G.ctrl === p ? DIFF[G.diff].icpt : 0)) { giveBall(p); G.stats.steals[p.team]++; p.stealsN++; banner('ABGEFANGEN!', '#9cff57', p.name, 0.9); say(`${p.name} liest den Pass und fängt ab!`); return; }
+      const near = b.passer && dist(p.x, p.y, b.passer.x, b.passer.y) < 1.3 ? 0.35 : 1;   // direkt am Werfer: der Pass geht am Gegenspieler vorbei
+      if (Math.random() < (0.1 + p.df / 900 + (G.ctrl === p ? DIFF[G.diff].icpt : 0)) * near) { giveBall(p); G.stats.steals[p.team]++; p.stealsN++; banner('ABGEFANGEN!', '#9cff57', p.name, 0.9); say(`${p.name} liest den Pass und fängt ab!`); return; }
       continue;
     }
     if (b.passTo && p !== b.passTo && dxy > 0.45) continue;
@@ -2701,7 +2702,7 @@ const ACT = {
   career() { careerEntry(); },
   afterMatch() { const c = G && G.career; G = null; if (c) careerHub(); else ACT.main(); },
   rematch() { const a = G.tid[0], b = G.tid[1]; startMatch(a, b, { human: 0, halfLen: G.halfLen, diff: G.diff, label: 'REVANCHE' }); },
-  rematchUp() { const a = G.tid[0], b = G.tid[1], d = Math.min(2, G.diff + 1); track('stufe-hoch', { stufe: DIFF[d].n.toLowerCase() }); SEL.diff = d; startMatch(a, b, { human: 0, halfLen: G.halfLen, diff: d, label: 'REVANCHE' }); },
+  rematchDiff(v) { const a = G.tid[0], b = G.tid[1], d = clamp(+v, 0, 2); track(d > G.diff ? 'stufe-hoch' : 'stufe-runter', { stufe: DIFF[d].n.toLowerCase() }); SEL.diff = d; startMatch(a, b, { human: 0, halfLen: G.halfLen, diff: d, label: 'REVANCHE' }); },
   editor(v) {
     const tid = v !== undefined ? +v : (SEL.edit ?? SEL.a); SEL.edit = tid;
     const ps = roster(tid).concat(quickBench(tid)), csq = CAREER && CAREER.squads[tid];
@@ -2763,7 +2764,9 @@ function endMatch() {
   const row = (l, a, b) => `<tr><td>${a}</td><td style="text-align:center">${l}</td><td>${b}</td></tr>`;
   const q = t => st.shots[t] ? Math.round(st.goals[t] / st.shots[t] * 100) + '%' : '–';
   const best = potm();
-  const up = !G.career && h >= 0 && G.diff < 2 && G.score[h] - G.score[1 - h] >= 6 ? DIFF[G.diff + 1].n.toUpperCase() : '';   // klarer Sieg im schnellen Spiel: nächste Stufe anbieten
+  // Klarer Sieg oder klare Niederlage im schnellen Spiel (6+ Tore): die nächste bzw. vorige Stufe anbieten
+  const gd = h < 0 ? 0 : G.score[h] - G.score[1 - h], sw = G.career || h < 0 ? null : gd >= 6 && G.diff < 2 ? { d: G.diff + 1, q: 'Zu leicht?' } : gd <= -6 && G.diff > 0 ? { d: G.diff - 1, q: 'Zu schwer?' } : null;
+  const swN = sw ? DIFF[sw.d].n.toUpperCase() : '';
   const scorers = allMatchPlayers().filter(p => p.goals).sort((a, b) => b.goals - a.goals).slice(0, 5).map(p => `${esc(p.name)} (${TEAMS[G.tid[p.team]].k}) ${p.goals}`).join(' · ') || 'keine';
   showMenu(`<div class="panel"><div class="row spread"><h2>ABPFIFF${res ? ' · ' + res : ''}</h2><span class="tag">${esc(G.label)}</span></div>
     <p class="res">${T0.k} ${G.score[0]} : ${G.score[1]} ${T1.k}</p>${G.trophyWinner !== undefined ? `<p class="res" style="font-size:clamp(12px,2vw,18px)">🏆 ${esc(TEAMS[G.tid[G.trophyWinner]].n.toUpperCase())} GEWINNT DEN ${esc(G.event.trophy)}</p>` : ''}${G.soScore ? `<p class="muted" style="text-align:center">n. 7-Meter-Werfen ${G.soScore[0]}:${G.soScore[1]} · ${esc(TEAMS[G.tid[G.soWinner]].n)} weiter</p>` : ''}
@@ -2771,8 +2774,8 @@ function endMatch() {
       <p class="muted">${esc(TEAMS[G.tid[best.team]].n)} · ${best.role === 'TW' ? `${best.saves} Paraden` : `${best.goals} Tore aus ${best.shots} Würfen`}${best.stealsN ? ` · ${best.stealsN} Ballgewinne` : ''}</p></div></div>
     <div class="tblwrap"><table><thead><tr><th>${T0.k}</th><th style="text-align:center">STATISTIK</th><th>${T1.k}</th></tr></thead><tbody>
     ${row('Würfe', st.shots[0], st.shots[1])}${row('Wurfquote', q(0), q(1))}${row('Paraden', st.saves[0], st.saves[1])}${row('Ballgewinne', st.steals[0], st.steals[1])}${row('7-Meter', st.seven[0], st.seven[1])}${row('Zeitstrafen', st.susp[0], st.susp[1])}</tbody></table></div>
-    <p class="muted">Torschützen: ${scorers}</p>${up ? `<p class="uphint">Zu leicht? Probier die Stufe ${up}.</p>` : ''}
-    <div class="row"><button class="main" data-back data-act="afterMatch">${G.career ? 'WEITER ZUR KARRIERE' : 'HAUPTMENÜ'}</button>${G.career ? '' : '<button data-act="rematch">REVANCHE</button>'}${up ? `<button data-act="rematchUp">REVANCHE AUF ${up}</button>` : ''}</div></div>`);
+    <p class="muted">Torschützen: ${scorers}</p>${sw ? `<p class="diffhint">${sw.q} Probier die Stufe ${swN}.</p>` : ''}
+    <div class="row"><button class="main" data-back data-act="afterMatch">${G.career ? 'WEITER ZUR KARRIERE' : 'HAUPTMENÜ'}</button>${G.career ? '' : '<button data-act="rematch">REVANCHE</button>'}${sw ? `<button data-act="rematchDiff" data-v="${sw.d}">REVANCHE AUF ${swN}</button>` : ''}</div></div>`);
   const c = menu.querySelector('#potmC'); if (c) c.getContext('2d').drawImage(portrait(best, kit(best.team)), 0, 0);
 }
 function togglePause() {
