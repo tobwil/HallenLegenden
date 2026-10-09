@@ -164,7 +164,7 @@ Im Browser speichert das Spiel in `localStorage`. Eine Hülle wie eine Desktop-V
 
 #### Tests
 
-Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere mit Pokal und Europapokal, Finanzen, Potenzial, Erfolge und Teilen-Bild, Vergleich vor dem Spiel, Editor, Menüfenster, Handy-Steuerung und Darstellung auf breiten Bildschirmen. Nach `sh src/build.sh` und vor jedem Merge:
+Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). **GitHub Actions** (`.github/workflows/tests.yml`) führt sie bei jedem Pull Request und jedem Push auf `main` aus: Erst wird das Spiel gebaut, und die Prüfung schlägt fehl, wenn `game/index.html` oder `hallen-legenden.html` nicht zu `src/` passen. Danach laufen `npm test` und `npm run tief`, das Ergebnis steht als Prüfung im Pull Request. Sie laufen Frame für Frame mit festem Zufall und prüfen unter anderem Tastenbelegung, Pässe, Eingabepuffer, Spielerwechsel, ein komplettes Spiel, Karriere mit Pokal und Europapokal, Finanzen, Potenzial, Erfolge und Teilen-Bild, Vergleich vor dem Spiel, Editor, Menüfenster, Handy-Steuerung und Darstellung auf breiten Bildschirmen. Nach `sh src/build.sh` und vor jedem Merge:
 
 ```sh
 cd tests
@@ -348,7 +348,7 @@ In the browser the game saves to `localStorage`. A wrapper such as a desktop ver
 
 #### Tests
 
-Regression tests for the game live in `tests/` (Playwright with Chromium). They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career with cup and European cup, finances, potential, achievements and share image, pre-match comparison, editor, menu windows, touch controls and wide-screen layout, among others. After `sh src/build.sh` and before every merge:
+Regression tests for the game live in `tests/` (Playwright with Chromium). **GitHub Actions** (`.github/workflows/tests.yml`) runs them on every pull request and every push to `main`: it builds the game first and fails if `game/index.html` or `hallen-legenden.html` don't match `src/`, then runs `npm test` and `npm run tief`; the result shows up as a check on the pull request. They step the game frame by frame with a fixed random seed and cover key mapping, passing, input buffering, player switching, a full match, career with cup and European cup, finances, potential, achievements and share image, pre-match comparison, editor, menu windows, touch controls and wide-screen layout, among others. After `sh src/build.sh` and before every merge:
 
 ```sh
 cd tests
