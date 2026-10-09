@@ -2,6 +2,18 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.31: Schwierigkeit mit Biss
+- **Behoben: Gegen die CPU war es zu leicht.** Ein einfacher Spieler-Bot (geradeaus zum Tor, aus 8,5 m in die freie Ecke, in der Abwehr vor den Ballführer stellen) gewann bei gleich starken Vereinen auf Profi 12 von 12 Spielen mit rund 19:8, auf Legende 11 von 12. Die Ursache: Wer selbst gesteuert wird, fing Pässe mit +25 % ab, rund 14 Ballgewinne pro Spiel. Den eigenen Ballführer störte die CPU dagegen kaum, und misslungene Klau-Versuche der CPU endeten oft im Foul, mit 5 bis 7 Siebenmetern pro Spiel für dich.
+- **Neu je Stufe:** Abfang-Bonus des gesteuerten Spielers, Klau-Chance, wie oft die CPU deinem Ballführer den Ball wegspitzeln will und wie oft sie dabei foult. Amateur bleibt wie bisher. Profi: Abfangen +15 % statt +25 %, die CPU stört deinen Ballführer 1,6-mal so oft und foult dabei seltener. Legende: Abfangen +3 %, Klauen schwerer, die CPU stört dreimal so oft, dazu Stärkebonus +9 statt +6.
+- **Wirkung bei gleich starken Vereinen (Bot, Siege):**
+  - **Profi:** guter Spieler etwa 80–90 % (vorher 100 %), mittlerer etwa 70 % (vorher 90 %), Anfänger etwa ein Drittel.
+  - **Legende:** guter Spieler etwa die Hälfte.
+  - **Amateur:** unverändert, alle gewinnen.
+- **Ungleiche Vereine:** Als Zweitligist gegen Magdeburg gewinnt ein guter Spieler weiter etwa die Hälfte, als Favorit gewinnt man weiter fast immer.
+- **CPU gegen CPU und simulierte Karriere-Spiele** bleiben unverändert. Mit Zufallseingaben fallen etwa gleich viele Tore (25,8 statt 28,0 pro Spiel).
+- **Neu: „Zu leicht?“** Nach einem Sieg mit mindestens 6 Toren im schnellen Spiel schlägt der Abpfiff die nächste Stufe vor, mit Knopf REVANCHE AUF PROFI bzw. AUF LEGENDE. Umami zählt das als `stufe-hoch`.
+- 1 neuer Regressionstest (Stufen durchgehend schwerer, Bot auf Amateur und Legende, CPU gegen CPU unabhängig von den neuen Werten, Hinweis und Revanche), insgesamt 52. Der Spielerkarten-Test prüft den Saisonwechsel jetzt an einem gesunden Stammspieler statt am ersten Spieler mit Einsätzen, der zufällig verletzt sein konnte.
+
 ## v8.30: Auszeichnungen und Meilensteine
 - **Neu: Auszeichnungen der Saison.** Am Saisonende werden in deiner Liga der **Spieler der Saison**, der **Torwart der Saison** und das **Talent der Saison** (bis 21 Jahre) gewählt. Wer mindestens 40 % der Spieltage gespielt hat, kommt in Frage. Feldspieler zählen mit Toren, Vorlagen, Ballgewinnen und „Spieler des Spiels“, Torhüter mit der Fangquote, dazu jeweils ein kleiner Bonus nach Tabellenplatz. Die Gewinner stehen in der Saisonbilanz, in der Zeitung und im Tab ERFOLGE. Eigene Spieler sind dort golden markiert und bekommen in der Ehrenhalle den Vermerk „AUSGEZEICHNET“.
 - **Neu: 18 Meilensteine** im Tab ERFOLGE, jeweils mit Saison: erster Sieg, Kantersieg, 5 und 10 Ligasiege in Folge, ausverkaufte Halle, selbst erzielte Dreher- und Kempa-Tore, gewonnenes 7-Meter-Werfen, Aufstieg, Final Four, Pokal, Meisterschaft, Europapokal, Double, Spieler der Saison, Hallen-Legende, 10 Saisons als Trainer und 1 Million Euro auf dem Konto. Ein neuer Meilenstein meldet sich in der Zeitung.

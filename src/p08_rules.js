@@ -63,7 +63,7 @@ function updateBall(dt) {
     if (p.role !== 'TW' && inArea(b.x, b.y) && p.z < 0.3) continue;
     if (b.passTo && p.team !== b.passTo.team) {
       if (b.tried.has(p)) continue; b.tried.add(p);
-      if (Math.random() < 0.1 + p.df / 900 + (G.ctrl === p ? 0.25 : 0)) { giveBall(p); G.stats.steals[p.team]++; p.stealsN++; banner('ABGEFANGEN!', '#9cff57', p.name, 0.9); say(`${p.name} liest den Pass und fängt ab!`); return; }
+      if (Math.random() < 0.1 + p.df / 900 + (G.ctrl === p ? DIFF[G.diff].icpt : 0)) { giveBall(p); G.stats.steals[p.team]++; p.stealsN++; banner('ABGEFANGEN!', '#9cff57', p.name, 0.9); say(`${p.name} liest den Pass und fängt ab!`); return; }
       continue;
     }
     if (b.passTo && p !== b.passTo && dxy > 0.45) continue;

@@ -216,6 +216,7 @@ const ACT = {
   career() { careerEntry(); },
   afterMatch() { const c = G && G.career; G = null; if (c) careerHub(); else ACT.main(); },
   rematch() { const a = G.tid[0], b = G.tid[1]; startMatch(a, b, { human: 0, halfLen: G.halfLen, diff: G.diff, label: 'REVANCHE' }); },
+  rematchUp() { const a = G.tid[0], b = G.tid[1], d = Math.min(2, G.diff + 1); track('stufe-hoch', { stufe: DIFF[d].n.toLowerCase() }); SEL.diff = d; startMatch(a, b, { human: 0, halfLen: G.halfLen, diff: d, label: 'REVANCHE' }); },
   editor(v) {
     const tid = v !== undefined ? +v : (SEL.edit ?? SEL.a); SEL.edit = tid;
     const ps = roster(tid).concat(quickBench(tid)), csq = CAREER && CAREER.squads[tid];
@@ -277,6 +278,7 @@ function endMatch() {
   const row = (l, a, b) => `<tr><td>${a}</td><td style="text-align:center">${l}</td><td>${b}</td></tr>`;
   const q = t => st.shots[t] ? Math.round(st.goals[t] / st.shots[t] * 100) + '%' : '–';
   const best = potm();
+  const up = !G.career && h >= 0 && G.diff < 2 && G.score[h] - G.score[1 - h] >= 6 ? DIFF[G.diff + 1].n.toUpperCase() : '';   // klarer Sieg im schnellen Spiel: nächste Stufe anbieten
   const scorers = allMatchPlayers().filter(p => p.goals).sort((a, b) => b.goals - a.goals).slice(0, 5).map(p => `${esc(p.name)} (${TEAMS[G.tid[p.team]].k}) ${p.goals}`).join(' · ') || 'keine';
   showMenu(`<div class="panel"><div class="row spread"><h2>ABPFIFF${res ? ' · ' + res : ''}</h2><span class="tag">${esc(G.label)}</span></div>
     <p class="res">${T0.k} ${G.score[0]} : ${G.score[1]} ${T1.k}</p>${G.trophyWinner !== undefined ? `<p class="res" style="font-size:clamp(12px,2vw,18px)">🏆 ${esc(TEAMS[G.tid[G.trophyWinner]].n.toUpperCase())} GEWINNT DEN ${esc(G.event.trophy)}</p>` : ''}${G.soScore ? `<p class="muted" style="text-align:center">n. 7-Meter-Werfen ${G.soScore[0]}:${G.soScore[1]} · ${esc(TEAMS[G.tid[G.soWinner]].n)} weiter</p>` : ''}
@@ -284,8 +286,8 @@ function endMatch() {
       <p class="muted">${esc(TEAMS[G.tid[best.team]].n)} · ${best.role === 'TW' ? `${best.saves} Paraden` : `${best.goals} Tore aus ${best.shots} Würfen`}${best.stealsN ? ` · ${best.stealsN} Ballgewinne` : ''}</p></div></div>
     <div class="tblwrap"><table><thead><tr><th>${T0.k}</th><th style="text-align:center">STATISTIK</th><th>${T1.k}</th></tr></thead><tbody>
     ${row('Würfe', st.shots[0], st.shots[1])}${row('Wurfquote', q(0), q(1))}${row('Paraden', st.saves[0], st.saves[1])}${row('Ballgewinne', st.steals[0], st.steals[1])}${row('7-Meter', st.seven[0], st.seven[1])}${row('Zeitstrafen', st.susp[0], st.susp[1])}</tbody></table></div>
-    <p class="muted">Torschützen: ${scorers}</p>
-    <div class="row"><button class="main" data-back data-act="afterMatch">${G.career ? 'WEITER ZUR KARRIERE' : 'HAUPTMENÜ'}</button>${G.career ? '' : '<button data-act="rematch">REVANCHE</button>'}</div></div>`);
+    <p class="muted">Torschützen: ${scorers}</p>${up ? `<p class="uphint">Zu leicht? Probier die Stufe ${up}.</p>` : ''}
+    <div class="row"><button class="main" data-back data-act="afterMatch">${G.career ? 'WEITER ZUR KARRIERE' : 'HAUPTMENÜ'}</button>${G.career ? '' : '<button data-act="rematch">REVANCHE</button>'}${up ? `<button data-act="rematchUp">REVANCHE AUF ${up}</button>` : ''}</div></div>`);
   const c = menu.querySelector('#potmC'); if (c) c.getContext('2d').drawImage(portrait(best, kit(best.team)), 0, 0);
 }
 function togglePause() {

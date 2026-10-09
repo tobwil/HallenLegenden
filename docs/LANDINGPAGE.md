@@ -90,6 +90,7 @@ Landingpage und Spiel (`game/index.html`, eingefügt von `src/build.sh`) laden d
 | `spiel-ende` | Abpfiff | `modus`, `ergebnis` (sieg, niederlage, unentschieden, weiter, ausgeschieden) |
 | `karriere-neu` | neue Karriere angelegt | |
 | `karriere-simuliert` | eigener Spieltag simuliert | |
+| `stufe-hoch` | nach klarem Sieg „Revanche auf …“ gewählt | `stufe`: profi, legende |
 
 Im Spiel läuft das über `track()` in `src/p01_core.js`, ohne Umami ist der Aufruf wirkungslos. Eigene Besuche ausschließen: auf der Datenschutz-Seite „Statistik abschalten“ klicken (setzt `umami.disabled` im Browser).
 
