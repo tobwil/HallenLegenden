@@ -40,7 +40,7 @@ function aiCarrier(p, dt) {
   return [p.tx, p.ty, dist(p.x, p.y, p.tx, p.ty) > 5];
 }
 function aiTarget(p, dt) {
-  const b = G.ball, own = b.owner;
+  const b = G.ball, own = b.owner, ctl = G.assist ? null : G.ctrl;   // im Abwehr-Assistenten stört ein KI-Mitspieler, auch wenn der eigene Spieler nah am Ballführer steht
   if (own === p) return aiCarrier(p, dt);
   if (b.passTo === p && b.state === 'air') {
     if (b.lob && p.z <= 0 && dist(p.x, p.y, b.x, b.y) < 2.6 && b.vz < 1.5 && b.z > 1.6) { p.vz = 4.3; p.vx = (b.x + b.vx * 0.35 - p.x) * 2; p.vy = (b.y + b.vy * 0.35 - p.y) * 2; }
@@ -57,7 +57,7 @@ function aiTarget(p, dt) {
   const threat = own || b.passTo;
   if (threat && threat.team !== p.team) {
     const gx = ownX(p.team), team = G.players.filter(q => q.team === p.team && !q.out && q.role !== 'TW');
-    const ctrlNear = G.ctrl && G.ctrl.team === p.team && dist(G.ctrl.x, G.ctrl.y, threat.x, threat.y) < 2.2;
+    const ctrlNear = ctl && ctl.team === p.team && dist(ctl.x, ctl.y, threat.x, threat.y) < 2.2;
     let presser = null, bd = 1e9;
     for (const q of team) if (q !== G.ctrl) { const d = dist(q.x, q.y, threat.x, threat.y); if (d < bd) { bd = d; presser = q; } }
     const td = goalDist(threat.x, threat.y, gx);
@@ -127,6 +127,23 @@ function humanControl(p, dt) {
   }
   return [IN.x * sp, IN.y * sp];
 }
+// Laufweg der KI (auch für den Abwehr-Assistenten): Geschwindigkeit zum Ziel aus aiTarget bzw. updateGK
+function aiVel(p, dt) {
+  const t = p.role === 'TW' ? updateGK(p, dt) : aiTarget(p, dt); if (!t) return [0, 0, false];
+  const dx = t[0] - p.x, dy = t[1] - p.y, d = Math.hypot(dx, dy);
+  const spd = t[3] || runSpeed(p) * (t[2] && p.st > 0.1 ? 1.25 : 1) * (G.ball.owner === p ? 0.92 : 1);
+  const k = d > 1.2 ? 1 : d / 1.2;
+  return d > 0.05 ? [dx / d * spd * k, dy / d * spd * k, t[2] && d > 2] : [0, 0, false];
+}
+// Abwehr-Assistent: Stick in der Abwehr länger als 0,8 s losgelassen: der Spieler verteidigt selbst weiter wie die KI-Mitspieler
+// (läuft auf seinen Platz in der Deckung, ein KI-Mitspieler stört den Ballführer). Sobald du wieder steuerst, hast du die volle Kontrolle; Tasten wirken immer
+function defAssist(p, dt) {
+  if (G.idleP !== p) { G.idleP = p; G.idleT = 0; }
+  G.idleT = Math.hypot(IN.x, IN.y) < 0.15 ? G.idleT + dt : 0;
+  const b = G.ball, o = b.owner || b.passTo, att = o ? o.team : G.poss;
+  G.assist = G.idleT >= 0.8 && b.owner !== p && p.z <= 0 && !(p.block > 0) && att >= 0 && att !== p.team;
+  return G.assist;
+}
 function updatePlayer(p, dt) {
   if (p.out) return;
   for (const k of ['stun', 'dash', 'cd', 'throwT', 'block', 'save', 'lie', 'stealT']) p[k] = Math.max(0, (p[k] || 0) - dt);
@@ -156,17 +173,8 @@ function updatePlayer(p, dt) {
         const dx = p.tx + IN.x * 0.6 - p.x, dy = p.ty + IN.y * 0.6 - p.y, d = Math.hypot(dx, dy), spd = runSpeed(p) * 1.25, k = d > 1.2 ? 1 : d / 1.2;
         if (d > 0.05) { dvx = dx / d * spd * k; dvy = dy / d * spd * k; } sprint = d > 2;
       }
-      else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
-      else {
-        const t = p.role === 'TW' ? updateGK(p, dt) : aiTarget(p, dt);
-        if (t) {
-          const dx = t[0] - p.x, dy = t[1] - p.y, d = Math.hypot(dx, dy);
-          const spd = t[3] || runSpeed(p) * (t[2] && p.st > 0.1 ? 1.25 : 1) * (G.ball.owner === p ? 0.92 : 1);
-          const k = d > 1.2 ? 1 : d / 1.2;
-          if (d > 0.05) { dvx = dx / d * spd * k; dvy = dy / d * spd * k; }
-          sprint = t[2] && d > 2;
-        }
-      }
+      else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; if (defAssist(p, dt)) [dvx, dvy, sprint] = aiVel(p, dt); }
+      else [dvx, dvy, sprint] = aiVel(p, dt);
     } else if (ph === 'goal' && G.lastScorer && p.team === G.lastScorer.team && p.role !== 'TW') {
       const sc = G.lastScorer;
       if (p === sc) { const a = G.phaseT * 2.2; dvx = Math.cos(a) * 4; dvy = Math.sin(a) * 2.5; if (G.phaseT > 1.0 && G.phaseT < 1.6) { dvx = sgn(p.team) * -5; p.cheer = 2; } }

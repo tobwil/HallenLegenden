@@ -202,9 +202,29 @@ function drawCut() {
   const extra = c.kind === 'goal' ? `${p.goals}. TOR (${p.goals}/${p.shots})` : c.kind === 'card' && c.title.startsWith('2') ? 'ZEITSTRAFE' : c.title === 'VERLETZT' ? 'WIRD AUSGEWECHSELT' : `${p.saves} PARADEN`;
   card(p, x, 214, c.title, c.col === '#f4f4f0' ? '#ffffff' : c.col, extra);
 }
+// Steuerhilfen: Tastenleiste passend zur Lage (Tastatur oder Gamepad; am Touch sind die Knöpfe beschriftet). AUTO = nur in den ersten 3 Spielen
+const helpsOn = () => G && !G.demo && G.human >= 0 && menu.hidden && (usePad() || !TOUCHDEV) && (SETTINGS.helps === 1 || ((SETTINGS.helps ?? 'auto') === 'auto' && (SETTINGS.helpN || 0) < 3));
+function keyBarItems() {
+  const pad = usePad(), K = (k, p) => pad ? p : k, b = G.ball, c = G.ctrl, me = G.human;
+  if (G.phase === 'penalty') return b.owner && b.owner.team === me ? [[K('LEERTASTE', 'X'), 'HALTEN'], [K('PFEILE', 'STICK'), 'ECKE'], ['LOSLASSEN', 'WURF']] : [[K('PFEILE', 'STICK'), 'ECKE RATEN']];
+  if (c && b.owner === c && c.role !== 'TW') return c.charging
+    ? [[K('PFEILE', 'STICK'), 'ECKE'], ['LOSLASSEN', 'WURF'], [K('D', 'B'), 'HEBER'], ...(dreherSpot(c, goalX(c.team)) ? [[K('S', 'A'), 'DREHER']] : [])]
+    : [[K('S', 'A'), 'PASS'], [K('A', 'RB+A'), 'KEMPA'], [K('LEERTASTE', 'X'), 'WURF'], [K('D', 'B'), 'FINTE'], [K('W', 'RB'), 'SPRINT']];
+  if ((b.owner ? b.owner.team : G.poss) !== me) return [[K('S', 'A'), 'WECHSEL'], [K('LEERTASTE', 'X'), 'BLOCK'], [K('D', 'B'), 'KLAUEN'], [K('W', 'RB'), 'SPRINT']];
+  return null;   // eigener Pass in der Luft, Torwart am Ball
+}
+function keyBar(above) {
+  if (!helpsOn() || !['play', 'restart', 'penalty'].includes(G.phase)) return;
+  const items = keyBarItems(); if (!items) return;
+  ctx.font = `8px ${FONT}`; const gap = 14, w = items.reduce((a, [k, l]) => a + ctx.measureText(k + ' ' + l).width, 0) + gap * (items.length - 1);
+  let x = Math.round(W / 2 - w / 2); const y = above ? H - 34 : H - 15;
+  rect(x - 8, y - 4, w + 16, 14, 'rgba(8,7,14,0.78)');
+  for (const [k, l] of items) { text(k, x, y, '#ffc83a', 8, 'left', null); x += ctx.measureText(k + ' ').width; text(l, x, y, '#f3ead6', 8, 'left', null); x += ctx.measureText(l).width + gap; }
+}
 function ticker() {
   let tick = G.ticker.t > 0 ? G.ticker.txt : '';
   if (!tick && G.phase === 'kickoff' && G.half === 1 && G.score[0] + G.score[1] === 0) tick = usePad() ? 'A PASS  RB+A KEMPA  X WURF  B FINTE/KLAU  RB SPRINT  START PAUSE' : TOUCHDEV ? 'MITSPIELER ANTIPPEN = PASS  TOR ANTIPPEN = WURF  PASS LANG = KEMPA' : 'S PASS  A KEMPA  LEERTASTE WURF  D FINTE/KLAU  W SPRINT  T TIMEOUT';
+  keyBar(!!tick);
   if (!tick) return;
   rect(0, H - 18, W, 18, 'rgba(8,7,14,0.88)'); rect(0, H - 18, 6, 18, '#ff4f3a'); rect(0, H - 19, W, 1, '#ffc83a');
   ctx.font = `8px ${FONT}`; while (ctx.measureText(tick).width > W - 24 && tick.length > 4) tick = tick.slice(0, -2) + '…';

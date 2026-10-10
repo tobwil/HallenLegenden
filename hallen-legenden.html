@@ -1595,7 +1595,7 @@ function aiCarrier(p, dt) {
   return [p.tx, p.ty, dist(p.x, p.y, p.tx, p.ty) > 5];
 }
 function aiTarget(p, dt) {
-  const b = G.ball, own = b.owner;
+  const b = G.ball, own = b.owner, ctl = G.assist ? null : G.ctrl;   // im Abwehr-Assistenten stört ein KI-Mitspieler, auch wenn der eigene Spieler nah am Ballführer steht
   if (own === p) return aiCarrier(p, dt);
   if (b.passTo === p && b.state === 'air') {
     if (b.lob && p.z <= 0 && dist(p.x, p.y, b.x, b.y) < 2.6 && b.vz < 1.5 && b.z > 1.6) { p.vz = 4.3; p.vx = (b.x + b.vx * 0.35 - p.x) * 2; p.vy = (b.y + b.vy * 0.35 - p.y) * 2; }
@@ -1612,7 +1612,7 @@ function aiTarget(p, dt) {
   const threat = own || b.passTo;
   if (threat && threat.team !== p.team) {
     const gx = ownX(p.team), team = G.players.filter(q => q.team === p.team && !q.out && q.role !== 'TW');
-    const ctrlNear = G.ctrl && G.ctrl.team === p.team && dist(G.ctrl.x, G.ctrl.y, threat.x, threat.y) < 2.2;
+    const ctrlNear = ctl && ctl.team === p.team && dist(ctl.x, ctl.y, threat.x, threat.y) < 2.2;
     let presser = null, bd = 1e9;
     for (const q of team) if (q !== G.ctrl) { const d = dist(q.x, q.y, threat.x, threat.y); if (d < bd) { bd = d; presser = q; } }
     const td = goalDist(threat.x, threat.y, gx);
@@ -1682,6 +1682,23 @@ function humanControl(p, dt) {
   }
   return [IN.x * sp, IN.y * sp];
 }
+// Laufweg der KI (auch für den Abwehr-Assistenten): Geschwindigkeit zum Ziel aus aiTarget bzw. updateGK
+function aiVel(p, dt) {
+  const t = p.role === 'TW' ? updateGK(p, dt) : aiTarget(p, dt); if (!t) return [0, 0, false];
+  const dx = t[0] - p.x, dy = t[1] - p.y, d = Math.hypot(dx, dy);
+  const spd = t[3] || runSpeed(p) * (t[2] && p.st > 0.1 ? 1.25 : 1) * (G.ball.owner === p ? 0.92 : 1);
+  const k = d > 1.2 ? 1 : d / 1.2;
+  return d > 0.05 ? [dx / d * spd * k, dy / d * spd * k, t[2] && d > 2] : [0, 0, false];
+}
+// Abwehr-Assistent: Stick in der Abwehr länger als 0,8 s losgelassen: der Spieler verteidigt selbst weiter wie die KI-Mitspieler
+// (läuft auf seinen Platz in der Deckung, ein KI-Mitspieler stört den Ballführer). Sobald du wieder steuerst, hast du die volle Kontrolle; Tasten wirken immer
+function defAssist(p, dt) {
+  if (G.idleP !== p) { G.idleP = p; G.idleT = 0; }
+  G.idleT = Math.hypot(IN.x, IN.y) < 0.15 ? G.idleT + dt : 0;
+  const b = G.ball, o = b.owner || b.passTo, att = o ? o.team : G.poss;
+  G.assist = G.idleT >= 0.8 && b.owner !== p && p.z <= 0 && !(p.block > 0) && att >= 0 && att !== p.team;
+  return G.assist;
+}
 function updatePlayer(p, dt) {
   if (p.out) return;
   for (const k of ['stun', 'dash', 'cd', 'throwT', 'block', 'save', 'lie', 'stealT']) p[k] = Math.max(0, (p[k] || 0) - dt);
@@ -1711,17 +1728,8 @@ function updatePlayer(p, dt) {
         const dx = p.tx + IN.x * 0.6 - p.x, dy = p.ty + IN.y * 0.6 - p.y, d = Math.hypot(dx, dy), spd = runSpeed(p) * 1.25, k = d > 1.2 ? 1 : d / 1.2;
         if (d > 0.05) { dvx = dx / d * spd * k; dvy = dy / d * spd * k; } sprint = d > 2;
       }
-      else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; }
-      else {
-        const t = p.role === 'TW' ? updateGK(p, dt) : aiTarget(p, dt);
-        if (t) {
-          const dx = t[0] - p.x, dy = t[1] - p.y, d = Math.hypot(dx, dy);
-          const spd = t[3] || runSpeed(p) * (t[2] && p.st > 0.1 ? 1.25 : 1) * (G.ball.owner === p ? 0.92 : 1);
-          const k = d > 1.2 ? 1 : d / 1.2;
-          if (d > 0.05) { dvx = dx / d * spd * k; dvy = dy / d * spd * k; }
-          sprint = t[2] && d > 2;
-        }
-      }
+      else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; if (defAssist(p, dt)) [dvx, dvy, sprint] = aiVel(p, dt); }
+      else [dvx, dvy, sprint] = aiVel(p, dt);
     } else if (ph === 'goal' && G.lastScorer && p.team === G.lastScorer.team && p.role !== 'TW') {
       const sc = G.lastScorer;
       if (p === sc) { const a = G.phaseT * 2.2; dvx = Math.cos(a) * 4; dvy = Math.sin(a) * 2.5; if (G.phaseT > 1.0 && G.phaseT < 1.6) { dvx = sgn(p.team) * -5; p.cheer = 2; } }
@@ -2414,9 +2422,29 @@ function drawCut() {
   const extra = c.kind === 'goal' ? `${p.goals}. TOR (${p.goals}/${p.shots})` : c.kind === 'card' && c.title.startsWith('2') ? 'ZEITSTRAFE' : c.title === 'VERLETZT' ? 'WIRD AUSGEWECHSELT' : `${p.saves} PARADEN`;
   card(p, x, 214, c.title, c.col === '#f4f4f0' ? '#ffffff' : c.col, extra);
 }
+// Steuerhilfen: Tastenleiste passend zur Lage (Tastatur oder Gamepad; am Touch sind die Knöpfe beschriftet). AUTO = nur in den ersten 3 Spielen
+const helpsOn = () => G && !G.demo && G.human >= 0 && menu.hidden && (usePad() || !TOUCHDEV) && (SETTINGS.helps === 1 || ((SETTINGS.helps ?? 'auto') === 'auto' && (SETTINGS.helpN || 0) < 3));
+function keyBarItems() {
+  const pad = usePad(), K = (k, p) => pad ? p : k, b = G.ball, c = G.ctrl, me = G.human;
+  if (G.phase === 'penalty') return b.owner && b.owner.team === me ? [[K('LEERTASTE', 'X'), 'HALTEN'], [K('PFEILE', 'STICK'), 'ECKE'], ['LOSLASSEN', 'WURF']] : [[K('PFEILE', 'STICK'), 'ECKE RATEN']];
+  if (c && b.owner === c && c.role !== 'TW') return c.charging
+    ? [[K('PFEILE', 'STICK'), 'ECKE'], ['LOSLASSEN', 'WURF'], [K('D', 'B'), 'HEBER'], ...(dreherSpot(c, goalX(c.team)) ? [[K('S', 'A'), 'DREHER']] : [])]
+    : [[K('S', 'A'), 'PASS'], [K('A', 'RB+A'), 'KEMPA'], [K('LEERTASTE', 'X'), 'WURF'], [K('D', 'B'), 'FINTE'], [K('W', 'RB'), 'SPRINT']];
+  if ((b.owner ? b.owner.team : G.poss) !== me) return [[K('S', 'A'), 'WECHSEL'], [K('LEERTASTE', 'X'), 'BLOCK'], [K('D', 'B'), 'KLAUEN'], [K('W', 'RB'), 'SPRINT']];
+  return null;   // eigener Pass in der Luft, Torwart am Ball
+}
+function keyBar(above) {
+  if (!helpsOn() || !['play', 'restart', 'penalty'].includes(G.phase)) return;
+  const items = keyBarItems(); if (!items) return;
+  ctx.font = `8px ${FONT}`; const gap = 14, w = items.reduce((a, [k, l]) => a + ctx.measureText(k + ' ' + l).width, 0) + gap * (items.length - 1);
+  let x = Math.round(W / 2 - w / 2); const y = above ? H - 34 : H - 15;
+  rect(x - 8, y - 4, w + 16, 14, 'rgba(8,7,14,0.78)');
+  for (const [k, l] of items) { text(k, x, y, '#ffc83a', 8, 'left', null); x += ctx.measureText(k + ' ').width; text(l, x, y, '#f3ead6', 8, 'left', null); x += ctx.measureText(l).width + gap; }
+}
 function ticker() {
   let tick = G.ticker.t > 0 ? G.ticker.txt : '';
   if (!tick && G.phase === 'kickoff' && G.half === 1 && G.score[0] + G.score[1] === 0) tick = usePad() ? 'A PASS  RB+A KEMPA  X WURF  B FINTE/KLAU  RB SPRINT  START PAUSE' : TOUCHDEV ? 'MITSPIELER ANTIPPEN = PASS  TOR ANTIPPEN = WURF  PASS LANG = KEMPA' : 'S PASS  A KEMPA  LEERTASTE WURF  D FINTE/KLAU  W SPRINT  T TIMEOUT';
+  keyBar(!!tick);
   if (!tick) return;
   rect(0, H - 18, W, 18, 'rgba(8,7,14,0.88)'); rect(0, H - 18, 6, 18, '#ff4f3a'); rect(0, H - 19, W, 1, '#ffc83a');
   ctx.font = `8px ${FONT}`; while (ctx.measureText(tick).width > W - 24 && tick.length > 4) tick = tick.slice(0, -2) + '…';
@@ -2648,6 +2676,7 @@ const ACT = {
       <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: wie S</span>
       <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt, wohin der Wurf geht: hoch/runter (auch schräg) = ganz in diese Ecke, ohne hoch/runter ein Stück in die Ecke weg vom Torwart, Aufladen = Höhe. Platzierte Ecken hält der Torwart schwerer. Auf dem Flügel beim Aufladen S = Dreher: Der Ball springt vor dem Torwart auf und dreht weg, am besten können das Dreher-Künstler · Abwehr: Blocksprung</span>
       <b>D</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
+      <b>ABWEHR</b><span>Lässt du die Richtung länger als knapp eine Sekunde los, läuft dein Spieler selbst auf seinen Platz in der Deckung. Direkt am Ballführer bleibt er stehen, bis du ihn steuerst</span>
       <b>Q</b><span>Wechselmenü</span>
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
@@ -2664,12 +2693,15 @@ const ACT = {
       <div class="ed" style="grid-template-columns:auto 1fr 40px">${sl('master', 'GESAMT')}${sl('music', 'MUSIK')}${sl('sfx', 'EFFEKTE')}${sl('crowd', 'PUBLIKUM')}</div>
       <div class="row"><span class="tag" style="min-width:150px">SPIELTEMPO</span>${[1, 0.85, 0.7].map(v => `<button class="small ${SETTINGS.speed === v ? 'on' : ''}" data-act="speed" data-v="${v}">${Math.round(v * 100)} %</button>`).join('')}</div>
       ${TOUCHDEV ? `<div class="row"><span class="tag" style="min-width:150px">TOUCH-KNÖPFE</span>${[['s', 'KLEIN'], ['m', 'NORMAL'], ['l', 'GROSS']].map(([k, n]) => `<button class="small ${(SETTINGS.btn || 'm') === k ? 'on' : ''}" data-act="btnSize" data-v="${k}">${n}</button>`).join('')}</div>` : ''}
+      <div class="row"><span class="tag" style="min-width:150px">STEUERHILFEN</span>${[['auto', 'AUTO'], [1, 'AN'], [0, 'AUS']].map(([v, n]) => `<button class="small ${(SETTINGS.helps ?? 'auto') === v ? 'on' : ''}" data-act="helps" data-v="${v}">${n}</button>`).join('')}</div>
+      <p class="muted">Tastenleiste im Spiel für Tastatur und Gamepad, passend zu Angriff, Abwehr und 7-Meter. AUTO zeigt sie in den ersten 3 Spielen.</p>
       <div class="row"><span class="tag" style="min-width:150px">TON</span><button class="small ${AU.on ? 'on' : ''}" data-act="sound">${AU.on ? 'AN' : 'AUS'}</button></div>
       <div class="row"><span class="tag" style="min-width:150px">HALLENSPRECHER</span><button class="small ${AU.vol.speaker ? 'on' : ''}" data-act="speaker">${AU.vol.speaker ? 'AN' : 'AUS'}</button><button class="small" data-act="sndTest">PROBE</button></div>
       <p class="muted">Der Hallensprecher nutzt die Sprachausgabe deines ${ON_WEB ? 'Browsers' : 'Geräts'}. Je nach Gerät klingt die Stimme anders oder fehlt ganz.</p>
       <div class="row"><button class="main" data-act="main">ZURÜCK</button></div></div>`);
     ['master', 'music', 'sfx', 'crowd'].forEach(k => { const el = menu.querySelector('#vol_' + k); el.oninput = () => { AU.setVol(k, el.value / 100); menu.querySelector('#vv_' + k).textContent = el.value; }; });
   },
+  helps(v) { SETTINGS.helps = v === 'auto' ? 'auto' : +v; store.set('hl4_settings', SETTINGS); ACT.options(); },
   speed(v) { SETTINGS.speed = +v; store.set('hl4_settings', SETTINGS); ACT.options(); },
   btnSize(v) { SETTINGS.btn = v; store.set('hl4_settings', SETTINGS); applyBtnSize(); ACT.options(); },
   speaker() { AU.vol.speakerChosen = true; AU.setVol('speaker', !AU.vol.speaker); ACT.options(); },
@@ -2758,6 +2790,7 @@ function potm(list = allMatchPlayers()) {
 function endMatch() {
   const T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]], st = G.stats;
   store.del(SAVE_KEY);
+  if (G.human >= 0 && !G.demo) { SETTINGS.helpN = (SETTINGS.helpN || 0) + 1; store.set('hl4_settings', SETTINGS); }   // für die Steuerhilfen (AUTO: erste 3 Spiele)
   if (G.career && CAREER) careerAfterPlayed(G);
   const h = G.human, res = h < 0 ? '' : G.soWinner !== undefined ? (G.soWinner === h ? 'WEITER!' : 'AUSGESCHIEDEN') : G.score[h] > G.score[1 - h] ? 'SIEG!' : G.score[h] < G.score[1 - h] ? 'NIEDERLAGE' : 'UNENTSCHIEDEN';
   track('spiel-ende', { modus: G.career ? 'karriere' : 'schnelles-spiel', ergebnis: res ? res.replace('!', '').toLowerCase() : 'cpu' });
