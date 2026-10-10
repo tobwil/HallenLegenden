@@ -4775,6 +4775,7 @@ function menuPad() {
       const adj = (k === 'left' || k === 'right') && inMenu && (el.tagName === 'SELECT' || el.type === 'range' || (el.type === 'color' && COLOREDIT === el));
       // neu gedrückt; links/rechts beim Wertändern wiederholen sich beim Halten (nach 0,35 s alle 0,08 s)
       if (PADM[k]) { if (!adj || now < PADM[k]) continue; PADM[k] = now + 80; } else PADM[k] = now + 350;
+      if (k === 'a' || k === 'b') clearEdges();   // der Druck gehört dem Menü: schließt er es (TRAINING, WEITERSPIELEN, ÜBERSPRINGEN), passt oder fintet er nicht im selben Takt (#66)
       if (k === 'a') { if (inMenu && el.type === 'color') colorEdit(COLOREDIT === el ? null : el); else if (inMenu && el.tagName === 'SELECT') menuAdjust(el, 1, true); else if (inMenu && el.type === 'range') menuMove('down'); else if (inMenu) el.click(); else menuMove('down'); }
       else if (k === 'b') { if (COLOREDIT) colorEdit(null); else menuBack(); }
       else if (COLOREDIT && (k === 'up' || k === 'down')) { colorEdit(null); menuMove(k); }

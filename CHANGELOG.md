@@ -2,6 +2,13 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.36: Gamepad-Druck im Menü löst nichts im Spiel aus
+- **Behoben (#66, gefunden in der Steam-Version):** A auf TRAINING spielte sofort einen Pass. Der Ball war in Lektion 1 gleich beim Mitspieler, und der Pass zählte schon für Lektion 2. Dasselbe passierte im normalen Spiel mit A auf WEITERSPIELEN in der Pause und im Training mit LEKTION ÜBERSPRINGEN.
+  - *Ursache:* Im Spieltakt wird erst die Eingabe gelesen, dann bedient das Gamepad das Menü, dann läuft im selben Takt der erste Spielschritt. Schloss der A-Druck das Menü, galt er dort noch als frischer Pass.
+  - *Lösung:* A und B im Menü verbrauchen den Druck (`clearEdges`). Ein gehaltener Knopf wirkt im Spiel erst nach dem Loslassen wieder, B (Finte/Klauen) genauso.
+- Tastatur und Touch waren nicht betroffen.
+- 1 neuer Regressionstest mit nachgebautem Gamepad: A 80, 250 und 670 ms gehalten, auf TRAINING und auf WEITERSPIELEN. Danach passt A normal. Insgesamt 56 Tests.
+
 ## v8.35: Training
 - **Neu: TRAINING im Hauptmenü.** 8 kurze Lektionen führen durch die Steuerung: Laufen (in die gelben Kreise), Passen, Werfen, Wurf in die Ecke, Kempa-Trick, Dreher vom Flügel, Finte und Abwehr.
   - Oben links steht die Anleitung mit Fortschritt. Sie nennt die Tasten des Geräts, mit dem du gerade spielst (Tastatur, Gamepad oder Touch), und wechselt mit.
