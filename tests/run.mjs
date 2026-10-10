@@ -1388,6 +1388,35 @@ test('Training: 8 Lektionen aus dem Hauptmenü, mit Tasten durchspielbar, Uhr st
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Gamepad: A auf TRAINING oder WEITERSPIELEN löst keinen Pass aus, auch wenn A länger gehalten wird; danach passt A normal (#66)', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 5);
+  const r = await page.evaluate(() => {
+    // Gamepad nachbauen: A (Knopf 0) gedrückt halten, so wie der Spieltakt es sieht (Eingabe, Menü, Spielschritt)
+    const pad = { id: 'Test', index: 0, connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => ({ pressed: false, value: 0 })) };
+    navigator.getGamepads = () => [pad];
+    const frame = () => { readInput(1 / 60); menuPad(); if (G && !G.paused) step(1 / 60); };
+    const out = [];
+    for (const hold of [5, 15, 40]) {   // A etwa 80, 250 und 670 ms gehalten
+      G = null; ACT.main(); for (let i = 0; i < 3; i++) frame();
+      menu.querySelector('[data-act="training"]').focus();
+      pad.buttons[0].pressed = true; for (let i = 0; i < hold; i++) frame(); pad.buttons[0].pressed = false; for (let i = 0; i < 20; i++) frame();
+      out.push({ hold, tut: !!(G && G.tut), lesson: G && G.tut && G.tut.i, passes: G && G.tut && G.tut.passes, owner: !!(G && G.ball.owner === G.ctrl) });
+    }
+    // danach passt A ganz normal (Lektion 2)
+    G.tut.i = 1; tutSetup(true); pad.buttons[0].pressed = true; frame(); pad.buttons[0].pressed = false; for (let i = 0; i < 5; i++) frame();
+    const later = G.tut.passes;
+    // Pause im normalen Spiel: A auf WEITERSPIELEN spielt keinen Pass (gleiche Ursache)
+    hideMenu(); newMatch(2, 1, { human: 0, halfLen: 180, diff: 1 }); G.introT = 99; G.phase = 'play'; const c = G.players.find(q => q.team === 0 && q.role === 'RM'); giveBall(c); G.ctrl = c;
+    for (let i = 0; i < 3; i++) frame(); togglePause(); for (let i = 0; i < 3; i++) frame(); menu.querySelector('[data-act="resume"]').focus();
+    pad.buttons[0].pressed = true; for (let i = 0; i < 6; i++) frame(); pad.buttons[0].pressed = false; for (let i = 0; i < 10; i++) frame();
+    return { out, later, resume: { paused: G.paused, owner: G.ball.owner === c, pass: !!G.ball.passTo } };
+  });
+  ok(r.out.every(o => o.tut && o.lesson === 0 && o.passes === 0 && o.owner), 'A auf TRAINING spielt einen Pass: ' + JSON.stringify(r.out));
+  ok(r.later === 1, 'A passt danach nicht: ' + r.later);
+  ok(!r.resume.paused && r.resume.owner && !r.resume.pass, 'A auf WEITERSPIELEN spielt einen Pass: ' + JSON.stringify(r.resume));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 // Startseite und Rechtstexte liegen neben game/: bei GAME=https://…/game/ auf demselben Server, sonst im Repository
 const SITE = p => /^https?:\/\//.test(GAME) ? new URL('../' + p, GAME).href : pathToFileURL(path.join(root, p)).href;
 test('Startseite: Abschnitt „Noch mehr Legenden“ mit Padel- und Korb-Legenden, im Fuß verlinkt, keine neuen fremden Server, Handy ohne seitliches Scrollen; Statistik-Knopf im Datenschutz deckt den Kontakt nicht auf (#61)', async () => {
