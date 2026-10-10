@@ -106,6 +106,8 @@ J, K und L funktionieren weiterhin als Alternative für Pass, Wurf und Finte.
 
 In der Abwehr und bei freiem Ball steuerst du ohne Wechseltaste automatisch den ballnächsten Spieler. Nach einem Wechsel per Taste bleibt die Automatik kurz aus. Lässt du in der Abwehr die Pfeile länger als 0,8 s los, läuft dein Spieler selbst auf seinen Platz in der Deckung (Abwehr-Assistent), und ein Mitspieler stört den Ballführer. Sobald du wieder steuerst, gehorcht er dir; Wechsel, Block und Klauen gehen immer.
 
+**Training:** Im Hauptmenü führt TRAINING in 8 Lektionen durch die Steuerung: Laufen, Passen, Werfen, Wurf in die Ecke, Kempa-Trick, Dreher, Finte und Abwehr. Die Anleitung oben zeigt die Tasten des Geräts, mit dem du gerade spielst (Tastatur, Gamepad oder Touch). Gegner und Mitspieler stehen dabei still (außer in der Abwehr-Lektion), die Uhr läuft nicht. Überspringen und Beenden gehen über die Pause.
+
 **Steuerhilfen:** In den ersten 3 Spielen zeigt eine Leiste unten die Tasten passend zur Lage: im Angriff, beim Aufladen (Ecke, Heber, Dreher), in der Abwehr und beim 7-Meter, mit Gamepad die Knöpfe des Pads. Unter Optionen → STEUERHILFEN: AUTO, AN oder AUS. Am Touch sind die Knöpfe ohnehin beschriftet.
 
 **Menüs:** Pfeiltasten wählen, Enter bestätigt, Esc oder Backspace geht zurück.
@@ -172,7 +174,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). **
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 54 Tests, etwa eine Minute
+npm test                             # alle 55 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 9 tiefe Tests, etwa drei Minuten (vor größeren Versionen)
@@ -292,6 +294,8 @@ J, K and L still work as alternatives for pass, shoot and feint.
 
 In defence and on loose balls you automatically control the player closest to the ball unless you switch manually. After a manual switch the automatic switching pauses briefly. If you let go of the arrows in defence for more than 0.8 s, your player moves to his place in the defence by himself (defence assist) and a teammate pressures the ball carrier. As soon as you steer again he follows you; switch, block and steal always work.
 
+**Training:** TRAINING in the main menu walks you through the controls in 8 lessons: moving, passing, shooting, shooting into a corner, Kempa trick, spin shot, feint and defence. The instructions at the top show the keys of the device you are using (keyboard, gamepad or touch). Opponents and teammates stand still (except in the defence lesson) and the clock does not run. Skip or quit via pause.
+
 **Control hints:** in your first 3 matches a bar at the bottom shows the keys for the current situation: attack, charging (corner, lob, spin shot), defence and 7-metre, with a gamepad its buttons. Options → STEUERHILFEN: AUTO, ON or OFF. On touch the buttons are labelled anyway.
 
 **Menus:** arrow keys to select, Enter to confirm, Esc or Backspace to go back.
@@ -358,7 +362,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). **Git
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 54 tests, about one minute
+npm test                             # all 55 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 9 deep tests, about three minutes (before bigger releases)

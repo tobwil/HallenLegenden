@@ -174,7 +174,7 @@ function updatePlayer(p, dt) {
         if (d > 0.05) { dvx = dx / d * spd * k; dvy = dy / d * spd * k; } sprint = d > 2;
       }
       else if (hum && !recv) { [dvx, dvy] = humanControl(p, dt); sprint = IN.s && Math.hypot(dvx, dvy) > 0.5; if (defAssist(p, dt)) [dvx, dvy, sprint] = aiVel(p, dt); }
-      else [dvx, dvy, sprint] = aiVel(p, dt);
+      else if (!(G.tut && tutHold(p))) [dvx, dvy, sprint] = aiVel(p, dt);   // im Training stehen Gegner und Mitspieler still
     } else if (ph === 'goal' && G.lastScorer && p.team === G.lastScorer.team && p.role !== 'TW') {
       const sc = G.lastScorer;
       if (p === sc) { const a = G.phaseT * 2.2; dvx = Math.cos(a) * 4; dvy = Math.sin(a) * 2.5; if (G.phaseT > 1.0 && G.phaseT < 1.6) { dvx = sgn(p.team) * -5; p.cheer = 2; } }

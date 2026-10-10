@@ -92,6 +92,7 @@ Landingpage und Spiel (`game/index.html`, eingefügt von `src/build.sh`) laden d
 | `spiel-ende` | Abpfiff | `modus`, `ergebnis` (sieg, niederlage, unentschieden, weiter, ausgeschieden) |
 | `karriere-neu` | neue Karriere angelegt | |
 | `karriere-simuliert` | eigener Spieltag simuliert | |
+| `training-start` / `training-geschafft` | Training im Hauptmenü begonnen / alle 8 Lektionen geschafft | |
 | `stufe-hoch` | nach klarem Sieg „Revanche auf …“ gewählt | `stufe`: profi, legende |
 | `stufe-runter` | nach klarer Niederlage „Revanche auf …“ gewählt | `stufe`: amateur, profi |
 

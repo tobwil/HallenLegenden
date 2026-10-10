@@ -122,7 +122,7 @@ function radar() {
   rect(x0 + G.ball.x * kx - 1, y0 + G.ball.y * ky - 1, 2, 2, '#fff');
 }
 function hud() {
-  scoreBug(); radar();
+  if (!G.tut) scoreBug(); radar(); if (G.tut) tutDraw();
   const b = G.ball, c = G.ctrl;
   if (c && !c.out && G.phase !== 'goal') {
     const x = sx(c.x, c.y), y = sy(c.y, c.z);
@@ -203,7 +203,7 @@ function drawCut() {
   card(p, x, 214, c.title, c.col === '#f4f4f0' ? '#ffffff' : c.col, extra);
 }
 // Steuerhilfen: Tastenleiste passend zur Lage (Tastatur oder Gamepad; am Touch sind die Knöpfe beschriftet). AUTO = nur in den ersten 3 Spielen
-const helpsOn = () => G && !G.demo && G.human >= 0 && menu.hidden && (usePad() || !TOUCHDEV) && (SETTINGS.helps === 1 || ((SETTINGS.helps ?? 'auto') === 'auto' && (SETTINGS.helpN || 0) < 3));
+const helpsOn = () => G && !G.demo && G.human >= 0 && menu.hidden && (usePad() || !TOUCHDEV) && (G.tut || SETTINGS.helps === 1 || ((SETTINGS.helps ?? 'auto') === 'auto' && (SETTINGS.helpN || 0) < 3));
 function keyBarItems() {
   const pad = usePad(), K = (k, p) => pad ? p : k, b = G.ball, c = G.ctrl, me = G.human;
   if (G.phase === 'penalty') return b.owner && b.owner.team === me ? [[K('LEERTASTE', 'X'), 'HALTEN'], [K('PFEILE', 'STICK'), 'ECKE'], ['LOSLASSEN', 'WURF']] : [[K('PFEILE', 'STICK'), 'ECKE RATEN']];

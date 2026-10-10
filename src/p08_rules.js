@@ -70,7 +70,7 @@ function updateBall(dt) {
     if (b.passTo && p !== b.passTo && dxy > 0.45) continue;
     const wasLob = b.lob;
     giveBall(p);
-    if (p.z > 0.3 && p.role !== 'TW') { p.airCatch = true; p.airT = 0; if (wasLob) banner('KEMPA?!', '#ff8bd1', '', 0.7); }
+    if (p.z > 0.3 && p.role !== 'TW') { p.airCatch = true; p.airT = 0; if (wasLob) banner('KEMPA?!', '#ff8bd1', '', 0.7); if (wasLob && G.tut && p.team === G.human) G.tut.kempa = 1; }
     return;
   }
   if (!b.shot && !b.lob) for (const g of G.goalie) {
@@ -130,6 +130,7 @@ function scoreGoal(team, gx) {
   b.shot = null; b.vx *= 0.25; b.vy *= 0.3; G.netKick[gx === 0 ? 0 : 1] = 1;
   const k = kit(team), wasPen = !!G.pen; G.pen = null;
   if (sc) sc.goals++;
+  if (G.tut) tutGoal(sc);
   // Statistik: 7-Meter, Tempogegenstoß, Vorlage, Gegentor des Torhüters
   if (sc && wasPen && shot && shot.pen) sc.g7 = (sc.g7 || 0) + 1;
   if (sc && shot && shot.fb) sc.fb = (sc.fb || 0) + 1;
@@ -264,6 +265,7 @@ function step(dt) {
   for (const p of G.players) updatePlayer(p, dt);
   collide();
   updateBall(dt);
+  if (G.tut) tutTick(dt);
 }
 function resumeTimeout() {
   const o = G.ball.owner || nearestTo(G.toTeam, 20, 10);
