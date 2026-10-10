@@ -1302,6 +1302,48 @@ test('TV-Intro mit Aufstellungen läuft vor dem Anwurf', async () => {
 });
 
 // ---------------------------------------------------------------- Handy-Zoom
+test('Steuerhilfen: Tastenleiste passend zu Angriff, Aufladen, Abwehr und 7-Meter, Gamepad-Namen, AUTO nur in den ersten 3 Spielen, nicht am Touch; Abwehr-Assistent füllt die Deckung', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 23);
+  await page.evaluate(STEP);
+  const r = await page.evaluate(() => {
+    hideMenu(); delete SETTINGS.helps; SETTINGS.helpN = 0;
+    newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.paused = true; G.introT = 99; __run(300); G.phase = 'play';
+    const lbl = () => (keyBarItems() || []).map(([k, l]) => k + ' ' + l).join(' · ');
+    const me = G.players.find(p => p.team === 0 && p.role === 'RM'), op = G.players.find(p => p.team === 1 && p.role === 'RM');
+    giveBall(me); G.ctrl = me; const att = lbl(); me.charging = true; me.charge = 0.5; const chg = lbl(); me.charging = false;
+    giveBall(op); const def = lbl(); LASTIN = 'pad'; const defPad = lbl(); giveBall(me); G.ctrl = me; const attPad = lbl(); LASTIN = 'key';
+    setupPenalty(0); G.phase = 'penalty'; const pen = lbl(); setupPenalty(1); G.phase = 'penalty'; const penGk = lbl(); G.phase = 'play';
+    const on0 = helpsOn();
+    // AUTO: nach drei beendeten Spielen aus; AN zeigt sie wieder, AUS nie
+    for (let i = 0; i < 3; i++) { newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.score = [5, 5]; G.phase = 'fulltime'; endMatch(); hideMenu(); }
+    newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.phase = 'play'; const auto3 = helpsOn(), n = SETTINGS.helpN;
+    ACT.options(); const opt = [...menu.querySelectorAll('[data-act="helps"]')].map(b => b.textContent + (b.classList.contains('on') ? '*' : '')).join(); menu.querySelector('[data-act="helps"][data-v="1"]').click(); hideMenu(); const an = helpsOn();
+    ACT.options(); menu.querySelector('[data-act="helps"][data-v="0"]').click(); hideMenu(); const aus = helpsOn(); SETTINGS.helps = 1;
+    const demo = (() => { const g = G; newMatch(2, 1, { demo: true, human: -1 }); const v = helpsOn(); G = g; return v; })();
+    // Abwehr-Assistent: Gegner im Angriff, eigener Spieler weit weg von seinem Platz, Stick los
+    newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.paused = true; G.introT = 99; __run(200); G.phase = 'play';
+    const c0 = G.players.find(p => p.team === 1 && p.role === 'RL'); giveBall(c0); G.poss = 1;
+    const d = G.players.find(p => p.team === 0 && p.role === 'RR'); G.ctrl = d; G.manT = G.t; const [sx0, sy0] = defendSpot(d); d.x = 20; d.y = 18; d.vx = d.vy = 0;
+    const gap = () => { const [x, y] = defendSpot(d); return dist(d.x, d.y, x, y); };
+    const KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']; KEYS.forEach(k => KEY[k] = false);
+    const hold = n => { for (let i = 0; i < n; i++) { if (G.ball.owner !== c0 || G.phase !== 'play') { G.phase = 'play'; giveBall(c0); c0.hold = 0; } G.ctrl = d; G.manT = G.t; readInput(1 / 60); step(1 / 60); } };   // Gegner bleibt am Ball
+    const g0 = gap(); hold(30); const g05 = gap(), as05 = G.assist; hold(60); const g15 = gap(), as15 = G.assist;
+    // wer steuert, steuert: Pfeil nach links hält den Assistenten aus
+    d.x = 20; d.y = 18; KEY.ArrowLeft = true; hold(60); const steer = { as: G.assist, x: d.x }; KEY.ArrowLeft = false;
+    return { att, chg, def, defPad, attPad, pen, penGk, on0, auto3, n, opt, an, aus, demo, g0, g05, as05, g15, as15, steer };
+  });
+  ok(r.att === 'S PASS · A KEMPA · LEERTASTE WURF · D FINTE · W SPRINT', 'Angriff: ' + r.att);
+  ok(/PFEILE ECKE · LOSLASSEN WURF · D HEBER/.test(r.chg), 'Aufladen: ' + r.chg);
+  ok(r.def === 'S WECHSEL · LEERTASTE BLOCK · D KLAUEN · W SPRINT' && r.defPad === 'A WECHSEL · X BLOCK · B KLAUEN · RB SPRINT' && /^A PASS · RB\+A KEMPA · X WURF/.test(r.attPad), `Abwehr/Gamepad: ${r.def} | ${r.defPad} | ${r.attPad}`);
+  ok(/LEERTASTE HALTEN · PFEILE ECKE · LOSLASSEN WURF/.test(r.pen) && r.penGk === 'PFEILE ECKE RATEN', `7-Meter: ${r.pen} | ${r.penGk}`);
+  ok(r.on0 && !r.auto3 && r.n === 3 && r.opt === 'AUTO*,AN,AUS' && r.an && !r.aus && !r.demo, 'AUTO/AN/AUS: ' + JSON.stringify(r));
+  ok(!r.as05 && r.as15 && r.g15 < r.g0 - 2, `Assistent: Abstand zum Platz ${r.g0.toFixed(1)} → ${r.g05.toFixed(1)} (0,5 s, aus) → ${r.g15.toFixed(1)} m (1,5 s, ${r.as15 ? "an" : "aus"})`);
+  ok(!r.steer.as && r.steer.x < 20 - 1.5, 'Steuern hält den Assistenten aus: ' + JSON.stringify(r.steer));
+  // Touch ohne Gamepad: keine Leiste (die Knöpfe sind beschriftet)
+  const t = await openPhone(844, 390); const tv = await t.page.evaluate(() => { hideMenu(); SETTINGS.helps = 1; newMatch(2, 1, { human: 0, halfLen: 120, diff: 1 }); G.phase = 'play'; return helpsOn(); }); await t.ctx.close();
+  ok(!tv, 'Touch zeigt die Tastenleiste'); ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 // Startseite und Rechtstexte liegen neben game/: bei GAME=https://…/game/ auf demselben Server, sonst im Repository
 const SITE = p => /^https?:\/\//.test(GAME) ? new URL('../' + p, GAME).href : pathToFileURL(path.join(root, p)).href;
 test('Startseite: Abschnitt „Noch mehr Legenden“ mit Padel- und Korb-Legenden, im Fuß verlinkt, keine neuen fremden Server, Handy ohne seitliches Scrollen; Statistik-Knopf im Datenschutz deckt den Kontakt nicht auf (#61)', async () => {

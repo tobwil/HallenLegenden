@@ -162,6 +162,7 @@ const ACT = {
       <b>A</b><span>Kempa-Trick: Lupfer in den Kreis, der Mitspieler fängt im Sprung und wirft (auch SHIFT + S) · Abwehr: wie S</span>
       <b>LEERTASTE</b><span>Angriff: Wurf. Kurz tippen = schneller Wurf, halten = mehr Wucht. Das Zielkreuz zeigt, wohin der Wurf geht: hoch/runter (auch schräg) = ganz in diese Ecke, ohne hoch/runter ein Stück in die Ecke weg vom Torwart, Aufladen = Höhe. Platzierte Ecken hält der Torwart schwerer. Auf dem Flügel beim Aufladen S = Dreher: Der Ball springt vor dem Torwart auf und dreht weg, am besten können das Dreher-Künstler · Abwehr: Blocksprung</span>
       <b>D</b><span>Angriff: Finte, beim Aufladen = Heber · Abwehr: Ball herausspielen (Foulgefahr)</span>
+      <b>ABWEHR</b><span>Lässt du die Richtung länger als knapp eine Sekunde los, läuft dein Spieler selbst auf seinen Platz in der Deckung. Direkt am Ballführer bleibt er stehen, bis du ihn steuerst</span>
       <b>Q</b><span>Wechselmenü</span>
       <b>T</b><span>Team-Timeout (1 pro Halbzeit, nur in Ballbesitz): Deckung umstellen</span>
       <b>ESC / P</b><span>Pause · M Ton</span>
@@ -178,12 +179,15 @@ const ACT = {
       <div class="ed" style="grid-template-columns:auto 1fr 40px">${sl('master', 'GESAMT')}${sl('music', 'MUSIK')}${sl('sfx', 'EFFEKTE')}${sl('crowd', 'PUBLIKUM')}</div>
       <div class="row"><span class="tag" style="min-width:150px">SPIELTEMPO</span>${[1, 0.85, 0.7].map(v => `<button class="small ${SETTINGS.speed === v ? 'on' : ''}" data-act="speed" data-v="${v}">${Math.round(v * 100)} %</button>`).join('')}</div>
       ${TOUCHDEV ? `<div class="row"><span class="tag" style="min-width:150px">TOUCH-KNÖPFE</span>${[['s', 'KLEIN'], ['m', 'NORMAL'], ['l', 'GROSS']].map(([k, n]) => `<button class="small ${(SETTINGS.btn || 'm') === k ? 'on' : ''}" data-act="btnSize" data-v="${k}">${n}</button>`).join('')}</div>` : ''}
+      <div class="row"><span class="tag" style="min-width:150px">STEUERHILFEN</span>${[['auto', 'AUTO'], [1, 'AN'], [0, 'AUS']].map(([v, n]) => `<button class="small ${(SETTINGS.helps ?? 'auto') === v ? 'on' : ''}" data-act="helps" data-v="${v}">${n}</button>`).join('')}</div>
+      <p class="muted">Tastenleiste im Spiel für Tastatur und Gamepad, passend zu Angriff, Abwehr und 7-Meter. AUTO zeigt sie in den ersten 3 Spielen.</p>
       <div class="row"><span class="tag" style="min-width:150px">TON</span><button class="small ${AU.on ? 'on' : ''}" data-act="sound">${AU.on ? 'AN' : 'AUS'}</button></div>
       <div class="row"><span class="tag" style="min-width:150px">HALLENSPRECHER</span><button class="small ${AU.vol.speaker ? 'on' : ''}" data-act="speaker">${AU.vol.speaker ? 'AN' : 'AUS'}</button><button class="small" data-act="sndTest">PROBE</button></div>
       <p class="muted">Der Hallensprecher nutzt die Sprachausgabe deines ${ON_WEB ? 'Browsers' : 'Geräts'}. Je nach Gerät klingt die Stimme anders oder fehlt ganz.</p>
       <div class="row"><button class="main" data-act="main">ZURÜCK</button></div></div>`);
     ['master', 'music', 'sfx', 'crowd'].forEach(k => { const el = menu.querySelector('#vol_' + k); el.oninput = () => { AU.setVol(k, el.value / 100); menu.querySelector('#vv_' + k).textContent = el.value; }; });
   },
+  helps(v) { SETTINGS.helps = v === 'auto' ? 'auto' : +v; store.set('hl4_settings', SETTINGS); ACT.options(); },
   speed(v) { SETTINGS.speed = +v; store.set('hl4_settings', SETTINGS); ACT.options(); },
   btnSize(v) { SETTINGS.btn = v; store.set('hl4_settings', SETTINGS); applyBtnSize(); ACT.options(); },
   speaker() { AU.vol.speakerChosen = true; AU.setVol('speaker', !AU.vol.speaker); ACT.options(); },
@@ -272,6 +276,7 @@ function potm(list = allMatchPlayers()) {
 function endMatch() {
   const T0 = TEAMS[G.tid[0]], T1 = TEAMS[G.tid[1]], st = G.stats;
   store.del(SAVE_KEY);
+  if (G.human >= 0 && !G.demo) { SETTINGS.helpN = (SETTINGS.helpN || 0) + 1; store.set('hl4_settings', SETTINGS); }   // für die Steuerhilfen (AUTO: erste 3 Spiele)
   if (G.career && CAREER) careerAfterPlayed(G);
   const h = G.human, res = h < 0 ? '' : G.soWinner !== undefined ? (G.soWinner === h ? 'WEITER!' : 'AUSGESCHIEDEN') : G.score[h] > G.score[1 - h] ? 'SIEG!' : G.score[h] < G.score[1 - h] ? 'NIEDERLAGE' : 'UNENTSCHIEDEN';
   track('spiel-ende', { modus: G.career ? 'karriere' : 'schnelles-spiel', ergebnis: res ? res.replace('!', '').toLowerCase() : 'cpu' });

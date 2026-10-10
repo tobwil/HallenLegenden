@@ -2,6 +2,21 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.34: Steuerhilfen und Abwehr-Assistent
+- **Neu: Steuerhilfen.** Eine Leiste unten im Spiel zeigt die Tasten passend zur Lage:
+  - **Angriff:** S PASS · A KEMPA · LEERTASTE WURF · D FINTE · W SPRINT
+  - **Aufladen:** PFEILE ECKE · LOSLASSEN WURF · D HEBER, vom Flügel dazu S DREHER
+  - **Abwehr:** S WECHSEL · LEERTASTE BLOCK · D KLAUEN · W SPRINT
+  - **7-Meter:** als Schütze und als Torwart
+
+  Mit Gamepad stehen dort dessen Knöpfe (A, X, B, RB). Läuft gerade ein Kommentar, rückt die Leiste darüber. Unter Optionen → STEUERHILFEN gibt es AUTO (Standard: nur in den ersten 3 Spielen), AN und AUS. Am Touch erscheint sie nicht, die Knöpfe sind beschriftet. Übernommen von Korb-Legenden, weil unsere Belegung (Wurf auf der Leertaste, Pass auf S) ungewohnt ist und bisher nur in der Hilfe stand.
+- **Neu: Abwehr-Assistent.** Lässt du in der Abwehr die Richtung länger als 0,8 s los, läuft dein Spieler selbst auf seinen Platz in der Deckung, statt ein Loch zu reißen. Steht er nah am Ballführer, darf ein KI-Mitspieler stören, was vorher nicht ging. Sobald du steuerst, gehorcht er dir sofort. Wechsel, Block und Klauen wirken immer.
+- **Wirkung (Bot, Profi, gleich starke Vereine, 16 Spiele):** Ein Spieler, der in der Abwehr gar nichts drückt, gewinnt 6 statt 4 Spiele bei 13,9 statt 14,1 Gegentoren. Wer aktiv verteidigt, liegt weiter klar vorn (mittlerer Bot 11 von 16, wie vorher). Der Assistent stopft also Löcher, spielt aber nicht für dich. Eine erste Fassung, in der der eigene Spieler auch selbst presste, hätte den untätigen Spieler so stark gemacht wie den mittleren Bot (11 von 16). Sie wurde deshalb verworfen.
+- 1 neuer Regressionstest, insgesamt 54. Er prüft:
+  - Leiste für Angriff, Aufladen, Abwehr und 7-Meter, mit Tastatur und Gamepad
+  - AUTO nach 3 Spielen aus, AN und AUS, keine Leiste in der Demo und am Touch
+  - Assistent erst nach der Wartezeit, dann läuft der Spieler zu seinem Platz; beim Steuern bleibt er aus
+
 ## v8.33: Tests automatisch in GitHub
 - **Neu: GitHub Actions** (`.github/workflows/tests.yml`). Bei jedem Pull Request und jedem Push auf `main` wird das Spiel gebaut, dann laufen die Regressionstests (`npm test`) und die tiefen Tests (`npm run tief`) mit Chromium. Das Ergebnis steht als Prüfung „Tests“ im Pull Request.
 - **Build-Prüfung:** Passen `game/index.html` oder `hallen-legenden.html` nicht zu `src/`, schlägt die Prüfung mit einem Hinweis fehl. Dann wurde `sh src/build.sh` vergessen.
