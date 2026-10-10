@@ -121,6 +121,7 @@ const ACT = {
     showMenu(`<div class="panel narrow"><h2>HAUPTMENÜ</h2><div class="btns menu-list">
       ${savedInfo() ? `<button class="main" data-act="load">FORTSETZEN <i>${savedInfo()}</i></button>` : ''}
       <button class="${savedInfo() ? '' : 'main'}" data-act="quick">SCHNELLES SPIEL <i>1 gegen CPU</i></button>
+      <button data-act="training">TRAINING <i>${SETTINGS.tutDone ? '8 Lektionen' : 'Steuerung lernen, 8 Lektionen'}</i></button>
       <button data-act="career">KARRIERE <i>${CAREER ? `${esc(TEAMS[CAREER.team].k)} · ${CAREER.season.lg}. Liga · ${CAREER.year}/${String(CAREER.year + 1).slice(2)}` : 'Manager & Liga'}</i></button>
       <button data-act="editor">EDITOR <i>Vereine, Farben, Spieler</i></button>
       <button data-act="help">STEUERUNG <i>& Regeln</i></button>
@@ -194,6 +195,9 @@ const ACT = {
   sndTest() { AU.init(); AU.whistle(1); setTimeout(() => { AU.cheer(0.7); AU.horn(); }, 400); setTimeout(() => AU.say('Tor für die Heimmannschaft! Torschütze mit der Nummer 7!'), 900); },
   pause() {
     SCREEN = 'pause';
+    if (G.tut) return showMenu(`<div class="panel narrow"><h2>TRAINING · PAUSE</h2><p class="muted">Lektion ${G.tut.i + 1} von ${LESSONS.length}: ${LESSONS[G.tut.i].n}</p>
+      <div class="btns menu-list"><button class="main" data-back data-act="resume">WEITER</button><button data-act="tutSkip">LEKTION ÜBERSPRINGEN</button>
+      <button data-act="help">STEUERUNG</button><button data-act="tutQuit">TRAINING BEENDEN</button></div></div>`);
     showMenu(`<div class="panel narrow"><h2>PAUSE</h2><p class="muted">${esc(TEAMS[G.tid[0]].n)} ${G.score[0]} : ${G.score[1]} ${esc(TEAMS[G.tid[1]].n)}</p>
       <div class="btns menu-list"><button class="main" data-act="resume">WEITERSPIELEN</button>
       ${G.human >= 0 ? `<div class="row"><span class="tag" style="min-width:120px">DECKUNG</span>${DEF_SYS.map((d, i) => `<button class="small ${G.tact[G.human] === i ? 'on' : ''}" data-act="tact" data-v="${i}">${d.n}</button>`).join('')}</div>` : ''}
@@ -359,7 +363,7 @@ function prematch(a, b, o, back) {
 }
 // ================= Spielstand speichern & laden =================
 function saveMatch() {
-  if (!G || G.demo || ['intro', 'fulltime'].includes(G.phase)) return false;
+  if (!G || G.demo || G.tut || ['intro', 'fulltime'].includes(G.phase)) return false;
   const d = { v: 2, tid: G.tid, kits: G.kits, human: G.human, diff: G.diff, halfLen: G.halfLen, career: !!G.career, ck: CAREER ? careerStamp() : '', lineups: G.lineupPids || null, label: G.label, cup: !!G.cup, euro: G.euro, event: G.event,
     score: G.score, half: G.phase === 'halftime' ? 2 : G.half, clock: G.phase === 'halftime' ? 0 : G.clock, swap: G.phase === 'halftime' ? !G.swap : G.swap,
     tact: G.tact, timeouts: G.timeouts, stats: G.stats, log: G.log, poss: G.poss, starter: G.starter,

@@ -2,6 +2,25 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.35: Training
+- **Neu: TRAINING im Hauptmenü.** 8 kurze Lektionen führen durch die Steuerung: Laufen (in die gelben Kreise), Passen, Werfen, Wurf in die Ecke, Kempa-Trick, Dreher vom Flügel, Finte und Abwehr.
+  - Oben links steht die Anleitung mit Fortschritt. Sie nennt die Tasten des Geräts, mit dem du gerade spielst (Tastatur, Gamepad oder Touch), und wechselt mit.
+  - Die Steuerhilfen-Leiste ist im Training immer an.
+  - Gegner und Mitspieler stehen still, nur Torhüter, Passempfänger und Kempa-Fänger bewegen sich. In der Abwehr-Lektion spielen alle.
+  - Uhr und Zeitspiel laufen nicht. Nach Tor, Pfiff oder Ballverlust wird die Lektion neu aufgestellt, der Fortschritt bleibt.
+  - In der Abwehr-Lektion zählt nur ein Ballgewinn deiner Feldspieler, nicht eine Parade des Torwarts.
+  - Die Pause bietet LEKTION ÜBERSPRINGEN und TRAINING BEENDEN. Das Training wird nicht als Spielstand gespeichert.
+  - Am Ende geht es direkt ins schnelle Spiel oder in die Karriere.
+- **Umami:** `training-start` und `training-geschafft`. Die Datenschutzerklärung nennt sie.
+- Übernommen von Korb-Legenden, auf Handball zugeschnitten. Neu ist die Datei `src/p19_training.js`. Am übrigen Spiel ändert sich nur, dass es an ein paar Stellen das Training benachrichtigt (Pass, Wurf, Finte, Kempa-Fang, Tor).
+- 1 neuer Regressionstest, insgesamt 55. Er prüft:
+  - Start aus dem Hauptmenü
+  - stillstehende Gegner, stehende Uhr
+  - Pause mit Überspringen und Beenden
+  - Texte für Tastatur und Gamepad
+  - alle 8 Lektionen mit simulierten Tasten durchgespielt
+  - Statistik-Ereignisse, kein Spielstand
+
 ## v8.34: Steuerhilfen und Abwehr-Assistent
 - **Neu: Steuerhilfen.** Eine Leiste unten im Spiel zeigt die Tasten passend zur Lage:
   - **Angriff:** S PASS · A KEMPA · LEERTASTE WURF · D FINTE · W SPRINT

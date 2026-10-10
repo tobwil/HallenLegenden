@@ -22,6 +22,7 @@ function choosePass(p, dx, dy, det = false, cone = 0.62) {
 }
 function pass(p, q) {
   if (!q) return;
+  if (G.tut && p.team === G.human && p === G.ctrl) G.tut.passes++;
   const b = G.ball, d = dist(p.x, p.y, q.x, q.y), sp = d > 14 ? 21 : 16.5, t = d / sp;
   const tp = { x: clamp(q.x + q.vx * t * 0.85, 0.3, CW - 0.3), y: clamp(q.y + q.vy * t * 0.85, 0.3, CH - 0.3) };
   pushOut(tp, 6.4); const tx = tp.x, ty = tp.y;
@@ -60,6 +61,7 @@ function shoot(p, aimY, charge, lob = false, dreher = false) {
   const b = G.ball, gx = goalX(p.team), s = sgn(p.team), gk = G.goalie[1 - p.team];
   const d = goalDist(p.x, p.y, gx), wing = Math.abs(p.y - 10) > 6 && d < 9.5, close = d < 7.6;
   dreher = dreher && !lob && dreherSpot(p, gx); const artist = p.trait === 'Dreher-Künstler';
+  if (G.tut && p.team === G.human) tutShot(p, aimY, dreher);
   if (p.z <= 0.01 && G.phase !== 'penalty') {
     if (wing || close) { p.vz = 2.9; p.vx = s * 3.2; p.vy = (10 - p.y) * 0.25; p.fallShot = true; }
     else { p.vz = 3.9; p.vx = s * 1.7 + p.vx * 0.3; p.vy *= 0.3; p.shotJump = true; }
@@ -104,7 +106,7 @@ function feint(p, dx, dy) {
   p.dash = 0.3; p.vx = dx / m * 8.5; p.vy = dy / m * 8.5;
   for (const o of fieldOpps(p)) if (dist(o.x, o.y, p.x, p.y) < 1.8 && Math.random() < 0.4 + (p.att - o.df) / 140) {
     o.stun = 0.75; G.parts.push(...burst(o.x, o.y, 1.9, '#ffffff', 5));
-    if (G.human === p.team) banner('FINTE!', '#7cf2ff', `${p.name} lässt ${o.name} stehen`, 0.9);
+    if (G.human === p.team) { banner('FINTE!', '#7cf2ff', `${p.name} lässt ${o.name} stehen`, 0.9); if (G.tut) G.tut.feints++; }
   }
 }
 function steal(d, c) {

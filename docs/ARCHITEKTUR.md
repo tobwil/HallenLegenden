@@ -21,6 +21,7 @@ Das Spiel ist reines HTML, CSS und JavaScript ohne Framework und ohne Bundler. D
 | `p13_career.js` | Karriere: Kader, Stärke, Simulation, Spieltag, Training, Transfers, Saisonende, CPU-Transfers, Vorstand, Schlagzeilen, Co-Trainer |
 | `p15_cup.js` | Pokal (Auslosung, Runden, Prämien), Vertragsverlängerung |
 | `p18_erfolge.js` | Erfolge: Titel (`CAREER.titles`), Rekorde (`CAREER.rec`, nach jedem eigenen Spiel über `noteOwnMatch`), Ehrenhalle (`CAREER.hall`), Tab ERFOLGE, Teilen-Karte (1080 × 1350, Web Share API, sonst Vorschau zum Speichern) |
+| `p19_training.js` | Training: 8 Lektionen (`LESSONS`) als Spiel mit `G.tut`, Aufstellung je Lektion (`tutSetup`), Fortschritt und Neuaufstellung im Spielschritt (`tutTick`), Stillstehen der KI (`tutHold`), Anleitung mit den Tasten des Geräts (`tutKeys`, `tutDraw`), Pause mit Überspringen/Beenden |
 | `p17_euro.js` | Europapokal: Qualifikation, Auslosung (Lostöpfe, deutsche Vereine getrennt), Gruppen, Viertelfinale, Final Four, Termine zwischen den Ligaspieltagen, Prämien |
 | `p16_finance.js` | Finanzen: Zuschauer, Sponsoren, Gehälter pro Saison, KI-Haushalte, Transfersperre für Neuzugänge, Schulden und Notverkauf, Vorstand (Bonus, Warnung, Entlassung, Jobangebote) |
 | `p14_career_ui.js` | Karriere-Bildschirme: Zeitung, Kader, Spieler-Detail, Training, Transfers, Tabelle, Pokal, Statistik, Historie, Saisonabschluss |

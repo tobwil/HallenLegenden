@@ -1344,6 +1344,50 @@ test('Steuerhilfen: Tastenleiste passend zu Angriff, Aufladen, Abwehr und 7-Mete
   ok(!tv, 'Touch zeigt die Tastenleiste'); ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Training: 8 Lektionen aus dem Hauptmenü, mit Tasten durchspielbar, Uhr steht, Gegner stehen still, Pause mit Überspringen und Beenden, wird nicht gespeichert', async () => {
+  const { page, ctx, errors } = await open(DESKTOP, 3);
+  const r = await page.evaluate(() => {
+    const ev = []; PLATFORM.event = n => { if (n.startsWith('training')) ev.push(n); };
+    ACT.main(); const btn = menu.querySelector('[data-act="training"]'); btn.click(); G.paused = true;
+    const start = { tut: !!G.tut, phase: G.phase, label: G.label, hidden: menu.hidden, save: saveMatch() };
+    const set = (k, v) => { if (v && !KEY[k]) KEYP[k] = true; KEY[k] = v; };
+    const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space', 'KeyS', 'KeyA', 'KeyD'], none = () => keys.forEach(k => set(k, false));
+    const tick = () => { readInput(1 / 60); step(1 / 60); };
+    const dir = (tx, ty) => { const c = G.ctrl, dx = tx - c.x, dy = ty - c.y; set('ArrowLeft', dx < -0.3); set('ArrowRight', dx > 0.3); set('ArrowUp', dy < -0.3); set('ArrowDown', dy > 0.3); };
+    // Lektion 2: Gegner stehen still, die Uhr läuft nicht
+    G.tut.i = 1; tutSetup(true); const opp = G.players.filter(p => p.team === 1 && p.role !== 'TW'), before = opp.map(p => p.x + ',' + p.y).join();
+    for (let i = 0; i < 120; i++) tick(); const still = opp.map(p => p.x + ',' + p.y).join() === before, clock = G.clock;
+    // Pause: Überspringen, Texte je Gerät
+    G.paused = false; togglePause(); const pauseTxt = menu.textContent; menu.querySelector('[data-act="tutSkip"]').click(); const afterSkip = G.tut.i;
+    const keyTxt = LESSONS[2].d(tutKeys()); LASTIN = 'pad'; const padTxt = LESSONS[2].d(tutKeys()); LASTIN = 'key';
+    // alles von vorn mit Tasten durchspielen
+    G.tut.i = 0; tutSetup(true); const times = []; let f = 0, cur = 0, t0 = 0;
+    G.paused = true; while (G && G.tut && f++ < 60 * 240) {
+      const T = G.tut, L = LESSONS[T.i], c = G.ctrl, s = sgn(G.human); if (T.i !== cur) { times.push(L.n); cur = T.i; t0 = f; }
+      const k = f % 40;
+      if (T.done || G.phase !== 'play' || !c) none();
+      else if (L.spots) { if (T.spot) dir(T.spot[0], T.spot[1]); }
+      else if (L.n === 'PASSEN') { none(); set('KeyS', k === 0); }
+      else if (['WERFEN', 'IN DIE ECKE', 'DREHER'].includes(L.n)) { if (G.ball.owner !== c) none(); else { set('Space', k < 30); set('ArrowUp', L.n === 'IN DIE ECKE' && k < 30); set('KeyS', L.n === 'DREHER' && k === 25); } }
+      else if (L.n === 'KEMPA-TRICK') { none(); set('KeyA', k === 0); }
+      else if (L.n === 'FINTE') { none(); set('KeyD', k === 0); }
+      else if (L.n === 'ABWEHR') { const o = G.ball.owner; if (o && o.team !== G.human) { dir(o.x - s * 0.6, o.y); set('KeyD', k % 20 === 0); } else none(); }
+      tick();
+    }
+    none(); const end = { menu: menu.textContent.slice(0, 40), done: SETTINGS.tutDone, sec: Math.round(f / 60), lessons: times.length + 1 };
+    // Beenden aus der Pause: zurück ins Hauptmenü
+    ACT.training(); G.paused = false; togglePause(); menu.querySelector('[data-act="tutQuit"]').click(); const quit = { G: G === null || !!(G && G.demo), screen: SCREEN };
+    return { start, still, clock, pauseTxt, afterSkip, keyTxt, padTxt, end, quit, ev };
+  });
+  ok(r.start.tut && r.start.phase === 'play' && r.start.label === 'TRAINING' && r.start.hidden && r.start.save === false, 'Start: ' + JSON.stringify(r.start));
+  ok(r.still && r.clock === 30, `Gegner bewegen sich oder Uhr läuft: ${r.still} ${r.clock}`);
+  ok(/Lektion 2 von 8: PASSEN/.test(r.pauseTxt) && /ÜBERSPRINGEN/.test(r.pauseTxt) && /TRAINING BEENDEN/.test(r.pauseTxt) && r.afterSkip === 2, 'Pause: ' + r.pauseTxt.slice(0, 120) + ' / ' + r.afterSkip);
+  ok(/^Leertaste halten/.test(r.keyTxt) && /^X halten/.test(r.padTxt), `Texte: ${r.keyTxt} | ${r.padTxt}`);
+  ok(r.end.menu.startsWith('TRAINING GESCHAFFT') && r.end.done && r.end.lessons === 8 && r.end.sec < 200, 'Durchgespielt: ' + JSON.stringify(r.end));
+  ok(r.quit.G && r.quit.screen === 'main' && r.ev.join() === 'training-start,training-geschafft,training-start', 'Beenden/Ereignisse: ' + JSON.stringify([r.quit, r.ev]));
+  ok(!errors.length, errors.join('; ')); await ctx.close();
+});
+
 // Startseite und Rechtstexte liegen neben game/: bei GAME=https://…/game/ auf demselben Server, sonst im Repository
 const SITE = p => /^https?:\/\//.test(GAME) ? new URL('../' + p, GAME).href : pathToFileURL(path.join(root, p)).href;
 test('Startseite: Abschnitt „Noch mehr Legenden“ mit Padel- und Korb-Legenden, im Fuß verlinkt, keine neuen fremden Server, Handy ohne seitliches Scrollen; Statistik-Knopf im Datenschutz deckt den Kontakt nicht auf (#61)', async () => {
