@@ -1417,6 +1417,30 @@ test('Gamepad: A auf TRAINING oder WEITERSPIELEN löst keinen Pass aus, auch wen
   ok(!errors.length, errors.join('; ')); await ctx.close();
 });
 
+test('Touch: Dreher und Heber mit einem Daumen, WURF halten und auf PASS bzw. FINTE ziehen; zurückziehen oder Dreher abseits des Flügels = normaler Wurf', async () => {
+  const o = await openPhone(844, 390), { page } = o, cdp = await o.ctx.newCDPSession(page);
+  await page.evaluate(() => { window.__shots = []; const sh = shoot; shoot = function (p, aim, ch, lob, dreher) { if (p.team === G.human) __shots.push({ lob: !!lob, dreher: !!(dreher && !lob && dreherSpot(p, goalX(p.team))) }); return sh.apply(this, arguments); }; });
+  const center = sel => page.evaluate(s => { const r = document.querySelector(s).getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }, sel);
+  const touch = (type, [x, y]) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y, id: 1 }] });
+  const swipe = async (lesson, path) => {
+    await page.evaluate(i => { ACT.training(); G.tut.i = i; tutSetup(true); __shots.length = 0; }, lesson); await page.waitForTimeout(250);
+    const w = await center('.tb-b'); await touch('touchStart', w); await page.waitForTimeout(250);
+    let cur = w, seen = null;
+    for (const target of path) { const to = target === 'b' ? w : await center('.tb-' + target);
+      for (let k = 1; k <= 6; k++) { cur = [cur[0] + (to[0] - cur[0]) * k / 6, cur[1] + (to[1] - cur[1]) * k / 6]; await touch('touchMove', cur); await page.waitForTimeout(16); }
+      cur = to; seen = await page.evaluate(() => ({ slide: TOUCH.slide, lit: [...document.querySelectorAll('.tb.slide')].map(e => e.dataset.k).join() })); }
+    await touch('touchEnd', cur); await page.waitForTimeout(400);
+    return { seen, shots: await page.evaluate(() => __shots.slice()), dreherCount: await page.evaluate(() => G.tut && G.tut.dreher) };
+  };
+  const dreher = await swipe(5, ['a']), heber = await swipe(2, ['c']), back = await swipe(5, ['a', 'b']), offWing = await swipe(2, ['a']);
+  const errors = o.errors; await o.ctx.close();
+  ok(dreher.seen.slide === 'a' && dreher.seen.lit === 'a' && dreher.shots.length === 1 && dreher.shots[0].dreher && dreher.dreherCount === 1, 'Dreher per Wischen: ' + JSON.stringify(dreher));
+  ok(heber.seen.slide === 'c' && heber.seen.lit === 'c' && heber.shots.length === 1 && heber.shots[0].lob, 'Heber per Wischen: ' + JSON.stringify(heber));
+  ok(back.seen.slide === null && back.shots.length === 1 && !back.shots[0].lob && !back.shots[0].dreher, 'Zurück auf WURF = normaler Wurf: ' + JSON.stringify(back));
+  ok(offWing.shots.length === 1 && !offWing.shots[0].lob && !offWing.shots[0].dreher, 'Abseits des Flügels = normaler Wurf: ' + JSON.stringify(offWing));
+  ok(!errors.length, errors.join('; '));
+});
+
 // Startseite und Rechtstexte liegen neben game/: bei GAME=https://…/game/ auf demselben Server, sonst im Repository
 const SITE = p => /^https?:\/\//.test(GAME) ? new URL('../' + p, GAME).href : pathToFileURL(path.join(root, p)).href;
 test('Startseite: Abschnitt „Noch mehr Legenden“ mit Padel- und Korb-Legenden, im Fuß verlinkt, keine neuen fremden Server, Handy ohne seitliches Scrollen; Statistik-Knopf im Datenschutz deckt den Kontakt nicht auf (#61)', async () => {

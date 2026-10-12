@@ -133,9 +133,13 @@ function hud() {
       const gx = goalX(c.team), ty = 10 + humanAim(c, c.aim) * 1.25, tz = 0.25 + c.charge * 1.5;   // genau dorthin geht der Wurf
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
-      text(usePad() ? 'B=HEBER' : TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
-      if (dreherSpot(c, gx)) text(usePad() ? 'A=DREHER' : TOUCHDEV ? 'PASS=DREHER' : 'S=DREHER', x, y - 92, '#ff8bd1', 8, 'center');   // nur wo er geht
-      else if (TOUCHDEV && !usePad()) text('TOR ANTIPPEN = ECKE', x, y - 92, '#ffc83a', 8, 'center');   // genauer als der Stick
+      const tch = TOUCHDEV && !usePad(), dr = dreherSpot(c, gx);
+      if (tch && TOUCH.slide) text(TOUCH.slide === 'c' ? 'LOSLASSEN = HEBER' : dr ? 'LOSLASSEN = DREHER' : 'DREHER NUR VOM FLÜGEL', x, y - 82, TOUCH.slide === 'c' || dr ? '#7cf2ff' : '#9b90ad', 8, 'center');   // Wischen vom WURF-Knopf
+      else {
+        text(usePad() ? 'B=HEBER' : tch ? 'AUF FINTE ZIEHEN=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
+        if (dr) text(usePad() ? 'A=DREHER' : tch ? 'AUF PASS ZIEHEN=DREHER' : 'S=DREHER', x, y - 92, '#ff8bd1', 8, 'center');   // nur wo er geht
+        else if (tch) text('TOR ANTIPPEN = ECKE', x, y - 92, '#ffc83a', 8, 'center');   // genauer als der Stick
+      }
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
