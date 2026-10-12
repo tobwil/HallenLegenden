@@ -2,6 +2,15 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.37: Dreher und Heber am Handy mit einem Daumen
+- **Neu: Wischen vom WURF-Knopf.** Bisher brauchten Dreher und Heber am Handy zwei Finger rechts gleichzeitig (WURF halten und PASS bzw. FINTE tippen). Mit dem Daumen allein ging das nicht. Jetzt geht es so:
+  - WURF halten (lädt auf) und den Daumen auf **PASS** ziehen, loslassen = **Dreher** (nur vom Flügel). Auf **FINTE** ziehen, loslassen = **Heber**.
+  - Der Zielknopf leuchtet, über dem Spieler steht „LOSLASSEN = DREHER“ bzw. „= HEBER“. Abseits des Flügels steht dort „DREHER NUR VOM FLÜGEL“.
+  - Zurück auf WURF oder daneben loslassen = normaler Wurf. Man kann sich bis zum Schluss umentscheiden.
+  - Die Variante mit zwei Fingern geht weiterhin. Tastatur und Gamepad bleiben unverändert.
+- Die Hinweise beim Aufladen am Handy heißen jetzt „AUF PASS ZIEHEN=DREHER“ und „AUF FINTE ZIEHEN=HEBER“. Hilfe, README und die Dreher-Lektion im Training erklären die Geste.
+- 1 neuer Test mit echten Touch-Ereignissen: Dreher und Heber per Wischen, zurückziehen auf WURF und Dreher abseits des Flügels ergeben einen normalen Wurf. Insgesamt 57 Tests.
+
 ## v8.36: Gamepad-Druck im Menü löst nichts im Spiel aus
 - **Behoben (#66, gefunden in der Steam-Version):** A auf TRAINING spielte sofort einen Pass. Der Ball war in Lektion 1 gleich beim Mitspieler, und der Pass zählte schon für Lektion 2. Dasselbe passierte im normalen Spiel mit A auf WEITERSPIELEN in der Pause und im Training mit LEKTION ÜBERSPRINGEN.
   - *Ursache:* Im Spieltakt wird erst die Eingabe gelesen, dann bedient das Gamepad das Menü, dann läuft im selben Takt der erste Spielschritt. Schloss der A-Druck das Menü, galt er dort noch als frischer Pass.

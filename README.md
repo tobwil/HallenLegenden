@@ -117,7 +117,7 @@ In der Abwehr und bei freiem Ball steuerst du ohne Wechseltaste automatisch den 
 **Touch (Handy):**
 - Stick erscheint dort, wo der Daumen links aufsetzt. Voll ausgelenkt sprintet der Spieler
 - Antippen: Mitspieler = Pass zu ihm, Tor = Wurf genau in diese Ecke (auch während WURF gehalten wird, beim Aufladen erinnert ein Hinweis daran), in der Abwehr Spieler = zu ihm wechseln. Ein Tipp in den ersten beiden Spielen erklärt das
-- Knöpfe je nach Lage: PASS/WURF/FINTE oder WECHSEL/BLOCK/KLAU. Langer Druck auf PASS spielt Kempa. WURF halten und PASS tippen = Dreher (nur vom Flügel). Im Ruhezustand sind die Knöpfe durchscheinend, damit man das Feld darunter sieht; die Größe (klein, normal, groß) steht unter Optionen
+- Knöpfe je nach Lage: PASS/WURF/FINTE oder WECHSEL/BLOCK/KLAU. Langer Druck auf PASS spielt Kempa. Dreher und Heber gehen mit einem Daumen: WURF halten, auf PASS ziehen und loslassen = Dreher (nur vom Flügel), auf FINTE = Heber. Der Zielknopf leuchtet, über dem Spieler steht, was beim Loslassen kommt. Zurück auf WURF ziehen = normaler Wurf. Zwei Finger (WURF halten, PASS oder FINTE tippen) gehen weiterhin. Im Ruhezustand sind die Knöpfe durchscheinend, damit man das Feld darunter sieht; die Größe (klein, normal, groß) steht unter Optionen
 - Pause (II) oben rechts, Zurück-Leiste in allen Menüs
 
 ### Projektstruktur
@@ -174,7 +174,7 @@ Regressionstests für das Spiel liegen in `tests/` (Playwright mit Chromium). **
 cd tests
 npm install                          # einmalig
 npx playwright-core install chromium # einmalig, falls noch kein Chromium da ist
-npm test                             # alle 56 Tests, etwa eine Minute
+npm test                             # alle 57 Tests, etwa eine Minute
 npm test -- pass zoom                # nur Tests, deren Name diese Wörter enthält
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # gegen eine Netlify-Vorschau
 npm run tief                         # 9 tiefe Tests, etwa drei Minuten (vor größeren Versionen)
@@ -305,7 +305,7 @@ In defence and on loose balls you automatically control the player closest to th
 **Touch (phone):**
 - The stick appears wherever your left thumb touches down. Full deflection makes the player sprint
 - Tapping: a teammate = pass to him, the goal = shot exactly into that corner (also while holding WURF, a hint reminds you when charging), in defence a player = switch to him. A tip explains this in your first two matches
-- Buttons change with the situation: PASS/WURF/FINTE (pass/shoot/feint) or WECHSEL/BLOCK/KLAU (switch/block/steal). Long-press PASS for a Kempa. Hold WURF and tap PASS for a spin shot (wing only). At rest the buttons are see-through so the pitch stays visible; their size (small, normal, large) is in the options
+- Buttons change with the situation: PASS/WURF/FINTE (pass/shoot/feint) or WECHSEL/BLOCK/KLAU (switch/block/steal). Long-press PASS for a Kempa. Spin shot and lob work with one thumb: hold WURF, slide onto PASS and release for a spin shot (wing only), onto FINTE for a lob. The target button lights up and a hint above the player says what happens on release. Sliding back onto WURF gives a normal shot. Two fingers (hold WURF, tap PASS or FINTE) still work. At rest the buttons are see-through so the pitch stays visible; their size (small, normal, large) is in the options
 - Pause (II) top right, back bar in all menus
 
 ### Project structure
@@ -362,7 +362,7 @@ Regression tests for the game live in `tests/` (Playwright with Chromium). **Git
 cd tests
 npm install                          # once
 npx playwright-core install chromium # once, if Chromium is not installed yet
-npm test                             # all 56 tests, about one minute
+npm test                             # all 57 tests, about one minute
 npm test -- pass zoom                # only tests whose name contains these words
 GAME=https://deploy-preview-14--hallenlegenden.netlify.app/game/ npm test   # against a Netlify deploy preview
 npm run tief                         # 9 deep tests, about three minutes (before bigger releases)

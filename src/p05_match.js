@@ -176,7 +176,7 @@ function setupPenalty(team, pick) {
 // ================= Eingabe =================
 const KEY = {}, KEYP = {};   // KEYP: seit dem letzten Frame gedrückt (damit kurze Tipper nicht verloren gehen)
 const IN = { x: 0, y: 0, s: false, a: false, b: false, c: false, pa: false, pb: false, pc: false, ra: false, rb: false, rc: false, any: false, aHeld: 0 };
-const TOUCH = { x: 0, y: 0, a: false, b: false, c: false, s: false };
+const TOUCH = { x: 0, y: 0, a: false, b: false, c: false, s: false, slide: null };   // slide: vom WURF auf PASS ('a') oder FINTE ('c') gezogen
 addEventListener('keydown', e => {
   const inField = document.activeElement && (document.activeElement.tagName === 'INPUT');
   if (inField) return;
@@ -210,6 +210,7 @@ function readInput(dt) {
   }
   x += TOUCH.x; y += TOUCH.y; b = b || TOUCH.b; c = c || TOUCH.c; s = s || TOUCH.s;
   if (TOUCH.pulseA) { a = true; TOUCH.pulseA = 0; }
+  if (TOUCH.pulseC) { c = true; TOUCH.pulseC = 0; }
   IN.k = !!TOUCH.pulseK || K('KeyA') || km; TOUCH.pulseK = 0;
   for (const k in KEYP) delete KEYP[k];
   const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }

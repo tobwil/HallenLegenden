@@ -2,9 +2,9 @@
 // Ein normales Spiel mit G.tut: Uhr und Zeitspiel stehen, Gegner und Mitspieler stehen still (außer in der Abwehr-Lektion),
 // nach Tor, Pfiff oder Ballverlust wird die Lektion neu aufgestellt. Überspringen und Beenden im Pausemenü.
 const tutKeys = () => LASTIN === 'touch' && !usePad()
-  ? { run: 'Daumen links ziehen', sprint: 'Stick weit ziehen', pass: 'PASS', passAlt: 'PASS (oder Mitspieler antippen)', shoot: 'WURF', aim: 'Stick hoch/runter oder Tor antippen', kempa: 'PASS lang drücken', feint: 'FINTE', steal: 'KLAU', block: 'BLOCK', sw: 'WECHSEL' }
-  : usePad() ? { run: 'Stick', sprint: 'RB', pass: 'A', passAlt: 'A', shoot: 'X', aim: 'Stick hoch/runter', kempa: 'RB + A', feint: 'B', steal: 'B', block: 'X', sw: 'A' }
-  : { run: 'Pfeiltasten', sprint: 'W', pass: 'S', passAlt: 'S', shoot: 'Leertaste', aim: 'Pfeil hoch/runter', kempa: 'A', feint: 'D', steal: 'D', block: 'Leertaste', sw: 'S' };
+  ? { run: 'Daumen links ziehen', sprint: 'Stick weit ziehen', pass: 'PASS', passAlt: 'PASS (oder Mitspieler antippen)', dreh: 'WURF halten, Daumen auf PASS ziehen und dort loslassen', shoot: 'WURF', aim: 'Stick hoch/runter oder Tor antippen', kempa: 'PASS lang drücken', feint: 'FINTE', steal: 'KLAU', block: 'BLOCK', sw: 'WECHSEL' }
+  : usePad() ? { run: 'Stick', sprint: 'RB', pass: 'A', passAlt: 'A', dreh: 'X halten und dazu A tippen', shoot: 'X', aim: 'Stick hoch/runter', kempa: 'RB + A', feint: 'B', steal: 'B', block: 'X', sw: 'A' }
+  : { run: 'Pfeiltasten', sprint: 'W', pass: 'S', passAlt: 'S', dreh: 'Leertaste halten und dazu S tippen', shoot: 'Leertaste', aim: 'Pfeil hoch/runter', kempa: 'A', feint: 'D', steal: 'D', block: 'Leertaste', sw: 'S' };
 // at: Ballführer [Abstand zur Torlinie, y in Angriffsrichtung]; spots: Laufziele; n: wie oft; got: Fortschritt aus G.tut
 const LESSONS = [
   { n: 'LAUFEN', d: t => `${t.run}: lauf in den gelben Kreis. ${t.sprint} = Sprint.`, at: [13, 10], spots: [[10, 5], [8.5, 15]] },
@@ -12,7 +12,7 @@ const LESSONS = [
   { n: 'WERFEN', d: t => `${t.shoot} halten lädt den Wurf auf (Balken), loslassen wirft. Erziele ein Tor.`, at: [9, 10], n2: 1, got: T => T.goals },
   { n: 'IN DIE ECKE', d: t => `Beim Aufladen ${t.aim}: Der Wurf geht genau in diese Ecke, das Zielkreuz zeigt wohin. Ein Tor in die Ecke.`, at: [9, 7], n2: 1, got: T => T.corner },
   { n: 'KEMPA-TRICK', d: t => `${t.kempa}: Lupfer in den Kreis, dein Mitspieler am Flügel fängt im Sprung und wirft.`, at: [9.5, 10], n2: 1, got: T => T.kempa },
-  { n: 'DREHER', d: t => `Nur vom Flügel: ${t.shoot} halten und dazu ${t.pass} tippen. Der Ball springt auf und dreht am Torwart vorbei.`, at: [3.2, 2.8], n2: 1, got: T => T.dreher },
+  { n: 'DREHER', d: t => `Nur vom Flügel: ${t.dreh}. Der Ball springt auf und dreht am Torwart vorbei.`, at: [3.2, 2.8], n2: 1, got: T => T.dreher },
   { n: 'FINTE', d: t => `${t.feint} direkt vor dem Abwehrspieler: Er bleibt kurz stehen, du gehst vorbei.`, at: [9.5, 10], def: 1, n2: 1, got: T => T.feints },
   { n: 'ABWEHR', d: t => `Der Gegner greift an. ${t.steal} am Ballführer spielt den Ball heraus (Foulgefahr), beim Wurf ${t.block} blockt, ${t.sw} wechselt den Spieler. Hol dir den Ball.`, defense: 1, n2: 1, got: T => T.won },
 ];

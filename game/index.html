@@ -337,6 +337,7 @@ body.touch.ingame #pad{display:block}
 .tb:hover,.tb:focus-visible{background:rgba(20,17,29,.32);color:var(--ink)}
 .tb-b:hover,.tb-b:focus-visible{background:rgba(255,79,58,.38)}
 .tb.on,.tb.on:hover{background:var(--gold);color:#1a1205;text-shadow:none;border-color:var(--gold);box-shadow:3px 3px 0 #000;transition:none}
+.tb.slide,.tb.slide:hover{background:#7cf2ff;color:#06131a;text-shadow:none;border-color:#7cf2ff;box-shadow:0 0 0 4px rgba(124,242,255,.35)}
 .tb.kempa,.tb.kempa:hover{background:#ff8bd1;color:#1a1205;text-shadow:none;border-color:#ff8bd1}
 /* Tipp beim ersten Spiel auf dem Handy */
 #ttip{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:6;width:min(560px,calc(100% - 140px));background:rgba(13,11,20,.94);border:3px solid var(--gold);box-shadow:5px 5px 0 #000;
@@ -1315,7 +1316,7 @@ function setupPenalty(team, pick) {
 // ================= Eingabe =================
 const KEY = {}, KEYP = {};   // KEYP: seit dem letzten Frame gedrückt (damit kurze Tipper nicht verloren gehen)
 const IN = { x: 0, y: 0, s: false, a: false, b: false, c: false, pa: false, pb: false, pc: false, ra: false, rb: false, rc: false, any: false, aHeld: 0 };
-const TOUCH = { x: 0, y: 0, a: false, b: false, c: false, s: false };
+const TOUCH = { x: 0, y: 0, a: false, b: false, c: false, s: false, slide: null };   // slide: vom WURF auf PASS ('a') oder FINTE ('c') gezogen
 addEventListener('keydown', e => {
   const inField = document.activeElement && (document.activeElement.tagName === 'INPUT');
   if (inField) return;
@@ -1349,6 +1350,7 @@ function readInput(dt) {
   }
   x += TOUCH.x; y += TOUCH.y; b = b || TOUCH.b; c = c || TOUCH.c; s = s || TOUCH.s;
   if (TOUCH.pulseA) { a = true; TOUCH.pulseA = 0; }
+  if (TOUCH.pulseC) { c = true; TOUCH.pulseC = 0; }
   IN.k = !!TOUCH.pulseK || K('KeyA') || km; TOUCH.pulseK = 0;
   for (const k in KEYP) delete KEYP[k];
   const m = Math.hypot(x, y); if (m > 1) { x /= m; y /= m; }
@@ -2366,9 +2368,13 @@ function hud() {
       const gx = goalX(c.team), ty = 10 + humanAim(c, c.aim) * 1.25, tz = 0.25 + c.charge * 1.5;   // genau dorthin geht der Wurf
       const rx = sx(gx, ty), ry = sy(ty, tz), bl = Math.floor(G.t * 10) % 2 ? '#ffc83a' : '#ffffff';
       rect(rx - 6, ry, 4, 1, bl); rect(rx + 3, ry, 4, 1, bl); rect(rx, ry - 6, 1, 4, bl); rect(rx, ry + 3, 1, 4, bl);
-      text(usePad() ? 'B=HEBER' : TOUCHDEV ? 'FINTE=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
-      if (dreherSpot(c, gx)) text(usePad() ? 'A=DREHER' : TOUCHDEV ? 'PASS=DREHER' : 'S=DREHER', x, y - 92, '#ff8bd1', 8, 'center');   // nur wo er geht
-      else if (TOUCHDEV && !usePad()) text('TOR ANTIPPEN = ECKE', x, y - 92, '#ffc83a', 8, 'center');   // genauer als der Stick
+      const tch = TOUCHDEV && !usePad(), dr = dreherSpot(c, gx);
+      if (tch && TOUCH.slide) text(TOUCH.slide === 'c' ? 'LOSLASSEN = HEBER' : dr ? 'LOSLASSEN = DREHER' : 'DREHER NUR VOM FLÜGEL', x, y - 82, TOUCH.slide === 'c' || dr ? '#7cf2ff' : '#9b90ad', 8, 'center');   // Wischen vom WURF-Knopf
+      else {
+        text(usePad() ? 'B=HEBER' : tch ? 'AUF FINTE ZIEHEN=HEBER' : 'D=HEBER', x, y - 82, '#7cf2ff', 8, 'center');
+        if (dr) text(usePad() ? 'A=DREHER' : tch ? 'AUF PASS ZIEHEN=DREHER' : 'S=DREHER', x, y - 92, '#ff8bd1', 8, 'center');   // nur wo er geht
+        else if (tch) text('TOR ANTIPPEN = ECKE', x, y - 92, '#ffc83a', 8, 'center');   // genauer als der Stick
+      }
     }
     if (b.owner === c && IN.a && IN.aHeld > 0.32 && c.role !== 'TW') text('KEMPA!', x, y - 82, '#ff8bd1', 8, 'center');
     if (c.st < 0.98) { rect(x - 9, sy(c.y) + 5, 18, 3, OUTLINE); rect(x - 8, sy(c.y) + 6, Math.round(16 * c.st), 1, c.st > 0.35 ? '#9cff57' : '#ff4f3a'); }
@@ -2696,7 +2702,7 @@ const ACT = {
       <b>ESC / P</b><span>Pause · M Ton</span>
       <b>7-METER</b><span>Als Schütze zielen und abziehen. Als Torwart vor dem Wurf hoch/runter drücken und die Ecke raten</span>
       <b>GAMEPAD</b><span>A Pass (beim Aufladen auf dem Flügel: Dreher) · X Wurf · B Finte/Klau · RB Sprint · Start Pause. Im Menü: Steuerkreuz wählen, A bestätigen, B zurück, links/rechts ändert Regler und Listen, Trikotfarbe: A, dann links/rechts</span>
-      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht, Stick hoch/runter = Ecke, dazu PASS = Dreher vom Flügel), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf genau in diese Ecke (auch beim Aufladen), in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
+      <b>TOUCH</b><span>Daumen links aufsetzen und ziehen = laufen, weit ziehen = sprinten. Rechts PASS (lang drücken = Kempa), WURF (halten = mehr Wucht, Stick hoch/runter = Ecke; mit gehaltenem WURF den Daumen auf PASS ziehen und loslassen = Dreher vom Flügel, auf FINTE = Heber), FINTE. In der Abwehr: WECHSEL, BLOCK, KLAU. Schneller geht es oft per Antippen: Mitspieler = Pass zu ihm, Tor = Wurf genau in diese Ecke (auch beim Aufladen), in der Abwehr Spieler = zu ihm wechseln. II oben rechts = Pause. Knopfgröße unter Optionen</span></div>
       <h2>REGELN</h2><p class="muted">Feldspieler dürfen den 6-m-Kreis nicht betreten, nur im Sprung. Wer mit Ball im Kreis landet, verliert ihn. Fouls bei klarer Chance geben 7-Meter, harte Fouls 2 Minuten. Zu langes Spiel ohne Torgefahr wird als passives Spiel abgepfiffen. Nach einem Tor kannst du mit einer Taste die schnelle Mitte spielen.</p>
       <button data-act="${G && !G.demo && G.paused ? 'pause' : 'main'}">ZURÜCK</button></div>`);
   },
@@ -4116,9 +4122,9 @@ if (CAREER) erfolgeInit();
 // Ein normales Spiel mit G.tut: Uhr und Zeitspiel stehen, Gegner und Mitspieler stehen still (außer in der Abwehr-Lektion),
 // nach Tor, Pfiff oder Ballverlust wird die Lektion neu aufgestellt. Überspringen und Beenden im Pausemenü.
 const tutKeys = () => LASTIN === 'touch' && !usePad()
-  ? { run: 'Daumen links ziehen', sprint: 'Stick weit ziehen', pass: 'PASS', passAlt: 'PASS (oder Mitspieler antippen)', shoot: 'WURF', aim: 'Stick hoch/runter oder Tor antippen', kempa: 'PASS lang drücken', feint: 'FINTE', steal: 'KLAU', block: 'BLOCK', sw: 'WECHSEL' }
-  : usePad() ? { run: 'Stick', sprint: 'RB', pass: 'A', passAlt: 'A', shoot: 'X', aim: 'Stick hoch/runter', kempa: 'RB + A', feint: 'B', steal: 'B', block: 'X', sw: 'A' }
-  : { run: 'Pfeiltasten', sprint: 'W', pass: 'S', passAlt: 'S', shoot: 'Leertaste', aim: 'Pfeil hoch/runter', kempa: 'A', feint: 'D', steal: 'D', block: 'Leertaste', sw: 'S' };
+  ? { run: 'Daumen links ziehen', sprint: 'Stick weit ziehen', pass: 'PASS', passAlt: 'PASS (oder Mitspieler antippen)', dreh: 'WURF halten, Daumen auf PASS ziehen und dort loslassen', shoot: 'WURF', aim: 'Stick hoch/runter oder Tor antippen', kempa: 'PASS lang drücken', feint: 'FINTE', steal: 'KLAU', block: 'BLOCK', sw: 'WECHSEL' }
+  : usePad() ? { run: 'Stick', sprint: 'RB', pass: 'A', passAlt: 'A', dreh: 'X halten und dazu A tippen', shoot: 'X', aim: 'Stick hoch/runter', kempa: 'RB + A', feint: 'B', steal: 'B', block: 'X', sw: 'A' }
+  : { run: 'Pfeiltasten', sprint: 'W', pass: 'S', passAlt: 'S', dreh: 'Leertaste halten und dazu S tippen', shoot: 'Leertaste', aim: 'Pfeil hoch/runter', kempa: 'A', feint: 'D', steal: 'D', block: 'Leertaste', sw: 'S' };
 // at: Ballführer [Abstand zur Torlinie, y in Angriffsrichtung]; spots: Laufziele; n: wie oft; got: Fortschritt aus G.tut
 const LESSONS = [
   { n: 'LAUFEN', d: t => `${t.run}: lauf in den gelben Kreis. ${t.sprint} = Sprint.`, at: [13, 10], spots: [[10, 5], [8.5, 15]] },
@@ -4126,7 +4132,7 @@ const LESSONS = [
   { n: 'WERFEN', d: t => `${t.shoot} halten lädt den Wurf auf (Balken), loslassen wirft. Erziele ein Tor.`, at: [9, 10], n2: 1, got: T => T.goals },
   { n: 'IN DIE ECKE', d: t => `Beim Aufladen ${t.aim}: Der Wurf geht genau in diese Ecke, das Zielkreuz zeigt wohin. Ein Tor in die Ecke.`, at: [9, 7], n2: 1, got: T => T.corner },
   { n: 'KEMPA-TRICK', d: t => `${t.kempa}: Lupfer in den Kreis, dein Mitspieler am Flügel fängt im Sprung und wirft.`, at: [9.5, 10], n2: 1, got: T => T.kempa },
-  { n: 'DREHER', d: t => `Nur vom Flügel: ${t.shoot} halten und dazu ${t.pass} tippen. Der Ball springt auf und dreht am Torwart vorbei.`, at: [3.2, 2.8], n2: 1, got: T => T.dreher },
+  { n: 'DREHER', d: t => `Nur vom Flügel: ${t.dreh}. Der Ball springt auf und dreht am Torwart vorbei.`, at: [3.2, 2.8], n2: 1, got: T => T.dreher },
   { n: 'FINTE', d: t => `${t.feint} direkt vor dem Abwehrspieler: Er bleibt kurz stehen, du gehst vorbei.`, at: [9.5, 10], def: 1, n2: 1, got: T => T.feints },
   { n: 'ABWEHR', d: t => `Der Gegner greift an. ${t.steal} am Ballführer spielt den Ball heraus (Foulgefahr), beim Wurf ${t.block} blockt, ${t.sw} wechselt den Spieler. Hol dir den Ball.`, defense: 1, n2: 1, got: T => T.won },
 ];
@@ -4681,10 +4687,21 @@ function tapAt(cx0, cy0) {
         else TOUCH.pulseA = 1;
       } else TOUCH[k] = true;
     });
-    const rel = () => { b.classList.remove('on', 'kempa'); if (k === 'a') { if (holdT) { clearTimeout(holdT); holdT = null; if (!kDone) TOUCH.pulseA = 1; } } else TOUCH[k] = false; };
+    const rel = e => {
+      b.classList.remove('on', 'kempa');
+      if (k === 'a') { if (holdT) { clearTimeout(holdT); holdT = null; if (!kDone) TOUCH.pulseA = 1; } }
+      else if (k === 'b' && TOUCH.slide && e.type === 'pointerup') {
+        // vom WURF auf PASS oder FINTE gezogen und dort losgelassen: Dreher bzw. Heber (ein Daumen statt zwei Knöpfe gleichzeitig)
+        TOUCH[TOUCH.slide === 'a' ? 'pulseA' : 'pulseC'] = 1; setTimeout(() => { TOUCH.b = false; }, 50);   // WURF bleibt kurz gehalten, damit der Trick beim Aufladen zählt
+      } else TOUCH[k] = false;
+      slideTo(null);
+    };
     b.addEventListener('pointerup', rel); b.addEventListener('pointercancel', rel);
+    // WURF gehalten: Daumen auf PASS (Dreher) oder FINTE (Heber) ziehen, der Zielknopf leuchtet; zurück auf WURF oder daneben = normaler Wurf
+    if (k === 'b') b.addEventListener('pointermove', e => { if (!TOUCH.b || !attacking()) return slideTo(null); slideTo(['a', 'c'].find(t => { const r = document.querySelector('.tb-' + t).getBoundingClientRect(), m = 6; return e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - m && e.clientY < r.bottom + m; }) || null); });
   });
 })();
+function slideTo(t) { if (TOUCH.slide === t) return; TOUCH.slide = t; document.querySelectorAll('.tb-a,.tb-c').forEach(el => el.classList.toggle('slide', el.dataset.k === t)); if (t) buzz(10); }
 // Knopfbeschriftung je nach Spielsituation
 // Knopfgröße aus den Optionen (klein, normal, groß)
 const BTN_SCALE = { s: 0.82, m: 1, l: 1.18 };

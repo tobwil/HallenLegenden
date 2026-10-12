@@ -64,10 +64,21 @@ function tapAt(cx0, cy0) {
         else TOUCH.pulseA = 1;
       } else TOUCH[k] = true;
     });
-    const rel = () => { b.classList.remove('on', 'kempa'); if (k === 'a') { if (holdT) { clearTimeout(holdT); holdT = null; if (!kDone) TOUCH.pulseA = 1; } } else TOUCH[k] = false; };
+    const rel = e => {
+      b.classList.remove('on', 'kempa');
+      if (k === 'a') { if (holdT) { clearTimeout(holdT); holdT = null; if (!kDone) TOUCH.pulseA = 1; } }
+      else if (k === 'b' && TOUCH.slide && e.type === 'pointerup') {
+        // vom WURF auf PASS oder FINTE gezogen und dort losgelassen: Dreher bzw. Heber (ein Daumen statt zwei Knöpfe gleichzeitig)
+        TOUCH[TOUCH.slide === 'a' ? 'pulseA' : 'pulseC'] = 1; setTimeout(() => { TOUCH.b = false; }, 50);   // WURF bleibt kurz gehalten, damit der Trick beim Aufladen zählt
+      } else TOUCH[k] = false;
+      slideTo(null);
+    };
     b.addEventListener('pointerup', rel); b.addEventListener('pointercancel', rel);
+    // WURF gehalten: Daumen auf PASS (Dreher) oder FINTE (Heber) ziehen, der Zielknopf leuchtet; zurück auf WURF oder daneben = normaler Wurf
+    if (k === 'b') b.addEventListener('pointermove', e => { if (!TOUCH.b || !attacking()) return slideTo(null); slideTo(['a', 'c'].find(t => { const r = document.querySelector('.tb-' + t).getBoundingClientRect(), m = 6; return e.clientX > r.left - m && e.clientX < r.right + m && e.clientY > r.top - m && e.clientY < r.bottom + m; }) || null); });
   });
 })();
+function slideTo(t) { if (TOUCH.slide === t) return; TOUCH.slide = t; document.querySelectorAll('.tb-a,.tb-c').forEach(el => el.classList.toggle('slide', el.dataset.k === t)); if (t) buzz(10); }
 // Knopfbeschriftung je nach Spielsituation
 // Knopfgröße aus den Optionen (klein, normal, groß)
 const BTN_SCALE = { s: 0.82, m: 1, l: 1.18 };
