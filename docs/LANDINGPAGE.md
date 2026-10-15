@@ -8,7 +8,8 @@
 |---|---|
 | Story-Film | Abschnitt `#film`: Beim Scrollen bleibt ein Pixel-Canvas stehen (`position: sticky`), eine Figur läuft von links nach rechts durch sieben Szenen. Code in `assets/story.js`. |
 | Wunsch-Formular | `#wunsch`, schreibt in die Google-Tabelle |
-| Fuß | Hinweis Fan-Projekt, Lizenz, Impressum, Datenschutz |
+| Noch mehr Legenden | `#legenden`: Karten zu den Geschwister-Spielen Padel-Legenden, Korb-Legenden und Kreisliga-Legenden (Emoji statt Bildern, keine fremden Server), auch in der Kopfleiste und im JSON-LD (`isRelatedTo`). Gleicher Abschnitt wie auf padellegenden.de, korblegenden.de und kreisliga-legenden.de; drei Spalten, ab 900 px zwei, ab 560 px eine |
+| Fuß | Hinweis Fan-Projekt, Lizenz, Links zu Padel-Legenden, Korb-Legenden und Kreisliga-Legenden, Impressum, Datenschutz |
 
 ### Story-Film
 
@@ -85,7 +86,7 @@ Landingpage und Spiel (`game/index.html`, eingefügt von `src/build.sh`) laden d
 | `spielen-klick` | Knöpfe „Spielen“ / „Jetzt spielen“ | `ort`: kopf, start, finale |
 | `wunsch-klick` | Knöpfe „Feature wünschen“ / „Was fehlt dir?“ | `ort` |
 | `appstore-klick` | Links zur App im App Store | `ort`: start, features, faq, finale |
-| `legenden-klick` | Karten im Abschnitt „Noch mehr Legenden“ und Links im Fuß | `ziel`: padellegenden, korblegenden; `ort`: familie, fuss |
+| `legenden-klick` | Karten im Abschnitt „Noch mehr Legenden“ und Links im Fuß | `ziel`: padellegenden, korblegenden, kreisligalegenden; `ort`: familie, fuss |
 | `story-szene` | jede Szene im Story-Film, einmal pro Besuch | `szene`, `nr` (1–7) |
 | `wunsch-gesendet` | Formular erfolgreich abgeschickt | `kategorie` |
 | `spiel-start` | Partie beginnt | `modus`: schnelles-spiel, karriere |

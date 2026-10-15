@@ -2,6 +2,11 @@
 
 Alle Versionen bis v7.8 entstanden am 1. Oktober 2026 in einer durchgehenden Entwicklungssitzung.
 
+## v8.38: Kreisliga-Legenden in der Legenden-Familie
+- **Startseite:** Neue dritte Karte **Kreisliga-Legenden** (kreisliga-legenden.de, Fußball 11 gegen 11) im Abschnitt „Noch mehr Legenden“, gleicher Text wie auf padellegenden.de. Die Karten stehen jetzt in drei Spalten, unter 900 px in zwei, unter 560 px untereinander. Kreisliga-Legenden steht auch im Fuß („Auch von mir“) und im JSON-LD (`isRelatedTo`).
+- **Umami:** Klicks zählen als `legenden-klick` mit `ziel` kreisligalegenden. Datenschutzerklärung und `docs/LANDINGPAGE.md` nennen den neuen Link.
+- Test „Noch mehr Legenden“ prüft drei Karten, Fuß und JSON-LD, dazu die Spalten auf Tablet-Breite (820 px). Weiterhin 57 Tests.
+
 ## v8.37: Dreher und Heber am Handy mit einem Daumen
 - **Neu: Wischen vom WURF-Knopf.** Bisher brauchten Dreher und Heber am Handy zwei Finger rechts gleichzeitig (WURF halten und PASS bzw. FINTE tippen). Mit dem Daumen allein ging das nicht. Jetzt geht es so:
   - WURF halten (lädt auf) und den Daumen auf **PASS** ziehen, loslassen = **Dreher** (nur vom Flügel). Auf **FINTE** ziehen, loslassen = **Heber**.

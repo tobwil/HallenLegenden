@@ -206,7 +206,8 @@ input::placeholder,textarea::placeholder{color:#5f5772}
 .family-inner{max-width:1120px;margin:0 auto}
 .family h2{font-size:clamp(18px,2.6vw,30px);color:var(--gold);text-shadow:0 3px 0 #7a2c0c,0 5px 0 #000;margin:10px 0 14px}
 .family .lead{color:var(--dim);font-size:clamp(20px,2vw,24px);max-width:60ch;margin-bottom:26px}
-.sibs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.sibs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+@media (max-width:900px){ .sibs{grid-template-columns:repeat(2,minmax(0,1fr))} }
 .sib{display:flex;flex-direction:column;gap:12px;background:var(--panel);border:3px solid var(--ink);box-shadow:8px 8px 0 #000,inset 0 0 0 3px var(--panel2);padding:20px 22px;text-decoration:none;color:var(--ink)}
 .sib:focus-visible{outline:3px solid var(--cyan)}
 @media (hover:hover){.sib:hover{border-color:var(--gold)}.sib:hover .go{background:var(--gold);color:var(--bg)}}
@@ -278,7 +279,7 @@ footer a:hover{color:var(--gold)}
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR", "availability": "https://schema.org/InStock", "url": "https://hallenlegenden.de/game/" },
       "author": { "@type": "Person", "name": "Tobias Wilhelm", "url": "https://github.com/tobwil" },
       "license": "https://polyformproject.org/licenses/noncommercial/1.0.0",
-      "isRelatedTo": [{ "@type": "VideoGame", "name": "Padel-Legenden", "url": "https://padellegenden.de/" }, { "@type": "VideoGame", "name": "Korb-Legenden", "url": "https://korblegenden.de/" }],
+      "isRelatedTo": [{ "@type": "VideoGame", "name": "Padel-Legenden", "url": "https://padellegenden.de/" }, { "@type": "VideoGame", "name": "Korb-Legenden", "url": "https://korblegenden.de/" }, { "@type": "VideoGame", "name": "Kreisliga-Legenden", "url": "https://kreisliga-legenden.de/" }],
       "trailer": {
         "@type": "VideoObject",
         "name": "Hallen-Legenden Trailer",
@@ -519,7 +520,7 @@ footer a:hover{color:var(--gold)}
   <div class="family-inner">
     <span class="num">DIE LEGENDEN-FAMILIE</span>
     <h2 id="family-title">Noch mehr Legenden</h2>
-    <p class="lead">Hallen-Legenden hat zwei Geschwister mit derselben Technik: Pixel-Look, volle Hallen, Karriere und Zeitung. Auch kostenlos im Browser.</p>
+    <p class="lead">Hallen-Legenden hat drei Geschwister mit derselben Technik: Pixel-Look, volle Ränge, Karriere und Zeitung. Auch kostenlos im Browser.</p>
     <div class="sibs">
       <a class="sib" href="https://padellegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="padellegenden" data-umami-event-ort="familie">
         <span class="icon" aria-hidden="true">🎾</span>
@@ -535,6 +536,13 @@ footer a:hover{color:var(--gold)}
         <p>Dunks, Crossover und Dreier mit Timing, zu zweit an einem Gerät, dazu eine Karriere mit zwei Ligen, Pokal und Europapokal.</p>
         <span class="go">KORBLEGENDEN.DE →</span>
       </a>
+      <a class="sib" href="https://kreisliga-legenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="kreisligalegenden" data-umami-event-ort="familie">
+        <span class="icon" aria-hidden="true">⚽</span>
+        <span class="tag">FUSSBALL · 11 GEGEN 11</span>
+        <h3>Kreisliga-Legenden</h3>
+        <p>Der Neue: alle rund 4.900 Kreisliga-Vereine Deutschlands auf Rasen, Kunstrasen und Asche, dazu Kreispokal, Kreisblatt und Playoffs um die Goldene Eckfahne.</p>
+        <span class="go">KREISLIGA-LEGENDEN.DE →</span>
+      </a>
     </div>
   </div>
 </section>
@@ -543,7 +551,7 @@ footer a:hover{color:var(--gold)}
 <footer>
   <div class="foot-inner">
     <p>Inoffizielles Fan-Projekt. Vereins- und Spielernamen sind Fantasienamen, ohne Verbindung zu einer Liga oder einem Verein.</p>
-    <p>© 2026 Tobias Wilhelm · <a href="https://github.com/tobwil/HallenLegenden">Quellcode auf GitHub</a> · Lizenz: PolyForm Noncommercial · Auch von mir: <a href="https://padellegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="padellegenden" data-umami-event-ort="fuss">Padel-Legenden</a> und <a href="https://korblegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="korblegenden" data-umami-event-ort="fuss">Korb-Legenden</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
+    <p>© 2026 Tobias Wilhelm · <a href="https://github.com/tobwil/HallenLegenden">Quellcode auf GitHub</a> · Lizenz: PolyForm Noncommercial · Auch von mir: <a href="https://padellegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="padellegenden" data-umami-event-ort="fuss">Padel-Legenden</a>, <a href="https://korblegenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="korblegenden" data-umami-event-ort="fuss">Korb-Legenden</a> und <a href="https://kreisliga-legenden.de/" data-umami-event="legenden-klick" data-umami-event-ziel="kreisligalegenden" data-umami-event-ort="fuss">Kreisliga-Legenden</a> · <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></p>
   </div>
 </footer>
 

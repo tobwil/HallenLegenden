@@ -1443,9 +1443,9 @@ test('Touch: Dreher und Heber mit einem Daumen, WURF halten und auf PASS bzw. FI
 
 // Startseite und Rechtstexte liegen neben game/: bei GAME=https://…/game/ auf demselben Server, sonst im Repository
 const SITE = p => /^https?:\/\//.test(GAME) ? new URL('../' + p, GAME).href : pathToFileURL(path.join(root, p)).href;
-test('Startseite: Abschnitt „Noch mehr Legenden“ mit Padel- und Korb-Legenden, im Fuß verlinkt, keine neuen fremden Server, Handy ohne seitliches Scrollen; Statistik-Knopf im Datenschutz deckt den Kontakt nicht auf (#61)', async () => {
+test('Startseite: Abschnitt „Noch mehr Legenden“ mit Padel-, Korb- und Kreisliga-Legenden, im Fuß verlinkt, keine neuen fremden Server, Handy ohne seitliches Scrollen; Statistik-Knopf im Datenschutz deckt den Kontakt nicht auf (#61)', async () => {
   const bad = [];
-  for (const [w, h] of [[1440, 900], [390, 844], [320, 640]]) {
+  for (const [w, h] of [[1440, 900], [820, 1180], [390, 844], [320, 640]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: w < 500, isMobile: w < 500 }), page = await ctx.newPage(), errors = [], hosts = new Set();
     page.on('pageerror', e => errors.push(e.message)); page.on('request', r => { const u = new URL(r.url()); if (/^https?:$/.test(u.protocol) && !['localhost', '127.0.0.1'].includes(u.hostname)) hosts.add(u.hostname); });
     await page.goto(SITE('index.html')); await page.waitForTimeout(400);
@@ -1457,12 +1457,12 @@ test('Startseite: Abschnitt „Noch mehr Legenden“ mit Padel- und Korb-Legende
       return { cards: cards.map(c => [c.href, c.dataset.umamiEvent, c.dataset.umamiEventZiel, c.dataset.umamiEventOrt, c.querySelector('h3').textContent].join('|')),
         foot: foot.map(a => [a.href, a.dataset.umamiEventZiel, a.dataset.umamiEventOrt].join('|')), nav: !!document.querySelector('header nav a[href="#legenden"]'),
         related: (game.isRelatedTo || []).map(x => x.url).join(), after: !!document.querySelector('#wunsch ~ #legenden'),
-        quer: document.documentElement.scrollWidth > innerWidth + 1 || sec.scrollWidth > sec.clientWidth + 1, stacked: cr.length === 2 && cr[1].top >= cr[0].bottom, side: cr.length === 2 && Math.abs(cr[1].top - cr[0].top) < 2, inside: cr.every(q => q.left >= sr.left - 1 && q.right <= sr.right + 1) };
+        quer: document.documentElement.scrollWidth > innerWidth + 1 || sec.scrollWidth > sec.clientWidth + 1, stacked: cr.length === 3 && cr.every((q, i) => !i || q.top >= cr[i - 1].bottom), side: cr.length === 3 && Math.abs(cr[1].top - cr[0].top) < 2 && (innerWidth > 900 ? Math.abs(cr[2].top - cr[0].top) < 2 : cr[2].top >= cr[0].bottom), inside: cr.every(q => q.left >= sr.left - 1 && q.right <= sr.right + 1) };
     });
-    const want = ['https://padellegenden.de/|legenden-klick|padellegenden|familie|Padel-Legenden', 'https://korblegenden.de/|legenden-klick|korblegenden|familie|Korb-Legenden'];
+    const want = ['https://padellegenden.de/|legenden-klick|padellegenden|familie|Padel-Legenden', 'https://korblegenden.de/|legenden-klick|korblegenden|familie|Korb-Legenden', 'https://kreisliga-legenden.de/|legenden-klick|kreisligalegenden|familie|Kreisliga-Legenden'];
     if (r.cards.join() !== want.join()) bad.push(`${w}px Karten: ${r.cards.join(' ; ')}`);
-    if (r.foot.join() !== 'https://padellegenden.de/|padellegenden|fuss,https://korblegenden.de/|korblegenden|fuss') bad.push(`${w}px Fuß: ${r.foot.join(' ; ')}`);
-    if (!r.nav || r.related !== 'https://padellegenden.de/,https://korblegenden.de/' || !r.after) bad.push(`${w}px Navigation/JSON-LD/Lage: ${JSON.stringify([r.nav, r.related, r.after])}`);
+    if (r.foot.join() !== 'https://padellegenden.de/|padellegenden|fuss,https://korblegenden.de/|korblegenden|fuss,https://kreisliga-legenden.de/|kreisligalegenden|fuss') bad.push(`${w}px Fuß: ${r.foot.join(' ; ')}`);
+    if (!r.nav || r.related !== 'https://padellegenden.de/,https://korblegenden.de/,https://kreisliga-legenden.de/' || !r.after) bad.push(`${w}px Navigation/JSON-LD/Lage: ${JSON.stringify([r.nav, r.related, r.after])}`);
     if (r.quer || !r.inside || (w <= 560 ? !r.stacked : !r.side)) bad.push(`${w}px Layout: ${JSON.stringify(r)}`);
     const foreign = [...hosts].filter(x => x !== 'cloud.umami.is'); if (foreign.length) bad.push(`${w}px fremde Server: ${foreign}`);
     if (errors.length) bad.push(`${w}px Fehler: ${errors.join('; ')}`);
